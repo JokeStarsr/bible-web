@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.exegesis.mapper.ExegesisRecordMapper">
+
+    <resultMap id="ExegesisRecordResultMap" type="com.bible.module.exegesis.entity.ExegesisRecord">
+        <id column="id" property="id"/>
+        <result column="generation_record_id" property="generationRecordId"/>
+        <result column="version_id" property="versionId"/>
+        <result column="reference_text" property="referenceText"/>
+        <result column="source_type" property="sourceType"/>
+        <result column="summary" property="summary"/>
+        <result column="historical_background" property="historicalBackground"/>
+        <result column="writing_background" property="writingBackground"/>
+        <result column="context_analysis" property="contextAnalysis"/>
+        <result column="keyword_analysis" property="keywordAnalysis"/>
+        <result column="canonical_position" property="canonicalPosition"/>
+        <result column="theological_theme" property="theologicalTheme"/>
+        <result column="truth_for_people" property="truthForPeople"/>
+        <result column="practical_application" property="practicalApplication"/>
+        <result column="reference_sources" property="referenceSources"/>
+        <result column="status" property="status"/>
+        <result column="ai_model_name" property="aiModelName"/>
+        <result column="prompt_version" property="promptVersion"/>
+        <result column="reviewed_by" property="reviewedBy"/>
+        <result column="reviewed_at" property="reviewedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="ExegesisRecordResultMap">
+        SELECT * FROM exegesis_records WHERE id = #{id}
+    </select>
+
+    <select id="findByGenerationRecordId" resultMap="ExegesisRecordResultMap">
+        SELECT * FROM exegesis_records WHERE generation_record_id = #{generationRecordId}
+    </select>
+
+    <select id="findByReferenceText" resultMap="ExegesisRecordResultMap">
+        SELECT * FROM exegesis_records WHERE reference_text = #{referenceText}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO exegesis_records(id, generation_record_id, version_id, reference_text, source_type, summary, historical_background, writing_background, context_analysis, keyword_analysis, canonical_position, theological_theme, truth_for_people, practical_application, reference_sources, status, ai_model_name, prompt_version, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{generationRecordId}, #{versionId}, #{referenceText}, #{sourceType}, #{summary}, #{historicalBackground}, #{writingBackground}, #{contextAnalysis}, #{keywordAnalysis}, #{canonicalPosition}, #{theologicalTheme}, #{truthForPeople}, #{practicalApplication}, #{referenceSources}, #{status}, #{aiModelName}, #{promptVersion}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE exegesis_records
+        SET reference_text = #{referenceText}, keyword_analysis = #{keywordAnalysis}, reference_sources = #{referenceSources}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

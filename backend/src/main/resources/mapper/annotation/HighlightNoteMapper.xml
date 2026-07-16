@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.annotation.mapper.HighlightNoteMapper">
+
+    <resultMap id="HighlightNoteResultMap" type="com.bible.module.annotation.entity.HighlightNote">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="verse_id" property="verseId"/>
+        <result column="color" property="color"/>
+        <result column="note_text" property="noteText"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="HighlightNoteResultMap">
+        SELECT * FROM highlight_notes WHERE id = #{id} AND deleted_at IS NULL
+    </select>
+
+    <insert id="insert">
+        INSERT INTO highlight_notes(id, user_id, verse_id, color, note_text, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{userId}, #{verseId}, #{color}, #{noteText}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE highlight_notes
+        SET color = #{color}, note_text = #{noteText}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteById">
+        UPDATE highlight_notes SET deleted_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="findByUserId" resultMap="HighlightNoteResultMap">
+        SELECT * FROM highlight_notes
+        WHERE user_id = #{userId} AND deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM highlight_notes WHERE user_id = #{userId} AND deleted_at IS NULL
+    </select>
+
+</mapper>

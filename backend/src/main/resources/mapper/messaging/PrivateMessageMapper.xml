@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.messaging.mapper.PrivateMessageMapper">
+
+    <resultMap id="PrivateMessageResultMap" type="com.bible.module.messaging.entity.PrivateMessage">
+        <id column="id" property="id"/>
+        <result column="session_id" property="sessionId"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="read_at" property="readAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="PrivateMessageResultMap">
+        SELECT * FROM private_messages WHERE id = #{id} AND deleted_at IS NULL
+    </select>
+
+    <insert id="insert">
+        INSERT INTO private_messages(id, session_id, sender_id, content, status, read_at, created_at)
+        VALUES(gen_random_uuid(), #{sessionId}, #{senderId}, #{content}, #{status}, #{readAt}, NOW())
+    </insert>
+
+    <update id="markRead">
+        UPDATE private_messages SET status = 'read', read_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="findBySessionId" resultMap="PrivateMessageResultMap">
+        SELECT * FROM private_messages
+        WHERE session_id = #{sessionId} AND deleted_at IS NULL
+        ORDER BY created_at ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countBySessionId" resultType="int">
+        SELECT COUNT(*) FROM private_messages
+        WHERE session_id = #{sessionId} AND deleted_at IS NULL
+    </select>
+
+</mapper>

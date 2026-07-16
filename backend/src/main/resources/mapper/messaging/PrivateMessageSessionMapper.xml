@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.messaging.mapper.PrivateMessageSessionMapper">
+
+    <resultMap id="PrivateMessageSessionResultMap" type="com.bible.module.messaging.entity.PrivateMessageSession">
+        <id column="id" property="id"/>
+        <result column="user_a_id" property="userAId"/>
+        <result column="user_b_id" property="userBId"/>
+        <result column="last_message_at" property="lastMessageAt"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="PrivateMessageSessionResultMap">
+        SELECT * FROM private_message_sessions WHERE id = #{id}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO private_message_sessions(id, user_a_id, user_b_id, last_message_at, status, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{userAId}, #{userBId}, #{lastMessageAt}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE private_message_sessions SET status = #{status}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateLastMessage">
+        UPDATE private_message_sessions SET last_message_at = NOW(), updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="findByUserId" resultMap="PrivateMessageSessionResultMap">
+        SELECT * FROM private_message_sessions
+        WHERE (user_a_id = #{userId} OR user_b_id = #{userId})
+        ORDER BY last_message_at DESC NULLS LAST
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM private_message_sessions
+        WHERE user_a_id = #{userId} OR user_b_id = #{userId}
+    </select>
+
+</mapper>

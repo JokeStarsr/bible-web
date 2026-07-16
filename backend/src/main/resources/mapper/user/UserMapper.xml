@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.user.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.bible.module.user.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="email" property="email"/>
+        <result column="openid" property="openid"/>
+        <result column="display_name" property="displayName"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="bio" property="bio"/>
+        <result column="status" property="status"/>
+        <result column="email_verified_at" property="emailVerifiedAt"/>
+        <result column="last_login_at" property="lastLoginAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="UserResultMap">
+        SELECT * FROM users WHERE id = #{id} AND deleted_at IS NULL
+    </select>
+
+    <select id="findByUsername" resultMap="UserResultMap">
+        SELECT * FROM users WHERE username = #{username} AND deleted_at IS NULL
+    </select>
+
+    <select id="findByEmail" resultMap="UserResultMap">
+        SELECT * FROM users WHERE email = #{email} AND deleted_at IS NULL
+    </select>
+
+    <select id="findByOpenid" resultMap="UserResultMap">
+        SELECT * FROM users WHERE openid = #{openid} AND deleted_at IS NULL
+    </select>
+
+    <insert id="insert">
+        INSERT INTO users(id, username, email, openid, display_name, avatar_url, bio, status, email_verified_at, last_login_at, created_at, updated_at)
+        VALUES(#{id}, #{username}, #{email}, #{openid}, #{displayName}, #{avatarUrl}, #{bio}, #{status}, #{emailVerifiedAt}, #{lastLoginAt}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE users SET display_name = #{displayName}, avatar_url = #{avatarUrl}, bio = #{bio}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE users SET status = #{status}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateLastLogin">
+        UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = #{id}
+    </update>
+
+</mapper>
