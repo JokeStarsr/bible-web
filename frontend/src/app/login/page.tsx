@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
@@ -24,8 +23,7 @@ export default function LoginPage() {
       if (res.data.data.userInfo) {
         localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo));
       }
-      router.push('/');
-      window.location.reload();
+      window.location.href = '/';
     } catch (err: any) {
       setError(err.response?.data?.message || '登录失败');
     } finally {
