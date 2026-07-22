@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.scripture.mapper.BibleBookMapper">
+
+    <resultMap id="BibleBookResultMap" type="com.bible.module.scripture.entity.BibleBook">
+        <id column="id" property="id"/>
+        <result column="version_id" property="versionId"/>
+        <result column="book_code" property="bookCode"/>
+        <result column="book_name" property="bookName"/>
+        <result column="book_order" property="bookOrder"/>
+        <result column="chapters" property="chapters"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BibleBookResultMap">
+        SELECT * FROM bible_books WHERE id = #{id}
+    </select>
+
+    <select id="findByVersionAndBookCode" resultMap="BibleBookResultMap">
+        SELECT * FROM bible_books WHERE version_id = #{versionId} AND book_code = #{bookCode}
+    </select>
+
+    <select id="findByVersionId" resultMap="BibleBookResultMap">
+        SELECT * FROM bible_books WHERE version_id = #{versionId} ORDER BY book_order
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM bible_books
+    </select>
+
+    <select id="findByIdIn" resultMap="BibleBookResultMap">
+        SELECT * FROM bible_books WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

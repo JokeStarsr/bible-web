@@ -1,0 +1,71 @@
+# Java
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven
+.mvn/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# H2
+*.db
+*.mv.db
+*.trace.db
+
+# 日志
+*.log
+logs/
+
+# 环境变量（敏感信息）
+.env
+application-local.yml
+application-prod-local.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 前端构建产物
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/node_modules/
+frontend/.env.local
+
+# 小程序构建产物
+miniprogram/node_modules/
+
+# H2 数据库文件
+backend/data/
+
+# SSH 密钥
+id_rsa_temp
+id_rsa_temp.pub
+ssh_key.pem
+ssh_key.pub
+GenSSHKey.java
+gen_ssh.py
+
+# 其他项目目录
+bible-web/

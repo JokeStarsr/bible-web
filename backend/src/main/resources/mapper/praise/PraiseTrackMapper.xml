@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.praise.mapper.PraiseTrackMapper">
+
+    <resultMap id="PraiseTrackResultMap" type="com.bible.module.praise.entity.PraiseTrack">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="artist" property="artist"/>
+        <result column="url" property="url"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="PraiseTrackResultMap">
+        SELECT * FROM praise_tracks WHERE id = #{id}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO praise_tracks(id, title, artist, url, status, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{title}, #{artist}, #{url}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE praise_tracks
+        SET title = #{title}, artist = #{artist}, url = #{url}, status = #{status}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="findAllActive" resultMap="PraiseTrackResultMap">
+        SELECT * FROM praise_tracks WHERE status = 'active'
+    </select>
+
+    <select id="countActive" resultType="int">
+        SELECT COUNT(*) FROM praise_tracks WHERE status = 'active'
+    </select>
+
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.discussion.mapper.ReflectionCommentMapper">
+
+    <resultMap id="ReflectionCommentResultMap" type="com.bible.module.discussion.entity.ReflectionComment">
+        <id column="id" property="id"/>
+        <result column="reflection_id" property="reflectionId"/>
+        <result column="user_id" property="userId"/>
+        <result column="content" property="content"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="ReflectionCommentResultMap">
+        SELECT * FROM reflection_comments WHERE id = #{id} AND deleted_at IS NULL
+    </select>
+
+    <insert id="insert">
+        INSERT INTO reflection_comments(id, reflection_id, user_id, content, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{reflectionId}, #{userId}, #{content}, NOW(), NOW())
+    </insert>
+
+    <update id="deleteById">
+        UPDATE reflection_comments SET deleted_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="findByReflectionId" resultMap="ReflectionCommentResultMap">
+        SELECT * FROM reflection_comments
+        WHERE reflection_id = #{reflectionId} AND deleted_at IS NULL
+        ORDER BY created_at ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByReflectionId" resultType="int">
+        SELECT COUNT(*) FROM reflection_comments
+        WHERE reflection_id = #{reflectionId} AND deleted_at IS NULL
+    </select>
+
+    <select id="countInteractionsBetween" resultType="int">
+        SELECT COUNT(*) FROM reflection_comments
+        WHERE reflection_id = #{reflectionId} AND deleted_at IS NULL
+        AND (
+            (user_id = #{userA} AND EXISTS (
+                SELECT 1 FROM reflection_comments rc2
+                WHERE rc2.reflection_id = reflection_comments.reflection_id
+                AND rc2.user_id = #{userB} AND rc2.deleted_at IS NULL
+            ))
+            OR
+            (user_id = #{userB} AND EXISTS (
+                SELECT 1 FROM reflection_comments rc2
+                WHERE rc2.reflection_id = reflection_comments.reflection_id
+                AND rc2.user_id = #{userA} AND rc2.deleted_at IS NULL
+            ))
+        )
+    </select>
+
+</mapper>

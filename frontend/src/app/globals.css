@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #FAF7F2;
+  --color-card: #FFFFFF;
+  --color-text: #3D3226;
+  --color-muted: #8B7355;
+  --color-gold: #B8860B;
+  --color-warm: #E8DCC8;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Georgia', 'Times New Roman', 'Noto Serif SC', serif;
+  line-height: 1.8;
+}
+
+.scripture-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FDF8F0 100%);
+  border: 1px solid #E8DCC8;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 24px rgba(139, 115, 85, 0.08);
+}
+
+.exegesis-btn {
+  background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(184, 134, 11, 0.3);
+}
+
+.exegesis-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(184, 134, 11, 0.5);
+}
+
+.verse-text {
+  line-height: 2.2;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+
+.verse-number {
+  color: var(--color-gold);
+  font-size: 0.8rem;
+  vertical-align: super;
+  margin-right: 0.25rem;
+}
+
+input, textarea {
+  background: #FFFFFF;
+  border: 1px solid #E8DCC8;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  font-family: inherit;
+  color: var(--color-text);
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-muted);
+  border: 1px solid #E8DCC8;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #F5F0E8;
+}

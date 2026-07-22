@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.scripture.mapper.BibleVersionMapper">
+
+    <resultMap id="BibleVersionResultMap" type="com.bible.module.scripture.entity.BibleVersion">
+        <id column="id" property="id"/>
+        <result column="code" property="code"/>
+        <result column="name" property="name"/>
+        <result column="language" property="language"/>
+        <result column="description" property="description"/>
+        <result column="is_default" property="isDefault"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BibleVersionResultMap">
+        SELECT * FROM bible_versions WHERE id = #{id}
+    </select>
+
+    <select id="findByCode" resultMap="BibleVersionResultMap">
+        SELECT * FROM bible_versions WHERE code = #{code}
+    </select>
+
+    <select id="findDefault" resultMap="BibleVersionResultMap">
+        SELECT * FROM bible_versions WHERE is_default = true
+    </select>
+
+    <select id="findAll" resultMap="BibleVersionResultMap">
+        SELECT * FROM bible_versions
+    </select>
+
+</mapper>

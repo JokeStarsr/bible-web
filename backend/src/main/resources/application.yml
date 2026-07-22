@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: bible-backend
+
+  profiles:
+    active: dev
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bible}
+    username: ${DB_USER:bible_user}
+    password: ${DB_PASS:bible_pass}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.bible.module
+  type-handlers-package: com.bible.config
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASS:}
+
+  mail:
+    host: ${MAIL_HOST:smtp.example.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USER:}
+    password: ${MAIL_PASS:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# ==================== 应用配置 ====================
+app:
+  jwt:
+    secret: ${JWT_SECRET:bible-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256}
+    access-token-expire: ${JWT_ACCESS_EXPIRE:7200}
+    refresh-token-expire: ${JWT_REFRESH_EXPIRE:604800}
+  verification-code:
+    expire-seconds: 300
+    send-interval-seconds: 60
+  private-message:
+    unlock-rounds: 20
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    com.bible: DEBUG
+    org.springframework.security: INFO
