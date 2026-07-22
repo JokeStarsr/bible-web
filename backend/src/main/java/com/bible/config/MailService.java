@@ -19,7 +19,11 @@ public class MailService {
     @Value("${spring.mail.username:}")
     private String from;
 
-    public void sendVerificationCode(String to, String code) {
+    /**
+     * 发送注册验证码。
+     * @return true 表示邮件发送成功；false 表示发送失败（如 SMTP 未配置），调用方可据此回退为直接返回验证码。
+     */
+    public boolean sendVerificationCode(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
@@ -28,12 +32,18 @@ public class MailService {
         try {
             mailSender.send(message);
             log.info("验证码已发送至 {}", to);
+            return true;
         } catch (Exception e) {
             log.warn("邮件发送失败: {}，验证码: {}", e.getMessage(), code);
+            return false;
         }
     }
 
-    public void sendPasswordResetCode(String to, String code) {
+    /**
+     * 发送密码重置验证码。
+     * @return true 表示邮件发送成功；false 表示发送失败，调用方可据此回退为直接返回验证码。
+     */
+    public boolean sendPasswordResetCode(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
@@ -42,8 +52,10 @@ public class MailService {
         try {
             mailSender.send(message);
             log.info("重置密码验证码已发送至 {}", to);
+            return true;
         } catch (Exception e) {
             log.warn("邮件发送失败: {}，验证码: {}", e.getMessage(), code);
+            return false;
         }
     }
 }

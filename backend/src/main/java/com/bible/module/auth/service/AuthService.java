@@ -80,10 +80,11 @@ public class AuthService {
                 throw new BusinessException("RATE_LIMITED", "发送过于频繁，请稍后再试");
             }
             String code = generateCode();
-            mailService.sendVerificationCode(email, code);
+            // 尝试发送邮件；若发送失败（如 SMTP 未配置），回退为直接返回验证码，保证注册流程可用
+            boolean sent = mailService.sendVerificationCode(email, code);
             verificationCodeService.saveRegisterCode(email, code);
             verificationCodeService.markCodeSent(email);
-            return null;
+            return sent ? null : code;
         }
     }
 
@@ -105,10 +106,11 @@ public class AuthService {
                 throw new BusinessException("RATE_LIMITED", "发送过于频繁，请稍后再试");
             }
             String code = generateCode();
-            mailService.sendPasswordResetCode(email, code);
+            // 尝试发送邮件；若发送失败（如 SMTP 未配置），回退为直接返回验证码，保证找回密码流程可用
+            boolean sent = mailService.sendPasswordResetCode(email, code);
             verificationCodeService.saveResetCode(email, code);
             verificationCodeService.markCodeSent(email);
-            return null;
+            return sent ? null : code;
         }
     }
 
