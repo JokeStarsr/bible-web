@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,6 +18,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -34,16 +34,24 @@ public class PraiseController {
     }
 
     /**
-     * 代理外部赞美诗音频流，解决浏览器跨域/加载不稳定问题。
-     * 仅允许代理 faithchinesechurch.org 域名下的公开诗歌资源。
+     * 按歌曲 ID 代理外部赞美诗音频流，解决浏览器跨域/加载不稳定问题。
      */
-    @GetMapping("/stream")
+    @GetMapping("/stream/{trackId}")
     public ResponseEntity<StreamingResponseBody> stream(
-            @RequestParam String url,
+            @PathVariable UUID trackId,
             @RequestHeader(value = HttpHeaders.RANGE, required = false) String range,
             HttpServletRequest request) {
-        if (!isAllowedAudioUrl(url)) {
-            log.warn("拒绝代理非允许域名音频: {}", url);
+        PraiseTrack track;
+        try {
+            track = praiseService.getTrack(trackId);
+        } catch (Exception e) {
+            log.warn("流媒体请求：找不到歌曲 {}", trackId);
+            return ResponseEntity.notFound().build();
+        }
+
+        String audioUrl = track.getAudioUrl();
+        if (!isAllowedAudioUrl(audioUrl)) {
+            log.warn("拒绝代理非允许域名音频，trackId={}", trackId);
             return ResponseEntity.status(403).build();
         }
 
@@ -53,7 +61,7 @@ public class PraiseController {
                     .build();
 
             java.net.http.HttpRequest.Builder reqBuilder = java.net.http.HttpRequest.newBuilder()
-                    .uri(URI.create(url))
+                    .uri(URI.create(audioUrl))
                     .header(HttpHeaders.USER_AGENT, "Mozilla/5.0 (compatible; BibleWeb/1.0)")
                     .header(HttpHeaders.ACCEPT, "audio/*,*/*")
                     .header(HttpHeaders.REFERER, "https://faithchinesechurch.org/")
@@ -91,14 +99,14 @@ public class PraiseController {
 
             return new ResponseEntity<>(body, outgoingHeaders, statusCode);
         } catch (Exception e) {
-            log.warn("代理音频失败: {}, 原因: {}", url, e.getMessage());
+            log.warn("代理音频失败，trackId={}，原因: {}", trackId, e.getMessage());
             return ResponseEntity.status(502).build();
         }
     }
 
     private boolean isAllowedAudioUrl(String url) {
         try {
-            URI uri = UriComponentsBuilder.fromUriString(url).build().toUri();
+            URI uri = URI.create(url);
             String host = uri.getHost();
             return host != null && host.toLowerCase().endsWith("faithchinesechurch.org")
                     && (url.endsWith(".mp3") || url.endsWith(".m4a"));
