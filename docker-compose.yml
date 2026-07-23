@@ -60,6 +60,11 @@ services:
       JWT_ACCESS_EXPIRE: ${JWT_ACCESS_EXPIRE:-7200}
       JWT_REFRESH_EXPIRE: ${JWT_REFRESH_EXPIRE:-604800}
       SERVER_PORT: "8080"
+      LLM_PROVIDER: ${LLM_PROVIDER:-deepseek}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.deepseek.com}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-chat}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-60}
     depends_on:
       postgres:
         condition: service_healthy

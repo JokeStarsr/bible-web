@@ -362,7 +362,6 @@ export default function HomePage() {
               key={audioKey}
               ref={audioRef}
               src={praiseTrack.audioUrl}
-              crossOrigin="anonymous"
               preload="auto"
               onCanPlay={handleAudioCanPlay}
               onEnded={() => setIsPlaying(false)}

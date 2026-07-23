@@ -43,12 +43,12 @@
 
     <insert id="insert">
         INSERT INTO exegesis_records(id, generation_record_id, version_id, reference_text, source_type, summary, original_text_note, verse_by_verse, historical_background, writing_background, context_analysis, keyword_analysis, canonical_position, theological_theme, truth_for_people, practical_application, reference_sources, status, ai_model_name, prompt_version, created_at, updated_at)
-        VALUES(gen_random_uuid(), #{generationRecordId}, #{versionId}, #{referenceText}, #{sourceType}, #{summary}, #{originalTextNote}, #{verseByVerse}, #{historicalBackground}, #{writingBackground}, #{contextAnalysis}, #{keywordAnalysis}, #{canonicalPosition}, #{theologicalTheme}, #{truthForPeople}, #{practicalApplication}, #{referenceSources}, #{status}, #{aiModelName}, #{promptVersion}, NOW(), NOW())
+        VALUES(gen_random_uuid(), #{generationRecordId}, #{versionId}, #{referenceText}, #{sourceType}, #{summary}, #{originalTextNote}, #{verseByVerse}, #{historicalBackground}, #{writingBackground}, #{contextAnalysis}, #{keywordAnalysis}::jsonb, #{canonicalPosition}, #{theologicalTheme}, #{truthForPeople}, #{practicalApplication}, #{referenceSources}::jsonb, #{status}, #{aiModelName}, #{promptVersion}, NOW(), NOW())
     </insert>
 
     <update id="update">
         UPDATE exegesis_records
-        SET reference_text = #{referenceText}, keyword_analysis = #{keywordAnalysis}, reference_sources = #{referenceSources}, updated_at = NOW()
+        SET reference_text = #{referenceText}, keyword_analysis = #{keywordAnalysis}::jsonb, reference_sources = #{referenceSources}::jsonb, updated_at = NOW()
         WHERE id = #{id}
     </update>
 
