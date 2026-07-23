@@ -14,6 +14,7 @@ interface DailyThoughtResult {
   pastoralResponse: string;
   scriptures: ScriptureMatch[];
   divineWord: string;
+  hymn?: string;
 }
 
 export default function DailyThoughtPage() {
@@ -71,6 +72,7 @@ export default function DailyThoughtPage() {
         content: content.trim(),
         pastoralResponse: result.pastoralResponse,
         divineWord: result.divineWord,
+        hymn: result.hymn,
         scriptures: result.scriptures,
       });
       setSaved(true);
@@ -174,6 +176,16 @@ export default function DailyThoughtPage() {
               <h2 className="text-xl font-bold text-bible-dark mb-4">✨ 神可能想对你说</h2>
               <div className="text-lg text-bible-dark leading-relaxed font-medium whitespace-pre-wrap">
                 {result.divineWord}
+              </div>
+            </div>
+          )}
+
+          {/* 主题赞美诗歌 */}
+          {result.hymn && (
+            <div className="scripture-card bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200">
+              <h2 className="text-xl font-bold text-bible-dark mb-4">🎵 主题赞美诗歌</h2>
+              <div className="text-bible-text leading-relaxed whitespace-pre-wrap">
+                {result.hymn}
               </div>
             </div>
           )}

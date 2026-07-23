@@ -8,20 +8,21 @@
         <result column="content" property="content"/>
         <result column="pastoral_response" property="pastoralResponse"/>
         <result column="divine_word" property="divineWord"/>
+        <result column="hymn" property="hymn"/>
         <result column="scriptures" property="scriptures"/>
         <result column="created_at" property="createdAt"/>
     </resultMap>
 
     <insert id="insert">
-        INSERT INTO daily_thought_records(id, user_id, content, pastoral_response, divine_word, scriptures, created_at)
-        VALUES(#{id}, #{userId}, #{content}, #{pastoralResponse}, #{divineWord},
+        INSERT INTO daily_thought_records(id, user_id, content, pastoral_response, divine_word, hymn, scriptures, created_at)
+        VALUES(#{id}, #{userId}, #{content}, #{pastoralResponse}, #{divineWord}, #{hymn},
                #{scriptures}::jsonb, NOW())
     </insert>
 
     <select id="findByUserId" resultMap="DailyThoughtRecordResultMap">
         SELECT * FROM daily_thought_records
         WHERE user_id = #{userId}
-        ORDER BY created_at DESC
+        ORDER BY created_at ASC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 

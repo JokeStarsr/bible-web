@@ -24,6 +24,11 @@ public class DailyThoughtResponse {
      */
     private String divineWord;
 
+    /**
+     * 与用户主题相关的赞美诗歌推荐
+     */
+    private String hymn;
+
     @Data
     @Builder
     public static class ScriptureMatch {

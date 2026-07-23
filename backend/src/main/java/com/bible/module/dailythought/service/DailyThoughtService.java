@@ -74,7 +74,8 @@ public class DailyThoughtService {
                       "relevance": "说明这段经文与今日随想的关联，以及它如何回应用户的心境。"
                     }
                   ],
-                  "divineWord": "用第一人称\"神可能想对你说：\"的格式，总结一段简短的神的话语，给用户力量和盼望。100字左右。"
+                  "divineWord": "用第一人称\"神可能想对你说：\"的格式，总结一段简短的神的话语，给用户力量和盼望。100字左右。",
+                  "hymn": "推荐一首与用户主题相关的基督教赞美诗歌，格式为：歌名 - 一两句与主题最契合的歌词，或简短推荐理由。"
                 }
                 """, req.getContent(), scriptureContext);
 
@@ -97,12 +98,14 @@ public class DailyThoughtService {
 
         String pastoralResponse = textNode(root, "pastoralResponse");
         String divineWord = textNode(root, "divineWord");
+        String hymn = textNode(root, "hymn");
         List<DailyThoughtResponse.ScriptureMatch> scriptures = parseScriptures(root.path("scriptures"));
 
         return DailyThoughtResponse.builder()
                 .pastoralResponse(pastoralResponse)
                 .scriptures(scriptures)
                 .divineWord(divineWord)
+                .hymn(hymn)
                 .build();
     }
 
@@ -122,6 +125,7 @@ public class DailyThoughtService {
         record.setContent(req.getContent());
         record.setPastoralResponse(req.getPastoralResponse());
         record.setDivineWord(req.getDivineWord());
+        record.setHymn(req.getHymn());
         record.setScriptures(scripturesJson);
         record.setCreatedAt(LocalDateTime.now());
 
@@ -139,6 +143,7 @@ public class DailyThoughtService {
                     .content(record.getContent())
                     .pastoralResponse(record.getPastoralResponse())
                     .divineWord(record.getDivineWord())
+                    .hymn(record.getHymn())
                     .scriptures(scriptures)
                     .createdAt(record.getCreatedAt())
                     .build());

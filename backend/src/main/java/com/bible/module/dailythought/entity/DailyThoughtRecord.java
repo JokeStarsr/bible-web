@@ -17,6 +17,7 @@ public class DailyThoughtRecord {
     private String content;
     private String pastoralResponse;
     private String divineWord;
+    private String hymn;
     private String scriptures;
     private LocalDateTime createdAt;
 }

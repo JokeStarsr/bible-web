@@ -18,6 +18,8 @@ public class SaveDailyThoughtRequest {
 
     private String divineWord;
 
+    private String hymn;
+
     @NotNull(message = "经文列表不能为空")
     private List<DailyThoughtResponse.ScriptureMatch> scriptures;
 }

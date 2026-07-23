@@ -78,6 +78,7 @@ export const dailyThoughtApi = {
     content: string;
     pastoralResponse?: string;
     divineWord?: string;
+    hymn?: string;
     scriptures: { reference: string; text: string; relevance: string }[];
   }) => api.post('/daily-thought/save', data),
 

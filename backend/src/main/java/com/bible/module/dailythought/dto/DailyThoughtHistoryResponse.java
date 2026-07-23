@@ -15,6 +15,7 @@ public class DailyThoughtHistoryResponse {
     private String content;
     private String pastoralResponse;
     private String divineWord;
+    private String hymn;
     private List<DailyThoughtResponse.ScriptureMatch> scriptures;
     private LocalDateTime createdAt;
 }
