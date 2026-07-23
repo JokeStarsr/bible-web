@@ -50,6 +50,10 @@ public class PraiseController {
         }
 
         String audioUrl = track.getAudioUrl();
+        if (audioUrl == null || audioUrl.isBlank()) {
+            log.warn("该曲目无站内音频，trackId={}", trackId);
+            return ResponseEntity.status(404).build();
+        }
         if (!isAllowedAudioUrl(audioUrl)) {
             log.warn("拒绝代理非允许域名音频，trackId={}", trackId);
             return ResponseEntity.status(403).build();

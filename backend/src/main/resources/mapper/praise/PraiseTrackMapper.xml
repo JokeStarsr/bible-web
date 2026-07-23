@@ -9,6 +9,8 @@
         <result column="cover_image_url" property="coverImageUrl"/>
         <result column="audio_url" property="audioUrl"/>
         <result column="duration_seconds" property="durationSeconds"/>
+        <result column="lyrics" property="lyrics"/>
+        <result column="external_url" property="externalUrl"/>
         <result column="source_type" property="sourceType"/>
         <result column="copyright_note" property="copyrightNote"/>
         <result column="status" property="status"/>
@@ -21,8 +23,8 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO praise_tracks(id, title, artist_name, cover_image_url, audio_url, duration_seconds, source_type, copyright_note, status, created_at, updated_at)
-        VALUES(COALESCE(#{id}, gen_random_uuid()), #{title}, #{artistName}, #{coverImageUrl}, #{audioUrl}, #{durationSeconds}, #{sourceType}, #{copyrightNote}, #{status}, NOW(), NOW())
+        INSERT INTO praise_tracks(id, title, artist_name, cover_image_url, audio_url, duration_seconds, lyrics, external_url, source_type, copyright_note, status, created_at, updated_at)
+        VALUES(COALESCE(#{id}, gen_random_uuid()), #{title}, #{artistName}, #{coverImageUrl}, #{audioUrl}, #{durationSeconds}, #{lyrics}, #{externalUrl}, #{sourceType}, #{copyrightNote}, #{status}, NOW(), NOW())
     </insert>
 
     <update id="update">
@@ -32,6 +34,8 @@
             cover_image_url = #{coverImageUrl},
             audio_url = #{audioUrl},
             duration_seconds = #{durationSeconds},
+            lyrics = #{lyrics},
+            external_url = #{externalUrl},
             source_type = #{sourceType},
             copyright_note = #{copyrightNote},
             status = #{status},

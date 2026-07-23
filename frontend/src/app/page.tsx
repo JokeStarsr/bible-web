@@ -32,8 +32,11 @@ interface PraiseTrack {
   title: string;
   artistName: string;
   coverImageUrl: string | null;
-  audioUrl: string;
+  audioUrl?: string;
   durationSeconds: number;
+  lyrics?: string;
+  externalUrl?: string;
+  sourceType?: string;
 }
 
 export default function HomePage() {
@@ -59,15 +62,21 @@ export default function HomePage() {
   const [duration, setDuration] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 切换歌曲后自动加载并播放（通过后端代理，避免外联音频跨域/加载失败）
+  // 切换歌曲后自动加载并播放（仅对本地可播放音频；外链曲目只展示信息）
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !praiseTrack) return;
+    setCurrentTime(0);
+    setDuration(praiseTrack.durationSeconds || 0);
+    setIsPlaying(false);
+    if (praiseTrack.sourceType === 'external_link' || !praiseTrack.audioUrl) {
+      audio.pause();
+      audio.removeAttribute('src');
+      return;
+    }
     audio.pause();
     audio.src = `/api/v1/praise/stream/${praiseTrack.id}`;
     audio.load();
-    setCurrentTime(0);
-    setDuration(praiseTrack.durationSeconds || 0);
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise
@@ -488,44 +497,68 @@ export default function HomePage() {
               className="hidden"
             />
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={togglePlay}
-                  className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white flex items-center justify-center hover:from-amber-600 hover:to-yellow-600 transform hover:scale-110 active:scale-95 transition-all duration-200 shadow-md flex-shrink-0"
+            {praiseTrack.sourceType === 'external_link' || !praiseTrack.audioUrl ? (
+              <div className="space-y-4">
+                <p className="text-xs text-amber-700 bg-amber-50 rounded-lg py-2 px-3 text-center">
+                  该曲目未提供站内音频，点击下方按钮前往官方平台收听
+                </p>
+                {praiseTrack.lyrics && (
+                  <div className="max-h-48 overflow-y-auto text-sm text-bible-dark whitespace-pre-line bg-amber-50/50 rounded-lg p-4 leading-relaxed">
+                    {praiseTrack.lyrics}
+                  </div>
+                )}
+                <a
+                  href={praiseTrack.externalUrl || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold rounded-full shadow-md hover:shadow-lg hover:from-rose-600 hover:to-pink-600 transform hover:scale-105 active:scale-95 transition-all duration-200"
                 >
-                  {isPlaying ? (
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <rect x="6" y="4" width="4" height="16" rx="1" />
-                      <rect x="14" y="4" width="4" height="16" rx="1" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  )}
-                </button>
-                <div className="flex-1">
-                  <input
-                    type="range"
-                    min={0}
-                    max={duration || 1}
-                    step={0.1}
-                    value={currentTime}
-                    onMouseDown={handleSeekStart}
-                    onTouchStart={handleSeekStart}
-                    onChange={handleSeekChange}
-                    onMouseUp={handleSeekEnd}
-                    onTouchEnd={handleSeekEnd}
-                    className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-600"
-                  />
-                  <div className="flex justify-between text-xs text-bible-muted mt-1">
-                    <span>{formatDuration(currentTime)}</span>
-                    <span>{formatDuration(duration || praiseTrack.durationSeconds)}</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                  </svg>
+                  去官方平台收听 / 查看歌词
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={togglePlay}
+                    className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white flex items-center justify-center hover:from-amber-600 hover:to-yellow-600 transform hover:scale-110 active:scale-95 transition-all duration-200 shadow-md flex-shrink-0"
+                  >
+                    {isPlaying ? (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </button>
+                  <div className="flex-1">
+                    <input
+                      type="range"
+                      min={0}
+                      max={duration || 1}
+                      step={0.1}
+                      value={currentTime}
+                      onMouseDown={handleSeekStart}
+                      onTouchStart={handleSeekStart}
+                      onChange={handleSeekChange}
+                      onMouseUp={handleSeekEnd}
+                      onTouchEnd={handleSeekEnd}
+                      className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-600"
+                    />
+                    <div className="flex justify-between text-xs text-bible-muted mt-1">
+                      <span>{formatDuration(currentTime)}</span>
+                      <span>{formatDuration(duration || praiseTrack.durationSeconds)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

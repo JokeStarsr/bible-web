@@ -18,6 +18,8 @@ public class PraiseTrack {
     private String coverImageUrl;
     private String audioUrl;
     private Integer durationSeconds;
+    private String lyrics;
+    private String externalUrl;
     private String sourceType;
     private String copyrightNote;
     private String status;
