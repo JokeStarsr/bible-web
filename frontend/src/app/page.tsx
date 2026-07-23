@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import api, { reflectionApi, praiseApi } from '@/services/api';
 
 const generationOptions = [
@@ -36,10 +37,19 @@ interface PraiseTrack {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [scripture, setScripture] = useState<ScriptureData | null>(null);
   const [exegesis, setExegesis] = useState<any>(null);
   const [error, setError] = useState('');
+
+  // 客户端登录保护：未登录则跳转到登录页
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.replace('/login');
+    }
+  }, [router]);
 
   // 灵修记录
   const [reflectionTitle, setReflectionTitle] = useState('');

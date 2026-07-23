@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 
 interface ScriptureMatch {
@@ -16,10 +17,19 @@ interface DailyThoughtResult {
 }
 
 export default function DailyThoughtPage() {
+  const router = useRouter();
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DailyThoughtResult | null>(null);
   const [error, setError] = useState('');
+
+  // 客户端登录保护：未登录则跳转到登录页
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.replace('/login');
+    }
+  }, [router]);
 
   const handleGenerate = async () => {
     if (!content.trim()) return;
