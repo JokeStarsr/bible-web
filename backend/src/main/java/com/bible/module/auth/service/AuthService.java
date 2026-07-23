@@ -81,12 +81,10 @@ public class AuthService {
             }
             String code = generateCode();
             boolean sent = mailService.sendVerificationCode(email, code);
-            if (!sent) {
-                throw new BusinessException("MAIL_SEND_FAILED", "验证码邮件发送失败，请稍后重试或联系管理员");
-            }
             verificationCodeService.saveRegisterCode(email, code);
             verificationCodeService.markCodeSent(email);
-            return null;
+            // 邮件发送失败时（如 SMTP 未配置）直接返回验证码，前端会自动填入
+            return sent ? null : code;
         }
     }
 
@@ -109,12 +107,10 @@ public class AuthService {
             }
             String code = generateCode();
             boolean sent = mailService.sendPasswordResetCode(email, code);
-            if (!sent) {
-                throw new BusinessException("MAIL_SEND_FAILED", "验证码邮件发送失败，请稍后重试或联系管理员");
-            }
             verificationCodeService.saveResetCode(email, code);
             verificationCodeService.markCodeSent(email);
-            return null;
+            // 邮件发送失败时（如 SMTP 未配置）直接返回验证码
+            return sent ? null : code;
         }
     }
 

@@ -11,17 +11,22 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', verificationCode: '' });
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
 
   const sendCode = async () => {
     try {
+      setError('');
+      setInfo('');
       const res = await axios.post(`${API_BASE}/auth/send-register-code`, { email: form.email });
-      // 开发环境下，后端会直接返回验证码，自动填入
+      // 开发环境或邮件服务未配置时，后端会直接返回验证码，自动填入
       if (res.data?.data) {
         setForm(prev => ({ ...prev, verificationCode: res.data.data }));
+        setInfo(res.data?.message || '验证码已自动填入，请查看上方输入框');
+      } else {
+        setInfo('验证码已发送至您的邮箱，请注意查收');
       }
       setCodeSent(true);
-      setError('');
     } catch (err: any) {
       setError(err.response?.data?.message || '发送验证码失败');
     }
@@ -70,6 +75,7 @@ export default function RegisterPage() {
           <label className="block text-sm text-bible-muted mb-1">确认密码</label>
           <input type="password" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} required />
         </div>
+        {info && <div className="text-amber-600 text-sm">{info}</div>}
         {error && <div className="text-red-500 text-sm">{error}</div>}
         <button type="submit" className="btn-primary w-full" disabled={loading}>
           {loading ? '注册中...' : '注册'}

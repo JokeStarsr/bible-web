@@ -20,6 +20,9 @@ public class AuthController {
     @PostMapping("/send-register-code")
     public ApiResponse<String> sendRegisterCode(@Valid @RequestBody SendCodeRequest req) {
         String code = authService.sendRegisterCode(req.getEmail());
+        if (code != null) {
+            return ApiResponse.ok("邮件服务未配置，验证码已直接显示在页面", code);
+        }
         return ApiResponse.ok("验证码已发送", code);
     }
 
@@ -55,6 +58,9 @@ public class AuthController {
     @PostMapping("/send-reset-code")
     public ApiResponse<String> sendResetCode(@Valid @RequestBody SendCodeRequest req) {
         String code = authService.sendResetCode(req.getEmail());
+        if (code != null) {
+            return ApiResponse.ok("邮件服务未配置，验证码已直接显示在页面", code);
+        }
         return ApiResponse.ok("验证码已发送", code);
     }
 
