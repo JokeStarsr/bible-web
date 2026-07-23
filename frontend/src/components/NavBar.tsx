@@ -42,13 +42,20 @@ export default function NavBar() {
     }
   };
 
+  const clearAuthCookies = () => {
+    if (typeof window === 'undefined') return;
+    document.cookie = 'token=; path=/; max-age=0';
+    document.cookie = 'refreshToken=; path=/; max-age=0';
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userInfo');
+    clearAuthCookies();
     setIsLoggedIn(false);
     setMenuOpen(false);
-    router.push('/');
+    router.push('/login');
   };
 
   return (
