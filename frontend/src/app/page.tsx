@@ -59,12 +59,16 @@ export default function HomePage() {
   const [duration, setDuration] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 切换歌曲后自动加载并播放
+  const getProxyAudioUrl = (url: string) => {
+    return `/api/v1/praise/stream?url=${encodeURIComponent(url)}`;
+  };
+
+  // 切换歌曲后自动加载并播放（通过后端代理，避免外联音频跨域/加载失败）
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !praiseTrack) return;
     audio.pause();
-    audio.src = praiseTrack.audioUrl;
+    audio.src = getProxyAudioUrl(praiseTrack.audioUrl);
     audio.load();
     setCurrentTime(0);
     setDuration(praiseTrack.durationSeconds || 0);
@@ -474,9 +478,7 @@ export default function HomePage() {
 
             <audio
               ref={audioRef}
-              src={praiseTrack.audioUrl}
               preload="auto"
-              crossOrigin="anonymous"
               onCanPlay={handleAudioCanPlay}
               onLoadedMetadata={handleLoadedMetadata}
               onTimeUpdate={handleTimeUpdate}

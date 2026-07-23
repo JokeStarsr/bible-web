@@ -49,7 +49,8 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET,
                         "/api/v1/health",
-                        "/api/v1/praise/random"
+                        "/api/v1/praise/random",
+                        "/api/v1/praise/stream"
                 ).permitAll()
                 // 管理后台仅管理员
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
