@@ -72,6 +72,7 @@ export default function HomePage() {
     if (praiseTrack.sourceType === 'external_link' || !praiseTrack.audioUrl) {
       audio.pause();
       audio.removeAttribute('src');
+      audio.load();
       return;
     }
     audio.pause();
@@ -86,6 +87,11 @@ export default function HomePage() {
           setIsPlaying(false);
         });
     }
+    return () => {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+    };
   }, [praiseTrack]);
 
   // 联系牧者
@@ -490,22 +496,6 @@ export default function HomePage() {
               <p className="text-sm text-bible-muted mt-1">{praiseTrack.artistName}</p>
             </div>
 
-            <audio
-              ref={audioRef}
-              preload="auto"
-              onCanPlay={handleAudioCanPlay}
-              onLoadedMetadata={handleLoadedMetadata}
-              onTimeUpdate={handleTimeUpdate}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={() => setIsPlaying(false)}
-              onError={() => {
-                setError('音频加载失败，请尝试其他歌曲');
-                setIsPlaying(false);
-              }}
-              className="hidden"
-            />
-
             {praiseTrack.sourceType === 'external_link' || !praiseTrack.audioUrl ? (
               <div className="space-y-4">
                 <p className="text-xs text-amber-700 bg-amber-50 rounded-lg py-2 px-3 text-center">
@@ -530,6 +520,21 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="space-y-3">
+                <audio
+                  ref={audioRef}
+                  preload="auto"
+                  onCanPlay={handleAudioCanPlay}
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onTimeUpdate={handleTimeUpdate}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onEnded={() => setIsPlaying(false)}
+                  onError={() => {
+                    setError('音频加载失败，请尝试其他歌曲');
+                    setIsPlaying(false);
+                  }}
+                  className="hidden"
+                />
                 <div className="flex items-center gap-3">
                   <button
                     onClick={togglePlay}
