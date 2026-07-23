@@ -17,7 +17,13 @@ public class MailService {
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username:}")
+    private String username;
+
+    @Value("${spring.mail.from:${spring.mail.username:}}")
     private String from;
+
+    @Value("${app.mail.pastor-to:852341467@qq.com}")
+    private String pastorTo;
 
     private boolean mailConfigured = false;
 
@@ -27,11 +33,11 @@ public class MailService {
 
     @PostConstruct
     public void init() {
-        mailConfigured = StringUtils.hasText(from);
+        mailConfigured = StringUtils.hasText(username) && StringUtils.hasText(from);
         if (mailConfigured) {
-            log.info("邮件服务已配置，发件人: {}", from);
+            log.info("邮件服务已配置，SMTP 账号: {}，发件人: {}", username, from);
         } else {
-            log.warn("邮件服务未配置：spring.mail.username 为空，邮件发送将失败");
+            log.warn("邮件服务未配置：spring.mail.username 或 spring.mail.from 为空，邮件发送将失败");
         }
     }
 
@@ -94,7 +100,7 @@ public class MailService {
         }
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
-        message.setTo("852341467@qq.com");
+        message.setTo(pastorTo);
         message.setSubject("圣经灵修 - 有人提交联系牧者信息");
         message.setText(content);
         try {

@@ -35,12 +35,15 @@ mybatis:
     port: ${MAIL_PORT:587}
     username: ${MAIL_USER:}
     password: ${MAIL_PASS:}
+    from: ${MAIL_FROM:${MAIL_USER:}}
     properties:
       mail:
         smtp:
           auth: true
           starttls:
-            enable: true
+            enable: ${MAIL_STARTTLS_ENABLE:true}
+          ssl:
+            enable: ${MAIL_SSL_ENABLE:false}
 
 # ==================== 应用配置 ====================
 app:
@@ -51,6 +54,8 @@ app:
   verification-code:
     expire-seconds: 300
     send-interval-seconds: 60
+  mail:
+    pastor-to: ${MAIL_PASTOR_TO:852341467@qq.com}
   private-message:
     unlock-rounds: 20
   llm:
