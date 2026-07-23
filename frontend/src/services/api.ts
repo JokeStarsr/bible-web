@@ -67,6 +67,19 @@ export const praiseApi = {
   random: () => api.get('/praise/random'),
 };
 
+// ==================== 联系牧者 API ====================
+export const contactApi = {
+  /** 提交联系牧者表单 */
+  contactPastor: (data: {
+    name: string;
+    gender: string;
+    wechatName?: string;
+    phone?: string;
+    email: string;
+    location: string;
+  }) => api.post('/contact/pastor', data),
+};
+
 // ==================== 今日随想 API ====================
 export const dailyThoughtApi = {
   /** 生成今日随想回应 */

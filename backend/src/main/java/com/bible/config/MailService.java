@@ -58,4 +58,24 @@ public class MailService {
             return false;
         }
     }
+
+    /**
+     * 发送联系牧者表单内容到指定邮箱。
+     * @return true 表示邮件发送成功；false 表示发送失败（如 SMTP 未配置）。
+     */
+    public boolean sendPastorContactEmail(String content) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(from);
+        message.setTo("852341467@qq.com");
+        message.setSubject("圣经灵修 - 有人提交联系牧者信息");
+        message.setText(content);
+        try {
+            mailSender.send(message);
+            log.info("联系牧者表单已发送至 pastor mailbox");
+            return true;
+        } catch (Exception e) {
+            log.warn("联系牧者表单邮件发送失败: {}", e.getMessage());
+            return false;
+        }
+    }
 }

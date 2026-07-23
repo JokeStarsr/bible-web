@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api, { reflectionApi, praiseApi } from '@/services/api';
+import api, { reflectionApi, praiseApi, contactApi } from '@/services/api';
 
 const generationOptions = [
   { type: 'verse_1', label: '1节' },
@@ -56,6 +56,19 @@ export default function HomePage() {
   const [audioKey, setAudioKey] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // 联系牧者
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    gender: '男',
+    wechatName: '',
+    phone: '',
+    email: '',
+    location: '',
+  });
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState('');
 
   // 客户端登录保护：未登录则清除可能残留的 Cookie 并跳转到登录页
   useEffect(() => {
@@ -132,6 +145,31 @@ export default function HomePage() {
     }
   };
 
+  // 提交联系牧者表单
+  const submitContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (contactSubmitting) return;
+    setContactSubmitting(true);
+    setError('');
+    setContactSuccess('');
+    try {
+      const res = await contactApi.contactPastor({
+        name: contactForm.name.trim(),
+        gender: contactForm.gender,
+        wechatName: contactForm.wechatName.trim() || undefined,
+        phone: contactForm.phone.trim() || undefined,
+        email: contactForm.email.trim(),
+        location: contactForm.location.trim(),
+      });
+      setContactSuccess(res.data?.message || '您的信息已提交至刘牧师处，晚些时候会跟您联系，请保持以上通讯方式畅通。');
+      setContactForm({ name: '', gender: '男', wechatName: '', phone: '', email: '', location: '' });
+    } catch (err: any) {
+      setError(err.response?.data?.message || '提交失败，请稍后再试');
+    } finally {
+      setContactSubmitting(false);
+    }
+  };
+
   // 随机播放赞美歌曲
   const playRandomPraise = async () => {
     setPraiseLoading(true);
@@ -179,8 +217,8 @@ export default function HomePage() {
         <p className="text-bible-muted text-lg">随机生成经文，安静默想，深度解经</p>
       </div>
 
-      {/* 今日随想入口 */}
-      <div className="text-center">
+      {/* 今日随想入口与联系牧者 */}
+      <div className="flex flex-wrap justify-center gap-4">
         <a
           href="/daily-thought"
           className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-bible-gold to-amber-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:from-amber-600 hover:to-amber-500 transform hover:scale-105 active:scale-95 transition-all duration-200"
@@ -190,6 +228,19 @@ export default function HomePage() {
           </svg>
           今日随想
         </a>
+        <button
+          onClick={() => {
+            setShowContactModal(true);
+            setContactSuccess('');
+            setError('');
+          }}
+          className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transform hover:scale-105 active:scale-95 transition-all duration-200"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          联系牧者
+        </button>
       </div>
 
       {/* 生成按钮组 */}
@@ -407,6 +458,135 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* 联系牧者弹窗 */}
+      {showContactModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-bible-dark">联系牧者</h2>
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="text-bible-muted hover:text-bible-dark"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {contactSuccess ? (
+                <div className="text-center py-6 space-y-4">
+                  <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-green-700 font-medium">{contactSuccess}</p>
+                  <button
+                    onClick={() => {
+                      setShowContactModal(false);
+                      setContactSuccess('');
+                    }}
+                    className="btn-primary"
+                  >
+                    好的
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={submitContact} className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-bible-muted mb-1">姓名（可化名）</label>
+                    <input
+                      type="text"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"
+                      placeholder="请输入姓名或化名"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-bible-muted mb-1">性别</label>
+                    <select
+                      value={contactForm.gender}
+                      onChange={(e) => setContactForm({ ...contactForm, gender: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="男">男</option>
+                      <option value="女">女</option>
+                      <option value="其他">其他</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-bible-muted mb-1">微信名</label>
+                    <input
+                      type="text"
+                      value={contactForm.wechatName}
+                      onChange={(e) => setContactForm({ ...contactForm, wechatName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"
+                      placeholder="请输入微信名"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-bible-muted mb-1">手机号</label>
+                    <input
+                      type="tel"
+                      value={contactForm.phone}
+                      onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"
+                      placeholder="请输入手机号"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-bible-muted mb-1">邮箱</label>
+                    <input
+                      type="email"
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"
+                      placeholder="请输入邮箱"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-bible-muted mb-1">当前居住地</label>
+                    <input
+                      type="text"
+                      value={contactForm.location}
+                      onChange={(e) => setContactForm({ ...contactForm, location: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"
+                      placeholder="请输入当前居住地"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="text-red-500 text-sm bg-red-50 rounded-lg py-2 px-3">{error}</div>
+                  )}
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={contactSubmitting}
+                      className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-lg shadow hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      {contactSubmitting ? '提交中...' : '提交'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
