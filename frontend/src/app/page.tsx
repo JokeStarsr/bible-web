@@ -478,6 +478,8 @@ export default function HomePage() {
               onCanPlay={handleAudioCanPlay}
               onLoadedMetadata={handleLoadedMetadata}
               onTimeUpdate={handleTimeUpdate}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
               onEnded={() => setIsPlaying(false)}
               onError={() => {
                 setError('音频加载失败，请尝试其他歌曲');
