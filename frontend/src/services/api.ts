@@ -18,14 +18,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+function clearAuth() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userInfo');
+  document.cookie = 'token=; path=/; max-age=0';
+  document.cookie = 'refreshToken=; path=/; max-age=0';
+  window.location.href = '/login';
+}
+
 // 响应拦截器：处理 401
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      window.location.href = '/login';
+    if (err.response?.status === 401) {
+      clearAuth();
     }
     return Promise.reject(err);
   }

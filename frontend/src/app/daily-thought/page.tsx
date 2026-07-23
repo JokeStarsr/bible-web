@@ -18,6 +18,7 @@ interface DailyThoughtResult {
 
 export default function DailyThoughtPage() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DailyThoughtResult | null>(null);
@@ -28,8 +29,18 @@ export default function DailyThoughtPage() {
     const token = localStorage.getItem('token');
     if (!token) {
       router.replace('/login');
+    } else {
+      setCheckingAuth(false);
     }
   }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-bible-gold text-lg animate-pulse">正在确认登录状态...</div>
+      </div>
+    );
+  }
 
   const handleGenerate = async () => {
     if (!content.trim()) return;
@@ -48,6 +59,18 @@ export default function DailyThoughtPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
+      <div className="pt-4">
+        <button
+          onClick={() => router.push('/')}
+          className="inline-flex items-center gap-1 text-bible-muted hover:text-bible-gold transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          返回主页面
+        </button>
+      </div>
+
       <div className="text-center py-6">
         <h1 className="text-3xl font-bold text-bible-dark mb-3">今日随想</h1>
         <p className="text-bible-muted">写下今天的感悟、挣扎或感恩，让神的话语回应你的心</p>

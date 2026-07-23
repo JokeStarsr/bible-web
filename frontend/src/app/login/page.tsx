@@ -17,8 +17,14 @@ export default function LoginPage() {
     setError('');
     try {
       const res = await axios.post(`${API_BASE}/auth/login`, { email, password });
-      localStorage.setItem('token', res.data.data.accessToken);
-      localStorage.setItem('refreshToken', res.data.data.refreshToken);
+      const token = res.data.data.accessToken;
+      const refreshToken = res.data.data.refreshToken;
+      // 30 分钟登录缓存，与浏览器 Cookie 保持一致
+      const maxAge = 30 * 60;
+      document.cookie = `token=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `refreshToken=${encodeURIComponent(refreshToken)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      localStorage.setItem('token', token);
+      localStorage.setItem('refreshToken', refreshToken);
       if (res.data.data.userInfo) {
         localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo));
       }

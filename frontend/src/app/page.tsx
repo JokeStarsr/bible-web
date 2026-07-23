@@ -38,6 +38,7 @@ interface PraiseTrack {
 
 export default function HomePage() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [loading, setLoading] = useState(false);
   const [scripture, setScripture] = useState<ScriptureData | null>(null);
   const [exegesis, setExegesis] = useState<any>(null);
@@ -48,8 +49,18 @@ export default function HomePage() {
     const token = localStorage.getItem('token');
     if (!token) {
       router.replace('/login');
+    } else {
+      setCheckingAuth(false);
     }
   }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-bible-gold text-lg animate-pulse">正在确认登录状态...</div>
+      </div>
+    );
+  }
 
   // 灵修记录
   const [reflectionTitle, setReflectionTitle] = useState('');
