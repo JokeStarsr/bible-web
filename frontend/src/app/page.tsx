@@ -44,6 +44,18 @@ export default function HomePage() {
   const [exegesis, setExegesis] = useState<any>(null);
   const [error, setError] = useState('');
 
+  // 灵修记录
+  const [reflectionTitle, setReflectionTitle] = useState('');
+  const [reflectionContent, setReflectionContent] = useState('');
+  const [reflectionSaving, setReflectionSaving] = useState(false);
+  const [reflectionSaved, setReflectionSaved] = useState(false);
+
+  // 赞美歌曲
+  const [praiseTrack, setPraiseTrack] = useState<PraiseTrack | null>(null);
+  const [praiseLoading, setPraiseLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   // 客户端登录保护：未登录则跳转到登录页
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -61,18 +73,6 @@ export default function HomePage() {
       </div>
     );
   }
-
-  // 灵修记录
-  const [reflectionTitle, setReflectionTitle] = useState('');
-  const [reflectionContent, setReflectionContent] = useState('');
-  const [reflectionSaving, setReflectionSaving] = useState(false);
-  const [reflectionSaved, setReflectionSaved] = useState(false);
-
-  // 赞美歌曲
-  const [praiseTrack, setPraiseTrack] = useState<PraiseTrack | null>(null);
-  const [praiseLoading, setPraiseLoading] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const generateScripture = async (type: string) => {
     setLoading(true);
