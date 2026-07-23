@@ -47,7 +47,7 @@ public class SecurityConfig {
                         "/api/v1/auth/send-reset-code",
                         "/api/v1/auth/reset-password"
                 ).permitAll()
-                .requestMatchers(HttpMethod.GET, HttpMethod.HEAD,
+                .requestMatchers(HttpMethod.GET,
                         "/api/v1/health",
                         "/api/v1/praise/random",
                         "/api/v1/praise/stream/**"
