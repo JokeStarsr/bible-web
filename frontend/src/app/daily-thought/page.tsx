@@ -24,15 +24,17 @@ export default function DailyThoughtPage() {
   const [result, setResult] = useState<DailyThoughtResult | null>(null);
   const [error, setError] = useState('');
 
-  // 客户端登录保护：未登录则跳转到登录页
+  // 客户端登录保护：未登录则清除可能残留的 Cookie 并跳转到登录页
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.replace('/login');
+      document.cookie = 'token=; path=/; max-age=0';
+      document.cookie = 'refreshToken=; path=/; max-age=0';
+      window.location.href = '/login';
     } else {
       setCheckingAuth(false);
     }
-  }, [router]);
+  }, []);
 
   if (checkingAuth) {
     return (
