@@ -53,12 +53,31 @@ export default function HomePage() {
   // 赞美歌曲
   const [praiseTrack, setPraiseTrack] = useState<PraiseTrack | null>(null);
   const [praiseLoading, setPraiseLoading] = useState(false);
-  const [audioKey, setAudioKey] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  // 切换歌曲后自动加载并播放
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !praiseTrack) return;
+    audio.pause();
+    audio.src = praiseTrack.audioUrl;
+    audio.load();
+    setCurrentTime(0);
+    setDuration(praiseTrack.durationSeconds || 0);
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          // 浏览器可能阻止自动播放，等待用户点击
+          setIsPlaying(false);
+        });
+    }
+  }, [praiseTrack]);
 
   // 联系牧者
   const [showContactModal, setShowContactModal] = useState(false);
@@ -181,10 +200,6 @@ export default function HomePage() {
       const res = await praiseApi.random();
       const track = res.data.data;
       setPraiseTrack(track);
-      setAudioKey(prev => prev + 1); // 强制重新挂载audio元素
-      setIsPlaying(true);
-      setCurrentTime(0);
-      setDuration(track.durationSeconds || 0);
     } catch (err: any) {
       setError(err.response?.data?.message || '获取赞美歌曲失败');
     } finally {
@@ -195,9 +210,6 @@ export default function HomePage() {
   const handleAudioCanPlay = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration || 0);
-      if (isPlaying) {
-        audioRef.current.play().catch(() => {});
-      }
     }
   };
 
@@ -461,10 +473,10 @@ export default function HomePage() {
             </div>
 
             <audio
-              key={audioKey}
               ref={audioRef}
               src={praiseTrack.audioUrl}
               preload="auto"
+              crossOrigin="anonymous"
               onCanPlay={handleAudioCanPlay}
               onLoadedMetadata={handleLoadedMetadata}
               onTimeUpdate={handleTimeUpdate}
