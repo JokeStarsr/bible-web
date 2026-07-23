@@ -2,7 +2,7 @@ import sys
 import paramiko
 
 host = "115.159.221.62"
-port = 8888
+port = 22
 user = "root"
 with open("/workspace/.server_pass", "r") as f:
     password = f.read().strip()
