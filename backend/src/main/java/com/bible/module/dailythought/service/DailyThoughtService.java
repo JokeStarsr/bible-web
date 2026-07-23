@@ -91,8 +91,8 @@ public class DailyThoughtService {
         try {
             root = objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
-            log.error("今日随想大模型返回 JSON 解析失败: {}", json, e);
-            throw new BusinessException("LLM_RESPONSE_INVALID", "大模型返回格式异常");
+            log.error("今日随想大模型返回 JSON 解析失败，原始内容: {}, 提取后: {}", llmResult, json, e);
+            throw new BusinessException("LLM_RESPONSE_INVALID", "大模型返回格式异常，请重试");
         }
 
         String pastoralResponse = textNode(root, "pastoralResponse");

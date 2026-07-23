@@ -73,13 +73,16 @@ public class LlmService {
     }
 
     /**
-     * 从模型返回的文本中提取 JSON 对象（支持 markdown 代码块包裹）
+     * 从模型返回的文本中提取 JSON 对象。
+     * 兼容：纯 JSON、markdown 代码块、以及 JSON 前后带有解释文字的情况。
      */
     public String extractJson(String text) {
         if (text == null || text.isBlank()) {
             return null;
         }
         String trimmed = text.trim();
+
+        // 1. 优先去掉整个字符串首尾 markdown 标记
         if (trimmed.startsWith("```json")) {
             trimmed = trimmed.substring(7);
         } else if (trimmed.startsWith("```")) {
@@ -88,6 +91,47 @@ public class LlmService {
         if (trimmed.endsWith("```")) {
             trimmed = trimmed.substring(0, trimmed.length() - 3);
         }
-        return trimmed.trim();
+        trimmed = trimmed.trim();
+
+        // 2. 如果去掉 markdown 后仍是合法 JSON，直接返回
+        try {
+            objectMapper.readTree(trimmed);
+            return trimmed;
+        } catch (Exception ignored) {
+            // 继续尝试从文本中定位 JSON 对象
+        }
+
+        // 3. 在文本中查找第一个 { 并匹配对应的 }
+        int start = trimmed.indexOf('{');
+        if (start < 0) {
+            return trimmed;
+        }
+        int depth = 0;
+        boolean inString = false;
+        boolean escape = false;
+        for (int i = start; i < trimmed.length(); i++) {
+            char c = trimmed.charAt(i);
+            if (inString) {
+                if (escape) {
+                    escape = false;
+                } else if (c == '\\') {
+                    escape = true;
+                } else if (c == '"') {
+                    inString = false;
+                }
+            } else {
+                if (c == '"') {
+                    inString = true;
+                } else if (c == '{') {
+                    depth++;
+                } else if (c == '}') {
+                    depth--;
+                    if (depth == 0) {
+                        return trimmed.substring(start, i + 1);
+                    }
+                }
+            }
+        }
+        return trimmed;
     }
 }
