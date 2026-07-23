@@ -78,6 +78,13 @@ export default function NavBar() {
               </button>
               {menuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-lg shadow-lg border border-bible-warm py-1 z-50">
+                  <a
+                    href="/profile"
+                    className="block w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    个人中心
+                  </a>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"

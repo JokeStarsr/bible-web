@@ -402,9 +402,18 @@ export default function HomePage() {
             写下你的感悟
           </h2>
           {reflectionSaved ? (
-            <div className="text-center text-green-600 bg-green-50 rounded-lg py-4">
+            <div className="text-center text-green-600 bg-green-50 rounded-lg py-4 space-y-2">
               <p className="font-semibold">感悟已保存 ✅</p>
-              <p className="text-sm mt-1">你可以在个人中心查看你的灵修记录</p>
+              <p className="text-sm">你可以在个人中心查看你的灵修记录</p>
+              <a
+                href="/profile"
+                className="inline-flex items-center gap-1 text-sm text-bible-gold hover:text-amber-600 font-semibold transition-colors"
+              >
+                前往个人中心
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
             </div>
           ) : (
             <div className="space-y-3">
