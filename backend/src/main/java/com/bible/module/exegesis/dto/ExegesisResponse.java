@@ -13,6 +13,8 @@ public class ExegesisResponse {
     private UUID exegesisRecordId;
     private String referenceText;
     private String summary;
+    private String originalTextNote;
+    private String verseByVerse;
     private String historicalBackground;
     private String writingBackground;
     private String contextAnalysis;

@@ -157,6 +157,19 @@ export default function HomePage() {
         <p className="text-bible-muted text-lg">随机生成经文，安静默想，深度解经</p>
       </div>
 
+      {/* 今日随想入口 */}
+      <div className="text-center">
+        <a
+          href="/daily-thought"
+          className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-bible-gold to-amber-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:from-amber-600 hover:to-amber-500 transform hover:scale-105 active:scale-95 transition-all duration-200"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          今日随想
+        </a>
+      </div>
+
       {/* 生成按钮组 */}
       <div className="flex flex-wrap justify-center gap-3">
         {generationOptions.map((opt) => (
@@ -219,6 +232,12 @@ export default function HomePage() {
           </h2>
 
           <Section title="经文摘要">{exegesis.summary}</Section>
+          {exegesis.originalTextNote && (
+            <Section title="原文翻译与注释">{exegesis.originalTextNote}</Section>
+          )}
+          {exegesis.verseByVerse && (
+            <Section title="逐节解析">{exegesis.verseByVerse}</Section>
+          )}
           <Section title="历史背景">{exegesis.historicalBackground}</Section>
           <Section title="写作背景">{exegesis.writingBackground}</Section>
           <Section title="上下文关系">{exegesis.contextAnalysis}</Section>

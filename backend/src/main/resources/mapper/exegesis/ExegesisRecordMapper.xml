@@ -9,6 +9,8 @@
         <result column="reference_text" property="referenceText"/>
         <result column="source_type" property="sourceType"/>
         <result column="summary" property="summary"/>
+        <result column="original_text_note" property="originalTextNote"/>
+        <result column="verse_by_verse" property="verseByVerse"/>
         <result column="historical_background" property="historicalBackground"/>
         <result column="writing_background" property="writingBackground"/>
         <result column="context_analysis" property="contextAnalysis"/>
@@ -40,8 +42,8 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO exegesis_records(id, generation_record_id, version_id, reference_text, source_type, summary, historical_background, writing_background, context_analysis, keyword_analysis, canonical_position, theological_theme, truth_for_people, practical_application, reference_sources, status, ai_model_name, prompt_version, created_at, updated_at)
-        VALUES(gen_random_uuid(), #{generationRecordId}, #{versionId}, #{referenceText}, #{sourceType}, #{summary}, #{historicalBackground}, #{writingBackground}, #{contextAnalysis}, #{keywordAnalysis}, #{canonicalPosition}, #{theologicalTheme}, #{truthForPeople}, #{practicalApplication}, #{referenceSources}, #{status}, #{aiModelName}, #{promptVersion}, NOW(), NOW())
+        INSERT INTO exegesis_records(id, generation_record_id, version_id, reference_text, source_type, summary, original_text_note, verse_by_verse, historical_background, writing_background, context_analysis, keyword_analysis, canonical_position, theological_theme, truth_for_people, practical_application, reference_sources, status, ai_model_name, prompt_version, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{generationRecordId}, #{versionId}, #{referenceText}, #{sourceType}, #{summary}, #{originalTextNote}, #{verseByVerse}, #{historicalBackground}, #{writingBackground}, #{contextAnalysis}, #{keywordAnalysis}, #{canonicalPosition}, #{theologicalTheme}, #{truthForPeople}, #{practicalApplication}, #{referenceSources}, #{status}, #{aiModelName}, #{promptVersion}, NOW(), NOW())
     </insert>
 
     <update id="update">

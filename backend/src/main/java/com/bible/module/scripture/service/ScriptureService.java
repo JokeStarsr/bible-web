@@ -42,27 +42,22 @@ public class ScriptureService {
 
         String type = req.getGenerationType();
 
-        // 随机打乱书卷顺序，尝试找到有足够经文的书卷（最多尝试10次）
-        List<BibleBook> shuffled = new ArrayList<>(books);
-        Collections.shuffle(shuffled, random);
-        int maxTries = shuffled.size();
-
-        for (int i = 0; i < maxTries; i++) {
-            BibleBook book = shuffled.get(i);
-            try {
-                if ("chapter_full".equals(type)) {
-                    int chapter = random.nextInt(book.getChapterCount()) + 1;
+        if ("chapter_full".equals(type)) {
+            // 随机打乱书卷顺序，尝试找到有完整章经文的书卷
+            List<BibleBook> shuffled = new ArrayList<>(books);
+            Collections.shuffle(shuffled, random);
+            for (BibleBook book : shuffled) {
+                int chapter = random.nextInt(book.getChapterCount()) + 1;
+                List<BibleVerse> verses = verseMapper.findByBookAndChapter(book.getId(), chapter);
+                if (!verses.isEmpty()) {
                     return generateChapter(userId, version, book, chapter);
-                } else {
-                    int verseCount = getVerseCount(type);
-                    return generateVerses(userId, version, book, verseCount, type);
                 }
-            } catch (BusinessException e) {
-                if (i == maxTries - 1) throw e;
-                // 该书卷经文不足，尝试下一卷
             }
+            throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "无可用的完整章节数据");
+        } else {
+            int verseCount = getVerseCount(type);
+            return generateVerses(userId, version, verseCount, type);
         }
-        throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "无可用的经文数据");
     }
 
     private GenerateScriptureResponse generateChapter(UUID userId, BibleVersion version,
@@ -82,81 +77,74 @@ public class ScriptureService {
     }
 
     private GenerateScriptureResponse generateVerses(UUID userId, BibleVersion version,
-                                                      BibleBook book, int count, String type) {
-        // 随机选择一个起始章节（1到该书的总章节数之间）
-        int startChapter = random.nextInt(book.getChapterCount()) + 1;
+                                                      int count, String type) {
+        // 构建全局经文池：按圣经书卷顺序 -> 章节号 -> 节号 排序
+        List<BibleBook> allBooks = bookMapper.findByVersionId(version.getId());
+        allBooks.sort(Comparator.comparingInt(BibleBook::getBookOrder));
 
-        // 从起始章节开始，按连续章节号(ch, ch+1, ch+2, ...)收集经文
-        // 如果某一章没有数据且不是起始章节，则停止收集（确保跨章连续性）
-        List<List<BibleVerse>> chapterVersesList = new ArrayList<>();
-        int totalFromStart = 0;
-        int currentChapter = startChapter;
-        while (totalFromStart < count && currentChapter <= book.getChapterCount()) {
-            List<BibleVerse> cv = verseMapper.findByBookAndChapter(book.getId(), currentChapter);
-            if (cv.isEmpty()) {
-                // 如果当前章节无数据，且已经收集了数据（不是起始章节），则无法继续
-                if (!chapterVersesList.isEmpty()) break;
-                // 起始章节无数据，尝试下一章
-                currentChapter++;
-                continue;
-            }
-            chapterVersesList.add(cv);
-            totalFromStart += cv.size();
-            currentChapter++;
-        }
-
-        if (chapterVersesList.isEmpty() || totalFromStart < count) {
-            throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "该书卷从该章节起经文不足" + count + "节");
-        }
-
-        // 在起始章节中随机选择起始节（确保后续有足够的连续经文）
-        List<BibleVerse> firstChapterVerses = chapterVersesList.get(0);
-        int versesFromFirstChapter = Math.min(firstChapterVerses.size(), count);
-        int maxStartOffset = firstChapterVerses.size() - versesFromFirstChapter;
-        int startOffset = maxStartOffset > 0 ? random.nextInt(maxStartOffset + 1) : 0;
-
-        // 确定实际起始章节（第一个有数据的章节）
-        int actualStartChapter = firstChapterVerses.get(0).getChapterNumber();
-
-        // 从 startOffset 开始收集连续经文
-        List<BibleVerse> selectedVerses = new ArrayList<>();
-        int collected = 0;
-        int startVerseNumber = firstChapterVerses.get(startOffset).getVerseNumber();
-        int endChapter = actualStartChapter;
-        int endVerseNumber = startVerseNumber;
-
-        // 从起始章节收集
-        for (int j = startOffset; j < firstChapterVerses.size() && collected < count; j++) {
-            selectedVerses.add(firstChapterVerses.get(j));
-            collected++;
-            endChapter = actualStartChapter;
-            endVerseNumber = firstChapterVerses.get(j).getVerseNumber();
-        }
-
-        // 从后续章节继续收集
-        for (int i = 1; i < chapterVersesList.size() && collected < count; i++) {
-            List<BibleVerse> cv = chapterVersesList.get(i);
-            for (BibleVerse v : cv) {
-                if (collected >= count) break;
-                selectedVerses.add(v);
-                collected++;
-                endChapter = v.getChapterNumber();
-                endVerseNumber = v.getVerseNumber();
+        List<BibleVerse> globalPool = new ArrayList<>();
+        for (BibleBook b : allBooks) {
+            List<Integer> chapters = verseMapper.findChaptersByBookId(b.getId());
+            for (int ch : chapters) {
+                List<BibleVerse> verses = verseMapper.findByBookAndChapter(b.getId(), ch);
+                globalPool.addAll(verses);
             }
         }
 
-        // 构建引用文本（使用实际起始章节，而非随机选择的章节号）
+        if (globalPool.isEmpty()) {
+            throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "圣经数据未就绪");
+        }
+
+        // 如果总经文数不足 count，返回全部可用经文
+        if (globalPool.size() <= count) {
+            return buildVersesResponse(userId, version, type, globalPool);
+        }
+
+        // 随机选择一个起始位置，连续取 count 节（允许跨章节、跨书卷循环）
+        int startIndex = random.nextInt(globalPool.size());
+        List<BibleVerse> selected = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            int idx = (startIndex + i) % globalPool.size();
+            selected.add(globalPool.get(idx));
+        }
+
+        return buildVersesResponse(userId, version, type, selected);
+    }
+
+    private GenerateScriptureResponse buildVersesResponse(UUID userId, BibleVersion version,
+                                                          String type, List<BibleVerse> verses) {
+        if (verses.isEmpty()) {
+            throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "未选到任何经文");
+        }
+
+        BibleVerse first = verses.get(0);
+        BibleVerse last = verses.get(verses.size() - 1);
+        BibleBook firstBook = bookMapper.findById(first.getBookId());
+        BibleBook lastBook = bookMapper.findById(last.getBookId());
+
         String referenceText;
-        if (actualStartChapter == endChapter) {
-            referenceText = String.format("%s %d:%d-%d",
-                    book.getBookNameZh(), actualStartChapter, startVerseNumber, endVerseNumber);
+        if (firstBook.getId().equals(lastBook.getId())) {
+            // 同一书卷
+            if (first.getChapterNumber() == last.getChapterNumber()) {
+                referenceText = String.format("%s %d:%d-%d",
+                        firstBook.getBookNameZh(), first.getChapterNumber(),
+                        first.getVerseNumber(), last.getVerseNumber());
+            } else {
+                referenceText = String.format("%s %d:%d-%d:%d",
+                        firstBook.getBookNameZh(), first.getChapterNumber(),
+                        first.getVerseNumber(), last.getChapterNumber(), last.getVerseNumber());
+            }
         } else {
-            referenceText = String.format("%s %d:%d-%d:%d",
-                    book.getBookNameZh(), actualStartChapter, startVerseNumber, endChapter, endVerseNumber);
+            // 跨书卷
+            referenceText = String.format("%s %d:%d - %s %d:%d",
+                    firstBook.getBookNameZh(), first.getChapterNumber(), first.getVerseNumber(),
+                    lastBook.getBookNameZh(), last.getChapterNumber(), last.getVerseNumber());
         }
 
-        return buildResponse(userId, version, book, actualStartChapter, startVerseNumber,
-                endChapter, endVerseNumber, type, referenceText, selectedVerses);
+        return buildResponse(userId, version, firstBook,
+                first.getChapterNumber(), first.getVerseNumber(),
+                last.getChapterNumber(), last.getVerseNumber(),
+                type, referenceText, verses);
     }
 
     private GenerateScriptureResponse buildResponse(UUID userId, BibleVersion version,

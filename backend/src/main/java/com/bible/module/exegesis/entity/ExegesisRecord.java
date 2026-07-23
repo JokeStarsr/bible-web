@@ -18,6 +18,8 @@ public class ExegesisRecord {
     private String referenceText;
     private String sourceType;
     private String summary;
+    private String originalTextNote;
+    private String verseByVerse;
     private String historicalBackground;
     private String writingBackground;
     private String contextAnalysis;
