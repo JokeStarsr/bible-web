@@ -53,6 +53,7 @@ export default function HomePage() {
   // 赞美歌曲
   const [praiseTrack, setPraiseTrack] = useState<PraiseTrack | null>(null);
   const [praiseLoading, setPraiseLoading] = useState(false);
+  const [audioKey, setAudioKey] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -130,8 +131,6 @@ export default function HomePage() {
   };
 
   // 随机播放赞美歌曲
-  const [audioKey, setAudioKey] = useState(0);
-
   const playRandomPraise = async () => {
     setPraiseLoading(true);
     setError('');
