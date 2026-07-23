@@ -56,6 +56,9 @@ export default function HomePage() {
   const [audioKey, setAudioKey] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // 联系牧者
   const [showContactModal, setShowContactModal] = useState(false);
@@ -180,6 +183,8 @@ export default function HomePage() {
       setPraiseTrack(track);
       setAudioKey(prev => prev + 1); // 强制重新挂载audio元素
       setIsPlaying(true);
+      setCurrentTime(0);
+      setDuration(track.durationSeconds || 0);
     } catch (err: any) {
       setError(err.response?.data?.message || '获取赞美歌曲失败');
     } finally {
@@ -188,8 +193,24 @@ export default function HomePage() {
   };
 
   const handleAudioCanPlay = () => {
-    if (isPlaying && audioRef.current) {
-      audioRef.current.play().catch(() => {});
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration || 0);
+      if (isPlaying) {
+        audioRef.current.play().catch(() => {});
+      }
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current && !isDragging) {
+      setCurrentTime(audioRef.current.currentTime);
+      setDuration(audioRef.current.duration || duration);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration || 0);
     }
   };
 
@@ -203,9 +224,27 @@ export default function HomePage() {
     setIsPlaying(!isPlaying);
   };
 
+  const handleSeekStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    setCurrentTime(value);
+  };
+
+  const handleSeekEnd = (e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>) => {
+    const value = parseFloat((e.target as HTMLInputElement).value);
+    setIsDragging(false);
+    if (audioRef.current) {
+      audioRef.current.currentTime = value;
+    }
+  };
+
   const formatDuration = (seconds: number) => {
+    if (!isFinite(seconds) || seconds < 0) seconds = 0;
     const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
+    const s = Math.floor(seconds % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
@@ -427,6 +466,8 @@ export default function HomePage() {
               src={praiseTrack.audioUrl}
               preload="auto"
               onCanPlay={handleAudioCanPlay}
+              onLoadedMetadata={handleLoadedMetadata}
+              onTimeUpdate={handleTimeUpdate}
               onEnded={() => setIsPlaying(false)}
               onError={() => {
                 setError('音频加载失败，请尝试其他歌曲');
@@ -435,25 +476,43 @@ export default function HomePage() {
               className="hidden"
             />
 
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={togglePlay}
-                className="w-14 h-14 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white flex items-center justify-center hover:from-amber-600 hover:to-yellow-600 transform hover:scale-110 active:scale-95 transition-all duration-200 shadow-md"
-              >
-                {isPlaying ? (
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <rect x="6" y="4" width="4" height="16" rx="1" />
-                    <rect x="14" y="4" width="4" height="16" rx="1" />
-                  </svg>
-                ) : (
-                  <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                )}
-              </button>
-              <span className="text-sm text-bible-muted font-medium">
-                {formatDuration(praiseTrack.durationSeconds)}
-              </span>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={togglePlay}
+                  className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white flex items-center justify-center hover:from-amber-600 hover:to-yellow-600 transform hover:scale-110 active:scale-95 transition-all duration-200 shadow-md flex-shrink-0"
+                >
+                  {isPlaying ? (
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                </button>
+                <div className="flex-1">
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration || 1}
+                    step={0.1}
+                    value={currentTime}
+                    onMouseDown={handleSeekStart}
+                    onTouchStart={handleSeekStart}
+                    onChange={handleSeekChange}
+                    onMouseUp={handleSeekEnd}
+                    onTouchEnd={handleSeekEnd}
+                    className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-600"
+                  />
+                  <div className="flex justify-between text-xs text-bible-muted mt-1">
+                    <span>{formatDuration(currentTime)}</span>
+                    <span>{formatDuration(duration || praiseTrack.durationSeconds)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

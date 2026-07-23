@@ -1,17 +1,17 @@
 package com.bible.config;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component
 @Profile("!dev")
-@RequiredArgsConstructor
 public class MailService {
 
     private final JavaMailSender mailSender;
@@ -19,11 +19,31 @@ public class MailService {
     @Value("${spring.mail.username:}")
     private String from;
 
+    private boolean mailConfigured = false;
+
+    public MailService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
+
+    @PostConstruct
+    public void init() {
+        mailConfigured = StringUtils.hasText(from);
+        if (mailConfigured) {
+            log.info("邮件服务已配置，发件人: {}", from);
+        } else {
+            log.warn("邮件服务未配置：spring.mail.username 为空，邮件发送将失败");
+        }
+    }
+
     /**
      * 发送注册验证码。
      * @return true 表示邮件发送成功；false 表示发送失败（如 SMTP 未配置），调用方可据此回退为直接返回验证码。
      */
     public boolean sendVerificationCode(String to, String code) {
+        if (!mailConfigured) {
+            log.warn("邮件服务未配置，无法发送验证码到 {}", to);
+            return false;
+        }
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
@@ -44,6 +64,10 @@ public class MailService {
      * @return true 表示邮件发送成功；false 表示发送失败，调用方可据此回退为直接返回验证码。
      */
     public boolean sendPasswordResetCode(String to, String code) {
+        if (!mailConfigured) {
+            log.warn("邮件服务未配置，无法发送密码重置验证码到 {}", to);
+            return false;
+        }
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
@@ -64,6 +88,10 @@ public class MailService {
      * @return true 表示邮件发送成功；false 表示发送失败（如 SMTP 未配置）。
      */
     public boolean sendPastorContactEmail(String content) {
+        if (!mailConfigured) {
+            log.warn("邮件服务未配置，无法发送联系牧者表单");
+            return false;
+        }
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo("852341467@qq.com");
@@ -74,7 +102,7 @@ public class MailService {
             log.info("联系牧者表单已发送至 pastor mailbox");
             return true;
         } catch (Exception e) {
-            log.warn("联系牧者表单邮件发送失败: {}", e.getMessage());
+            log.warn("联系牧者表单邮件发送失败: {}", e.getMessage(), e);
             return false;
         }
     }

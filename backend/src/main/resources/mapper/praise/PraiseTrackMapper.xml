@@ -5,8 +5,12 @@
     <resultMap id="PraiseTrackResultMap" type="com.bible.module.praise.entity.PraiseTrack">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
-        <result column="artist" property="artist"/>
-        <result column="url" property="url"/>
+        <result column="artist_name" property="artistName"/>
+        <result column="cover_image_url" property="coverImageUrl"/>
+        <result column="audio_url" property="audioUrl"/>
+        <result column="duration_seconds" property="durationSeconds"/>
+        <result column="source_type" property="sourceType"/>
+        <result column="copyright_note" property="copyrightNote"/>
         <result column="status" property="status"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
@@ -17,13 +21,21 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO praise_tracks(id, title, artist, url, status, created_at, updated_at)
-        VALUES(gen_random_uuid(), #{title}, #{artist}, #{url}, #{status}, NOW(), NOW())
+        INSERT INTO praise_tracks(id, title, artist_name, cover_image_url, audio_url, duration_seconds, source_type, copyright_note, status, created_at, updated_at)
+        VALUES(COALESCE(#{id}, gen_random_uuid()), #{title}, #{artistName}, #{coverImageUrl}, #{audioUrl}, #{durationSeconds}, #{sourceType}, #{copyrightNote}, #{status}, NOW(), NOW())
     </insert>
 
     <update id="update">
         UPDATE praise_tracks
-        SET title = #{title}, artist = #{artist}, url = #{url}, status = #{status}, updated_at = NOW()
+        SET title = #{title},
+            artist_name = #{artistName},
+            cover_image_url = #{coverImageUrl},
+            audio_url = #{audioUrl},
+            duration_seconds = #{durationSeconds},
+            source_type = #{sourceType},
+            copyright_note = #{copyrightNote},
+            status = #{status},
+            updated_at = NOW()
         WHERE id = #{id}
     </update>
 
