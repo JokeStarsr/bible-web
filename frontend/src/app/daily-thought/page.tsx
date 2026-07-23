@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/services/api';
+import { dailyThoughtApi } from '@/services/api';
 
 interface ScriptureMatch {
   reference: string;
@@ -23,6 +23,8 @@ export default function DailyThoughtPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DailyThoughtResult | null>(null);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   // 客户端登录保护：未登录则清除可能残留的 Cookie 并跳转到登录页
   useEffect(() => {
@@ -49,13 +51,33 @@ export default function DailyThoughtPage() {
     setLoading(true);
     setError('');
     setResult(null);
+    setSaved(false);
     try {
-      const res = await api.post('/daily-thought/generate', { content: content.trim() });
+      const res = await dailyThoughtApi.generate(content);
       setResult(res.data.data);
     } catch (err: any) {
       setError(err.response?.data?.message || '生成失败，请稍后再试');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    setSaving(true);
+    setError('');
+    try {
+      await dailyThoughtApi.save({
+        content: content.trim(),
+        pastoralResponse: result.pastoralResponse,
+        divineWord: result.divineWord,
+        scriptures: result.scriptures,
+      });
+      setSaved(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || '保存失败，请稍后再试');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -76,6 +98,17 @@ export default function DailyThoughtPage() {
       <div className="text-center py-6">
         <h1 className="text-3xl font-bold text-bible-dark mb-3">今日随想</h1>
         <p className="text-bible-muted">写下今天的感悟、挣扎或感恩，让神的话语回应你的心</p>
+        <div className="mt-4">
+          <button
+            onClick={() => router.push('/daily-thought/history')}
+            className="inline-flex items-center gap-1 text-bible-gold hover:text-amber-700 font-medium transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            历史记录
+          </button>
+        </div>
       </div>
 
       <div className="scripture-card space-y-4">
@@ -144,6 +177,29 @@ export default function DailyThoughtPage() {
               </div>
             </div>
           )}
+
+          {/* 保存到历史记录 */}
+          <div className="text-center">
+            {saved ? (
+              <div className="inline-flex items-center gap-2 text-green-600 bg-green-50 rounded-lg px-4 py-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                已保存到历史记录
+              </div>
+            ) : (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="btn-secondary inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                {saving ? '保存中...' : '保存到历史记录'}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

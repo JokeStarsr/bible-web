@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.dailythought.mapper.DailyThoughtRecordMapper">
+
+    <resultMap id="DailyThoughtRecordResultMap" type="com.bible.module.dailythought.entity.DailyThoughtRecord">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="content" property="content"/>
+        <result column="pastoral_response" property="pastoralResponse"/>
+        <result column="divine_word" property="divineWord"/>
+        <result column="scriptures" property="scriptures"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO daily_thought_records(id, user_id, content, pastoral_response, divine_word, scriptures, created_at)
+        VALUES(#{id}, #{userId}, #{content}, #{pastoralResponse}, #{divineWord},
+               #{scriptures}::jsonb, NOW())
+    </insert>
+
+    <select id="findByUserId" resultMap="DailyThoughtRecordResultMap">
+        SELECT * FROM daily_thought_records
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM daily_thought_records WHERE user_id = #{userId}
+    </select>
+
+</mapper>

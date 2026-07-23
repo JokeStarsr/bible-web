@@ -3,8 +3,12 @@ package com.bible.module.dailythought.service;
 import com.bible.common.exception.BusinessException;
 import com.bible.config.LlmConfig;
 import com.bible.config.LlmService;
+import com.bible.module.dailythought.dto.DailyThoughtHistoryResponse;
 import com.bible.module.dailythought.dto.DailyThoughtRequest;
 import com.bible.module.dailythought.dto.DailyThoughtResponse;
+import com.bible.module.dailythought.dto.SaveDailyThoughtRequest;
+import com.bible.module.dailythought.entity.DailyThoughtRecord;
+import com.bible.module.dailythought.mapper.DailyThoughtRecordMapper;
 import com.bible.module.scripture.entity.BibleBook;
 import com.bible.module.scripture.entity.BibleVerse;
 import com.bible.module.scripture.mapper.BibleBookMapper;
@@ -15,8 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +36,7 @@ public class DailyThoughtService {
     private final LlmConfig llmConfig;
     private final BibleVerseMapper verseMapper;
     private final BibleBookMapper bookMapper;
+    private final DailyThoughtRecordMapper dailyThoughtRecordMapper;
     private final ObjectMapper objectMapper;
 
     public DailyThoughtResponse generate(DailyThoughtRequest req) {
@@ -96,6 +104,59 @@ public class DailyThoughtService {
                 .scriptures(scriptures)
                 .divineWord(divineWord)
                 .build();
+    }
+
+    @Transactional
+    public void save(UUID userId, SaveDailyThoughtRequest req) {
+        String scripturesJson;
+        try {
+            scripturesJson = objectMapper.writeValueAsString(req.getScriptures() == null ? Collections.emptyList() : req.getScriptures());
+        } catch (JsonProcessingException e) {
+            log.error("保存今日随想时经文序列化失败", e);
+            throw new BusinessException("SAVE_FAILED", "保存失败，请重试");
+        }
+
+        DailyThoughtRecord record = new DailyThoughtRecord();
+        record.setId(UUID.randomUUID());
+        record.setUserId(userId);
+        record.setContent(req.getContent());
+        record.setPastoralResponse(req.getPastoralResponse());
+        record.setDivineWord(req.getDivineWord());
+        record.setScriptures(scripturesJson);
+        record.setCreatedAt(LocalDateTime.now());
+
+        dailyThoughtRecordMapper.insert(record);
+    }
+
+    public List<DailyThoughtHistoryResponse> listByUser(UUID userId, int page, int size) {
+        int offset = (page - 1) * size;
+        List<DailyThoughtRecord> records = dailyThoughtRecordMapper.findByUserId(userId, offset, size);
+        List<DailyThoughtHistoryResponse> result = new ArrayList<>(records.size());
+        for (DailyThoughtRecord record : records) {
+            List<DailyThoughtResponse.ScriptureMatch> scriptures = parseScripturesJson(record.getScriptures());
+            result.add(DailyThoughtHistoryResponse.builder()
+                    .id(record.getId())
+                    .content(record.getContent())
+                    .pastoralResponse(record.getPastoralResponse())
+                    .divineWord(record.getDivineWord())
+                    .scriptures(scriptures)
+                    .createdAt(record.getCreatedAt())
+                    .build());
+        }
+        return result;
+    }
+
+    private List<DailyThoughtResponse.ScriptureMatch> parseScripturesJson(String json) {
+        if (json == null || json.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            JsonNode node = objectMapper.readTree(json);
+            return parseScriptures(node);
+        } catch (JsonProcessingException e) {
+            log.warn("解析历史记录经文 JSON 失败: {}", json, e);
+            return Collections.emptyList();
+        }
     }
 
     /**

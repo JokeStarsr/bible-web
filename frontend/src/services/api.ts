@@ -67,5 +67,24 @@ export const praiseApi = {
   random: () => api.get('/praise/random'),
 };
 
+// ==================== 今日随想 API ====================
+export const dailyThoughtApi = {
+  /** 生成今日随想回应 */
+  generate: (content: string) =>
+    api.post('/daily-thought/generate', { content: content.trim() }),
+
+  /** 保存今日随想到历史记录 */
+  save: (data: {
+    content: string;
+    pastoralResponse?: string;
+    divineWord?: string;
+    scriptures: { reference: string; text: string; relevance: string }[];
+  }) => api.post('/daily-thought/save', data),
+
+  /** 获取历史记录列表 */
+  history: (page = 1, size = 10) =>
+    api.get('/daily-thought/history', { params: { page, size } }),
+};
+
 export default api;
 export { API_BASE };
