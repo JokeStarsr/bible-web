@@ -133,57 +133,68 @@ export default function ScriptureReader({
 
   // 监听文本选择
   useEffect(() => {
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleSelectionEnd = () => {
+      // 用 setTimeout 确保浏览器完成选区绘制后再读取
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed || !containerRef.current) {
+          setToolbarPos(null);
+          setSelectedRange(null);
+          return;
+        }
+        const range = selection.getRangeAt(0);
+        if (!containerRef.current.contains(range.commonAncestorContainer)) {
+          setToolbarPos(null);
+          setSelectedRange(null);
+          return;
+        }
+        const startEl = findVerseElement(range.startContainer);
+        const endEl = findVerseElement(range.endContainer);
+        if (!startEl || !endEl) {
+          setToolbarPos(null);
+          setSelectedRange(null);
+          return;
+        }
+        const start = parseInt(startEl.dataset.verseIdx || '0', 10);
+        const end = parseInt(endEl.dataset.verseIdx || '0', 10);
+        const selected = selection.toString().trim();
+        if (!selected) {
+          setToolbarPos(null);
+          setSelectedRange(null);
+          return;
+        }
+        setSelectedRange({ start: Math.min(start, end), end: Math.max(start, end) });
+        setSelectedText(selected);
+        const rect = range.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        setToolbarPos({
+          x: rect.left - containerRect.left + rect.width / 2,
+          y: rect.top - containerRect.top - 12,
+        });
+      }, 10);
+    };
+
+    const handleDismiss = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('[data-annotation-toolbar]') || target.closest('[data-annotation-modal]')) {
         return;
       }
-      const selection = window.getSelection();
-      if (!selection || selection.isCollapsed || !containerRef.current) {
-        setSelectedRange(null);
+      // 如果点击的不是经文区域内的文字，关闭工具栏
+      if (!containerRef.current?.contains(target)) {
         setToolbarPos(null);
-        return;
-      }
-      const range = selection.getRangeAt(0);
-      if (!containerRef.current.contains(range.commonAncestorContainer)) {
         setSelectedRange(null);
-        setToolbarPos(null);
-        return;
       }
-      const startEl = findVerseElement(range.startContainer);
-      const endEl = findVerseElement(range.endContainer);
-      if (!startEl || !endEl) {
-        setSelectedRange(null);
-        setToolbarPos(null);
-        return;
-      }
-      const start = parseInt(startEl.dataset.verseIdx || '0', 10);
-      const end = parseInt(endEl.dataset.verseIdx || '0', 10);
-      setSelectedRange({ start: Math.min(start, end), end: Math.max(start, end) });
-      setSelectedText(selection.toString().trim());
-      const rect = range.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-      setToolbarPos({
-        x: rect.left - containerRect.left + rect.width / 2,
-        y: rect.top - containerRect.top - 12,
-      });
     };
 
-    const handleMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-annotation-toolbar]') || target.closest('[data-annotation-modal]')) {
-        return;
-      }
-      setToolbarPos(null);
-      setSelectedRange(null);
-      window.getSelection()?.removeAllRanges();
-    };
-
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mouseup', handleSelectionEnd);
+    document.addEventListener('touchend', handleSelectionEnd);
+    document.addEventListener('mousedown', handleDismiss);
+    document.addEventListener('touchstart', handleDismiss);
     return () => {
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mouseup', handleSelectionEnd);
+      document.removeEventListener('touchend', handleSelectionEnd);
+      document.removeEventListener('mousedown', handleDismiss);
+      document.removeEventListener('touchstart', handleDismiss);
     };
   }, []);
 
