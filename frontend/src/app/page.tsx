@@ -86,14 +86,14 @@ export default function HomePage() {
   const [duration, setDuration] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 切换歌曲后自动加载并播放（仅对本地可播放音频；外链曲目只展示信息）
+  // 切换歌曲后自动加载并播放（有 audioUrl 的曲目直接播放，无 audioUrl 的只展示信息）
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !praiseTrack) return;
     setCurrentTime(0);
     setDuration(praiseTrack.durationSeconds || 0);
     setIsPlaying(false);
-    if (praiseTrack.sourceType === 'external_link' || !praiseTrack.audioUrl) {
+    if (!praiseTrack.audioUrl) {
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
@@ -551,7 +551,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            {praiseTrack.sourceType === 'external_link' || !praiseTrack.audioUrl ? (
+            {!praiseTrack.audioUrl ? (
               <div className="space-y-2">
                 {praiseTrack.lyrics && (
                   <div className="max-h-32 overflow-y-auto text-sm text-bible-dark whitespace-pre-line bg-bible-cream rounded-lg p-3 leading-relaxed">

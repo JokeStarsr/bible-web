@@ -19,19 +19,25 @@ public class PraiseService {
 
     public PraiseTrack getRandomTrack() {
         List<PraiseTrack> publicDomain = praiseTrackMapper.findActiveBySourceType("public_domain");
+        List<PraiseTrack> external = praiseTrackMapper.findActiveBySourceType("external");
         List<PraiseTrack> externalLink = praiseTrackMapper.findActiveBySourceType("external_link");
 
-        boolean usePublicDomain = !publicDomain.isEmpty()
+        // 合并 public_domain 和 external（faithchinesechurch.org 曲目）为可直接播放池
+        List<PraiseTrack> playable = new java.util.ArrayList<>();
+        playable.addAll(publicDomain);
+        playable.addAll(external);
+
+        boolean usePlayable = !playable.isEmpty()
                 && (externalLink.isEmpty() || random.nextInt(100) < 80);
 
-        if (usePublicDomain) {
-            return publicDomain.get(random.nextInt(publicDomain.size()));
+        if (usePlayable) {
+            return playable.get(random.nextInt(playable.size()));
         }
         if (!externalLink.isEmpty()) {
             return externalLink.get(random.nextInt(externalLink.size()));
         }
-        if (!publicDomain.isEmpty()) {
-            return publicDomain.get(random.nextInt(publicDomain.size()));
+        if (!playable.isEmpty()) {
+            return playable.get(random.nextInt(playable.size()));
         }
 
         List<PraiseTrack> active = praiseTrackMapper.findAllActive();

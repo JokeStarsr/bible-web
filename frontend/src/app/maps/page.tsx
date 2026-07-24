@@ -20,12 +20,14 @@ const MapControls = dynamic(
 
 export default function BibleMapsPage() {
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
-  const [searchLocationId, setSearchLocationId] = useState<string | null>(null);
-  const [searchVersion, setSearchVersion] = useState(0);
+  const [searchTrigger, setSearchTrigger] = useState<{ locationId: string; ts: number } | null>(null);
 
   const handleSearch = useCallback((locationId: string | null) => {
-    setSearchLocationId(locationId);
-    setSearchVersion((v) => v + 1);
+    if (locationId) {
+      setSearchTrigger({ locationId, ts: Date.now() });
+    } else {
+      setSearchTrigger(null);
+    }
   }, []);
 
   return (
@@ -35,7 +37,7 @@ export default function BibleMapsPage() {
         onRouteChange={setRouteId}
         onSearch={handleSearch}
       />
-      <MapComponent routeId={routeId} searchLocationId={searchLocationId} searchVersion={searchVersion} />
+      <MapComponent routeId={routeId} searchTrigger={searchTrigger} />
 
       <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-bible-warm px-3 py-2 text-xs text-bible-muted max-w-xs">
         提示：坐标为近似值，仅用于辅助读经，不代表考古定论。

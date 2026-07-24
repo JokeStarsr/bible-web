@@ -28,93 +28,119 @@ function numberedIcon(number: number, color: string) {
     html: `<div style="
       background-color: ${color};
       color: white;
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: bold;
       border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     ">${number}</div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -12],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
   });
 }
 
-// 控制地图视野：路线切换时适配边界，搜索时飞抵目标地点
-function MapViewportController({
-  orderedPositions,
+// ====================== 地图内部子组件 ======================
+
+// 地图控制器：处理路线切换时的 fitBounds 和搜索时的 flyTo
+function MapController({
   routeId,
-  searchLocationId,
-  searchVersion,
+  searchTrigger,
 }: {
-  orderedPositions: [number, number][];
   routeId: string;
-  searchLocationId: string | null;
-  searchVersion: number;
+  searchTrigger: { locationId: string; ts: number } | null;
 }) {
   const map = useMap();
+  const lastRouteIdRef = useRef<string | null>(null);
+  const lastSearchTsRef = useRef(0);
 
-  // 仅在初始挂载和 routeId 变化时 fitBounds，不依赖 orderedPositions 避免每次渲染都重置
+  // 路线切换时自动适配视图（仅在 routeId 真正变化时触发）
   useEffect(() => {
-    if (orderedPositions.length === 0) return;
-    const bounds = L.latLngBounds(orderedPositions.map(([lat, lng]) => [lat, lng]));
+    if (routeId === lastRouteIdRef.current) return;
+    lastRouteIdRef.current = routeId;
+
+    const route = getRouteById(routeId);
+    if (!route || route.locations.length === 0) return;
+
+    const positions: [number, number][] = route.locations
+      .map((id) => BIBLE_LOCATIONS[id])
+      .filter(Boolean)
+      .map((loc) => [loc.lat, loc.lng] as [number, number]);
+
+    if (positions.length === 0) return;
+
+    const bounds = L.latLngBounds(positions);
     map.fitBounds(bounds, { padding: [60, 60], maxZoom: 12 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, routeId]);
 
-  // 搜索时通过 searchVersion 触发，不依赖 searchLocationId 引用和 lastSearchIdRef 守卫
+  // 搜索定位：通过 searchTrigger 的时间戳确保每次搜索都触发
   useEffect(() => {
-    if (!searchLocationId) return;
-    const loc = BIBLE_LOCATIONS[searchLocationId];
-    if (loc) {
-      map.panTo([loc.lat, loc.lng], { animate: true, duration: 0.6 });
-      map.setZoom(11, { animate: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, searchVersion]);
+    if (!searchTrigger || searchTrigger.ts <= lastSearchTsRef.current) return;
+    lastSearchTsRef.current = searchTrigger.ts;
+
+    const loc = BIBLE_LOCATIONS[searchTrigger.locationId];
+    if (!loc) return;
+
+    // 使用 flyTo 实现平滑飞行动画
+    map.flyTo([loc.lat, loc.lng], 11, { animate: true, duration: 1.2 });
+  }, [map, searchTrigger]);
 
   return null;
 }
 
-// 动画流动路线：使用 L.polyline 直接创建，通过 CSS stroke-dashoffset 动画实现流动效果
+// 动态流动路线：底层光晕 + 顶层金色流动虚线
 function AnimatedRoute({
+  positionsKey,
   positions,
 }: {
+  positionsKey: string;
   positions: [number, number][];
 }) {
   const map = useMap();
-  const polylineRef = useRef<L.Polyline | null>(null);
 
   useEffect(() => {
-    if (positions.length === 0) return;
-    const polyline = L.polyline(positions, {
+    if (positions.length < 2) return;
+
+    // 底层光晕：更宽的半透明路线，呼吸效果
+    const glow = L.polyline(positions, {
       color: '#ffffff',
-      weight: 4,
-      opacity: 0.9,
-      dashArray: '10 20',
-      className: 'animated-route',
+      weight: 7,
+      opacity: 0.35,
+      className: 'animated-route-glow',
     }).addTo(map);
-    polylineRef.current = polyline;
+
+    // 顶层流动虚线：金色醒目
+    const flow = L.polyline(positions, {
+      color: '#ffd700',
+      weight: 3,
+      opacity: 0.9,
+      dashArray: '12 18',
+      className: 'animated-route-flow',
+    }).addTo(map);
+
     return () => {
-      map.removeLayer(polyline);
+      map.removeLayer(glow);
+      map.removeLayer(flow);
     };
-  }, [map, positions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, positionsKey]);
 
   return null;
 }
 
-interface MapComponentProps {
+// 地图主内容（稳定子组件，避免 TileLayer 不必要的重挂载）
+function MapContent({
+  routeId,
+  searchTrigger,
+}: {
   routeId: string;
-  searchLocationId: string | null;
-  searchVersion: number;
-}
-
-export default function MapComponent({ routeId, searchLocationId, searchVersion }: MapComponentProps) {
+  searchTrigger: { locationId: string; ts: number } | null;
+}) {
   const route = useMemo(
     () => getRouteById(routeId) || getRouteById(DEFAULT_ROUTE_ID)!,
     [routeId]
@@ -125,64 +151,76 @@ export default function MapComponent({ routeId, searchLocationId, searchVersion 
       route.locations
         .map((id) => BIBLE_LOCATIONS[id])
         .filter(Boolean)
-        .map((loc) => [loc.lat, loc.lng]),
+        .map((loc) => [loc.lat, loc.lng] as [number, number]),
     [route]
+  );
+  // 用字符串 key 代替数组引用，避免 useEffect 因引用变化而重复触发
+  const positionsKey = useMemo(
+    () => orderedPositions.map((p) => `${p[0].toFixed(4)},${p[1].toFixed(4)}`).join('|'),
+    [orderedPositions]
   );
   const markerRefs = useRef<Record<string, L.Marker | null>>({});
 
-  // 搜索时打开对应 popup
+  // 搜索时自动打开对应地点的 popup
   useEffect(() => {
-    if (!searchLocationId) return;
-    const marker = markerRefs.current[searchLocationId];
-    if (marker) {
-      marker.openPopup();
-    }
-  }, [searchLocationId]);
+    if (!searchTrigger) return;
+    // 延迟打开 popup，等待 flyTo 动画完成
+    const timer = setTimeout(() => {
+      const marker = markerRefs.current[searchTrigger.locationId];
+      if (marker) {
+        marker.openPopup();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTrigger]);
 
   return (
-    <MapContainer
-      center={[33.5, 35.5]}
-      zoom={6}
-      scrollWheelZoom
-      className="h-full w-full"
-      style={{ background: '#f5f0e8' }}
-    >
+    <>
+      {/* 高德地图瓦片（深色风格 style=7，适合圣经主题） */}
       <TileLayer
         attribution='&copy; 高德地图'
         url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}"
         subdomains="1234"
         maxZoom={18}
         maxNativeZoom={18}
-        keepBuffer={6}
-        detectRetina
+        keepBuffer={4}
+        updateWhenZooming={false}
       />
+
+      {/* CSS 动画定义 */}
       <style>{`
         @keyframes dashFlow {
-          to {
-            stroke-dashoffset: -100;
-          }
+          to { stroke-dashoffset: -60; }
         }
-        .animated-route {
-          animation: dashFlow 2s linear infinite;
-          stroke-dasharray: 10 20;
+        .animated-route-flow {
+          animation: dashFlow 1.5s linear infinite;
         }
-        @keyframes pulse {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
-          }
-          50% {
-            box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
-          }
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.5; }
+        }
+        .animated-route-glow {
+          animation: glowPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes markerPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+          50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
         }
         .pulse-marker > div {
-          animation: pulse 2s ease-in-out infinite;
+          animation: markerPulse 2.5s ease-in-out infinite;
         }
       `}</style>
+
+      {/* 静态底层路线 */}
       <Polyline
         positions={orderedPositions}
-        pathOptions={{ color: route.color, weight: 3, opacity: 0.85, dashArray: '6 8' }}
+        pathOptions={{ color: route.color, weight: 3, opacity: 0.75, dashArray: '6 8' }}
       />
-      <AnimatedRoute positions={orderedPositions} />
+
+      {/* 动态流动路线：光晕 + 金色流动虚线 */}
+      <AnimatedRoute positionsKey={positionsKey} positions={orderedPositions} />
+
+      {/* 地点标记 */}
       {uniqueLocations.map((loc, index) => (
         <Marker
           key={loc.id}
@@ -215,17 +253,38 @@ export default function MapComponent({ routeId, searchLocationId, searchVersion 
           </Popup>
         </Marker>
       ))}
-      <MapViewportController
-        orderedPositions={orderedPositions}
-        routeId={routeId}
-        searchLocationId={searchLocationId}
-        searchVersion={searchVersion}
-      />
+
+      {/* 地图控制器 */}
+      <MapController routeId={routeId} searchTrigger={searchTrigger} />
+    </>
+  );
+}
+
+// ====================== 主组件 ======================
+
+interface MapComponentProps {
+  routeId: string;
+  searchTrigger: { locationId: string; ts: number } | null;
+}
+
+export default function MapComponent({ routeId, searchTrigger }: MapComponentProps) {
+  return (
+    <MapContainer
+      key="bible-map"
+      center={[33.5, 35.5]}
+      zoom={6}
+      scrollWheelZoom
+      zoomControl
+      className="h-full w-full"
+      style={{ background: '#f5f0e8' }}
+    >
+      <MapContent routeId={routeId} searchTrigger={searchTrigger} />
     </MapContainer>
   );
 }
 
-// 搜索框与路线选择器
+// ====================== 搜索框与路线选择器 ======================
+
 export function MapControls({
   routeId,
   onRouteChange,
@@ -334,7 +393,7 @@ export function MapControls({
           </button>
         </div>
         {showSuggestions && suggestions.length > 0 && (
-          <ul className="absolute left-3 right-3 top-full mt-1 bg-white rounded-lg shadow-lg border border-bible-warm max-h-48 overflow-auto">
+          <ul className="absolute left-3 right-3 top-full mt-1 bg-white rounded-lg shadow-lg border border-bible-warm max-h-48 overflow-auto z-50">
             {suggestions.map((loc) => (
               <li
                 key={loc.id}
