@@ -12,16 +12,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN">
       <body className="min-h-screen antialiased flex flex-col">
         <NavBar />
-        <main className="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">
-          {children}
-        </main>
-        <footer className="w-full border-t border-bible-warm bg-white/80 backdrop-blur-sm py-4">
-          <div className="max-w-5xl mx-auto px-4 text-center">
+        <div className="w-full bg-red-50 border-b border-red-100">
+          <div className="max-w-5xl mx-auto px-4 py-2.5 text-center">
             <p className="text-red-600 font-bold text-sm md:text-base">
               以上答复仅供参考，具体还需要自己祷告寻求。
             </p>
           </div>
-        </footer>
+        </div>
+        <main className="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">
+          {children}
+        </main>
       </body>
     </html>
   );

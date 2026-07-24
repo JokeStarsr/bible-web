@@ -113,8 +113,14 @@ export default function MapComponent({ routeId, searchLocationId }: MapComponent
       style={{ background: '#f5f0e8' }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        attribution='&copy; 高德地图'
+        url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+        subdomains="1234"
+        maxZoom={18}
+        maxNativeZoom={18}
+        keepBuffer={4}
+        updateWhenZooming={false}
+        updateInterval={100}
       />
       <Polyline
         positions={orderedPositions}

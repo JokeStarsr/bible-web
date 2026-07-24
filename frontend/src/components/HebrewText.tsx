@@ -155,33 +155,87 @@ function SpeakerIcon({ playing }: { playing: boolean }) {
 function HebrewWord({ word }: { word: string }) {
   const pronunciation = transliterateHebrew(word);
   const [playing, setPlaying] = useState(false);
+  const [errorTip, setErrorTip] = useState<string | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const speak = useCallback(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      alert('当前浏览器暂不支持希伯来语朗读');
+  const clearErrorTip = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setErrorTip(null), 3000);
+  }, []);
+
+  const doSpeak = useCallback((voices: SpeechSynthesisVoice[]) => {
+    const synth = window.speechSynthesis;
+    const hebrewVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
+
+    if (voices.length > 0 && !hebrewVoice) {
+      setErrorTip('未找到希伯来语语音，请尝试切换浏览器');
+      clearErrorTip();
       return;
     }
-
-    // 取消当前所有朗读，避免重叠
-    window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(word);
     utterance.lang = 'he-IL';
     utterance.rate = 0.85;
     utterance.pitch = 1;
+    if (hebrewVoice) {
+      utterance.voice = hebrewVoice;
+    }
 
     utterance.onstart = () => setPlaying(true);
     utterance.onend = () => setPlaying(false);
-    utterance.onerror = () => setPlaying(false);
+    utterance.onerror = () => {
+      setPlaying(false);
+      setErrorTip('朗读失败，请重试');
+      clearErrorTip();
+    };
 
     utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  }, [word]);
+    synth.speak(utterance);
+  }, [word, clearErrorTip]);
+
+  const speak = useCallback(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      setErrorTip('当前浏览器不支持语音朗读');
+      clearErrorTip();
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+
+    // Chrome 在后台 tab 或长时间未使用后可能进入暂停状态，先 resume
+    try {
+      synth.resume();
+    } catch {
+      // ignore
+    }
+
+    // 取消当前所有朗读，避免重叠
+    synth.cancel();
+
+    const voices = synth.getVoices();
+    if (voices.length === 0 && 'onvoiceschanged' in synth) {
+      // 某些浏览器需要等待语音列表加载
+      const handleVoicesChanged = () => {
+        synth.removeEventListener('voiceschanged', handleVoicesChanged);
+        doSpeak(synth.getVoices());
+      };
+      synth.addEventListener('voiceschanged', handleVoicesChanged);
+      // 超时兜底
+      timeoutRef.current = setTimeout(() => {
+        synth.removeEventListener('voiceschanged', handleVoicesChanged);
+        doSpeak(synth.getVoices());
+      }, 800);
+      return;
+    }
+
+    doSpeak(voices);
+  }, [doSpeak]);
 
   // 组件卸载时停止朗读
   useEffect(() => {
     return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (utteranceRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
@@ -189,7 +243,7 @@ function HebrewWord({ word }: { word: string }) {
   }, []);
 
   return (
-    <span className="inline-flex items-center gap-0.5 align-bottom mx-0.5" dir="rtl">
+    <span className="inline-flex items-center gap-0.5 align-bottom mx-0.5 relative" dir="rtl">
       <ruby
         className="hebrew-ruby inline-flex flex-col items-center"
         title={`发音：${pronunciation}`}
@@ -202,11 +256,16 @@ function HebrewWord({ word }: { word: string }) {
       <button
         type="button"
         onClick={speak}
-        className="p-0.5 rounded hover:bg-bible-warm/50 transition-colors focus:outline-none focus:ring-1 focus:ring-bible-gold"
+        className="p-0.5 rounded hover:bg-bible-warm/50 transition-colors focus:outline-none focus:ring-1 focus:ring-bible-gold relative"
         title="播放希伯来语发音"
         aria-label={`播放 ${word} 的希伯来语发音`}
       >
         <SpeakerIcon playing={playing} />
+        {errorTip && (
+          <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 whitespace-nowrap bg-bible-dark text-white text-xs px-2 py-1 rounded shadow-lg z-10">
+            {errorTip}
+          </span>
+        )}
       </button>
     </span>
   );

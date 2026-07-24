@@ -277,51 +277,43 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* 欢迎区域 */}
-      <div className="text-center py-8">
-        <h1 className="text-3xl font-bold text-bible-dark mb-3">每日领受神的话语</h1>
-        <p className="text-bible-muted text-lg">随机生成经文，安静默想，深度解经</p>
+      <div className="text-center pt-4 pb-6">
+        <h1 className="text-2xl font-bold text-bible-dark mb-1">每日领受神的话语</h1>
+        <p className="text-bible-muted text-sm">随机生成经文，安静默想，深度解经</p>
       </div>
 
-      {/* 今日随想入口与联系牧者 */}
-      <div className="flex flex-wrap justify-center gap-4">
-        <a
-          href="/daily-thought"
-          className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-bible-gold to-amber-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:from-amber-600 hover:to-amber-500 transform hover:scale-105 active:scale-95 transition-all duration-200"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+      {/* 生成按钮组 */}
+      <div className="flex flex-wrap justify-center gap-2">
+        {generationOptions.map((opt) => (
+          <button
+            key={opt.type}
+            onClick={() => generateScripture(opt.type)}
+            disabled={loading}
+            className="px-4 py-2 text-sm border border-bible-warm rounded-lg text-bible-dark bg-white hover:border-bible-gold hover:text-bible-gold transition-colors"
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 快捷入口 */}
+      <div className="flex justify-center gap-4 text-sm text-bible-muted">
+        <a href="/daily-thought" className="hover:text-bible-gold transition-colors">
           今日随想
         </a>
+        <span className="text-bible-warm">|</span>
         <button
           onClick={() => {
             setShowContactModal(true);
             setContactSuccess('');
             setError('');
           }}
-          className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transform hover:scale-105 active:scale-95 transition-all duration-200"
+          className="hover:text-bible-gold transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
           联系牧者
         </button>
-      </div>
-
-      {/* 生成按钮组 */}
-      <div className="flex flex-wrap justify-center gap-3">
-        {generationOptions.map((opt) => (
-          <button
-            key={opt.type}
-            onClick={() => generateScripture(opt.type)}
-            disabled={loading}
-            className="btn-secondary hover:border-bible-gold hover:text-bible-gold transition-all"
-          >
-            {opt.label}
-          </button>
-        ))}
       </div>
 
       {/* 错误提示 */}
@@ -477,57 +469,33 @@ export default function HomePage() {
       )}
 
       {/* ==================== 赞美播放 ==================== */}
-      <div className="scripture-card space-y-4 bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200">
-        <h2 className="text-xl font-bold text-bible-dark text-center border-b border-amber-200 pb-3 flex items-center justify-center gap-2">
-          <span className="text-2xl">🎵</span> 赞美诗歌
-        </h2>
-        <div className="text-center">
+      <div className="scripture-card space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-bible-dark flex items-center gap-2">
+            <span>🎵</span> 赞美诗歌
+          </h2>
           <button
             onClick={playRandomPraise}
             disabled={praiseLoading}
-            className="group relative inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-white font-bold text-lg rounded-full shadow-lg hover:shadow-xl hover:from-amber-600 hover:via-yellow-600 hover:to-amber-500 transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="text-sm px-3 py-1.5 rounded-full bg-bible-gold/10 text-bible-gold hover:bg-bible-gold/20 transition-colors disabled:opacity-50"
           >
-            {praiseLoading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                加载中...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                </svg>
-                <span>{praiseTrack ? '换一首赞美诗' : '🎶 随机播放赞美诗歌'}</span>
-                <svg className="w-5 h-5 opacity-70 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
-            )}
+            {praiseLoading ? '加载中...' : praiseTrack ? '换一首' : '随机播放'}
           </button>
         </div>
 
         {praiseTrack && (
-          <div className="bg-white/80 backdrop-blur rounded-xl p-6 space-y-4 shadow-inner">
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-amber-400 to-yellow-300 flex items-center justify-center shadow-lg">
-                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                </svg>
-              </div>
-              <p className="text-xl font-bold text-bible-dark">{praiseTrack.title}</p>
-              <p className="text-sm text-bible-muted mt-1">{praiseTrack.artistName}</p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <p className="flex-1 text-sm">
+                <span className="font-semibold text-bible-dark">{praiseTrack.title}</span>
+                <span className="text-bible-muted ml-2">{praiseTrack.artistName}</span>
+              </p>
             </div>
 
             {praiseTrack.sourceType === 'external_link' || !praiseTrack.audioUrl ? (
-              <div className="space-y-4">
-                <p className="text-xs text-amber-700 bg-amber-50 rounded-lg py-2 px-3 text-center">
-                  该曲目未提供站内音频，点击下方按钮前往官方平台收听
-                </p>
+              <div className="space-y-2">
                 {praiseTrack.lyrics && (
-                  <div className="max-h-48 overflow-y-auto text-sm text-bible-dark whitespace-pre-line bg-amber-50/50 rounded-lg p-4 leading-relaxed">
+                  <div className="max-h-32 overflow-y-auto text-sm text-bible-dark whitespace-pre-line bg-bible-cream rounded-lg p-3 leading-relaxed">
                     {praiseTrack.lyrics}
                   </div>
                 )}
@@ -535,16 +503,16 @@ export default function HomePage() {
                   href={praiseTrack.externalUrl || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold rounded-full shadow-md hover:shadow-lg hover:from-rose-600 hover:to-pink-600 transform hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="inline-flex items-center gap-1 text-sm text-bible-gold hover:text-amber-600 font-medium"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                  去官方平台收听
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
-                  去官方平台收听 / 查看歌词
                 </a>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <audio
                   ref={audioRef}
                   preload="auto"
@@ -563,15 +531,15 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={togglePlay}
-                    className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white flex items-center justify-center hover:from-amber-600 hover:to-yellow-600 transform hover:scale-110 active:scale-95 transition-all duration-200 shadow-md flex-shrink-0"
+                    className="w-9 h-9 rounded-full bg-bible-gold text-white flex items-center justify-center hover:bg-amber-600 transition-colors flex-shrink-0"
                   >
                     {isPlaying ? (
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <rect x="6" y="4" width="4" height="16" rx="1" />
                         <rect x="14" y="4" width="4" height="16" rx="1" />
                       </svg>
                     ) : (
-                      <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     )}
@@ -588,7 +556,7 @@ export default function HomePage() {
                       onChange={handleSeekChange}
                       onMouseUp={handleSeekEnd}
                       onTouchEnd={handleSeekEnd}
-                      className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-600"
+                      className="w-full h-1.5 bg-bible-warm rounded-lg appearance-none cursor-pointer accent-bible-gold"
                     />
                     <div className="flex justify-between text-xs text-bible-muted mt-1">
                       <span>{formatDuration(currentTime)}</span>
