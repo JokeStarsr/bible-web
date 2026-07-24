@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api, { reflectionApi, praiseApi, contactApi } from '@/services/api';
+import HebrewText from '@/components/HebrewText';
 
 const generationOptions = [
   { type: 'verse_1', label: '1节' },
@@ -370,34 +371,58 @@ export default function HomePage() {
             精读解经
           </h2>
 
-          <Section title="经文摘要">{exegesis.summary}</Section>
+          <Section title="经文摘要">
+            <HebrewText text={exegesis.summary} />
+          </Section>
           {exegesis.originalTextNote && (
-            <Section title="原文翻译与注释">{exegesis.originalTextNote}</Section>
+            <Section title="原文翻译与注释">
+              <HebrewText text={exegesis.originalTextNote} />
+            </Section>
           )}
           {exegesis.verseByVerse && (
-            <Section title="逐节解析">{exegesis.verseByVerse}</Section>
+            <Section title="逐节解析">
+              <HebrewText text={exegesis.verseByVerse} />
+            </Section>
           )}
-          <Section title="历史背景">{exegesis.historicalBackground}</Section>
-          <Section title="写作背景">{exegesis.writingBackground}</Section>
-          <Section title="上下文关系">{exegesis.contextAnalysis}</Section>
+          <Section title="历史背景">
+            <HebrewText text={exegesis.historicalBackground} />
+          </Section>
+          <Section title="写作背景">
+            <HebrewText text={exegesis.writingBackground} />
+          </Section>
+          <Section title="上下文关系">
+            <HebrewText text={exegesis.contextAnalysis} />
+          </Section>
 
           {exegesis.keywordAnalysis?.length > 0 && (
             <Section title="关键词解析">
               <ul className="space-y-2">
                 {exegesis.keywordAnalysis.map((kw: any, i: number) => (
                   <li key={i} className="flex gap-2">
-                    <span className="text-bible-gold font-semibold min-w-[4rem]">{kw.keyword}：</span>
-                    <span>{kw.explanation}</span>
+                    <span className="text-bible-gold font-semibold min-w-[4rem]">
+                      <HebrewText text={kw.keyword} />：
+                    </span>
+                    <span>
+                      <HebrewText text={kw.explanation} />
+                    </span>
                   </li>
                 ))}
               </ul>
             </Section>
           )}
 
-          <Section title="在整本圣经中的位置">{exegesis.canonicalPosition}</Section>
-          <Section title="神学主题">{exegesis.theologicalTheme}</Section>
-          <Section title="神对世人的启示" highlight>{exegesis.truthForPeople}</Section>
-          <Section title="对当代信徒的提醒">{exegesis.practicalApplication}</Section>
+          <Section title="在整本圣经中的位置">
+            <HebrewText text={exegesis.canonicalPosition} />
+          </Section>
+          <Section title="神学主题">
+            <HebrewText text={exegesis.theologicalTheme} />
+          </Section>
+          <Section title="神对世人的启示" highlight>
+            <HebrewText text={exegesis.truthForPeople} />
+          </Section>
+          <Section title="对当代信徒的提醒">
+            <HebrewText text={exegesis.practicalApplication} />
+          </Section>
         </div>
       )}
 
@@ -713,7 +738,7 @@ function Section({ title, children, highlight }: { title: string; children: Reac
   return (
     <div className={highlight ? 'bg-yellow-50/50 border border-yellow-200 rounded-lg p-4' : ''}>
       <h3 className="text-lg font-bold text-bible-dark mb-2">{title}</h3>
-      <div className="text-bible-text leading-relaxed">{children}</div>
+      <div className="text-bible-text leading-relaxed whitespace-pre-wrap">{children}</div>
     </div>
   );
 }
