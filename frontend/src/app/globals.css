@@ -104,3 +104,31 @@ input:focus, textarea:focus {
 .btn-secondary:hover {
   background: #F5F0E8;
 }
+
+/* 圣经地图自定义标记 */
+.custom-marker {
+  background: transparent;
+  border: none;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(139, 115, 85, 0.15);
+  border: 1px solid #E8DCC8;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+  line-height: 1.6;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: #8B7355;
+  font-size: 18px;
+  top: 6px;
+  right: 6px;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #B8860B;
+}

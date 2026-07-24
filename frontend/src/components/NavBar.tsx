@@ -4,11 +4,30 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 
+const MapLink = ({ onClick }: { onClick?: () => void }) => (
+  <a
+    href="/maps"
+    onClick={onClick}
+    className="text-bible-muted hover:text-bible-gold transition-colors inline-flex items-center gap-1"
+  >
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+    圣经地图
+  </a>
+);
+
 export default function NavBar() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     checkLoginStatus();
@@ -55,6 +74,7 @@ export default function NavBar() {
     clearAuthCookies();
     setIsLoggedIn(false);
     setMenuOpen(false);
+    setMobileMenuOpen(false);
     router.push('/login');
   };
 
@@ -64,7 +84,10 @@ export default function NavBar() {
         <a href="/" className="text-xl font-bold text-bible-gold tracking-wide">
           📖 圣经灵修
         </a>
-        <nav className="flex items-center gap-4 text-sm">
+
+        {/* 桌面导航 */}
+        <nav className="hidden sm:flex items-center gap-4 text-sm">
+          <MapLink />
           {isLoggedIn ? (
             <div className="relative">
               <button
@@ -74,7 +97,7 @@ export default function NavBar() {
                 <span className="w-7 h-7 rounded-full bg-bible-gold/10 text-bible-gold flex items-center justify-center text-xs font-bold">
                   {username.charAt(0).toUpperCase()}
                 </span>
-                <span className="hidden sm:inline">{username}</span>
+                <span>{username}</span>
               </button>
               {menuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-lg shadow-lg border border-bible-warm py-1 z-50">
@@ -96,12 +119,72 @@ export default function NavBar() {
             </div>
           ) : (
             <>
-              <a href="/login" className="text-bible-muted hover:text-bible-gold transition-colors">登录</a>
-              <a href="/register" className="btn-primary text-sm py-2 px-4">注册</a>
+              <a href="/login" className="text-bible-muted hover:text-bible-gold transition-colors">
+                登录
+              </a>
+              <a href="/register" className="btn-primary text-sm py-2 px-4">
+                注册
+              </a>
             </>
           )}
         </nav>
+
+        {/* 移动端菜单按钮 */}
+        <button
+          className="sm:hidden p-1.5 text-bible-dark hover:text-bible-gold"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="打开菜单"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {mobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
+
+      {/* 移动端下拉菜单 */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden border-t border-bible-warm bg-white/95 px-4 py-3 space-y-3">
+          <MapLink onClick={() => setMobileMenuOpen(false)} />
+          {isLoggedIn ? (
+            <>
+              <a
+                href="/profile"
+                className="block text-bible-dark hover:text-bible-gold"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                个人中心
+              </a>
+              <button
+                onClick={handleLogout}
+                className="block text-bible-dark hover:text-bible-gold"
+              >
+                退出登录
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
+              <a
+                href="/login"
+                className="text-bible-muted hover:text-bible-gold"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                登录
+              </a>
+              <a
+                href="/register"
+                className="btn-primary text-sm py-2 px-4"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                注册
+              </a>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }

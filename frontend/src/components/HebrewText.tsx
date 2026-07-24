@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // 希伯来文 Unicode 范围：基本希伯来文 + 字母呈现形式-A
 const HEBREW_REGEX = /[\u0590-\u05FF\uFB1D-\uFB4F]+/g;
@@ -137,6 +137,81 @@ interface HebrewTextProps {
   className?: string;
 }
 
+// 小喇叭图标
+function SpeakerIcon({ playing }: { playing: boolean }) {
+  return (
+    <svg
+      className={`w-3.5 h-3.5 transition-colors ${playing ? 'text-bible-gold' : 'text-bible-muted/60 hover:text-bible-gold'}`}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+    </svg>
+  );
+}
+
+// 单个希伯来文词组 + 音译 + 发音按钮
+function HebrewWord({ word }: { word: string }) {
+  const pronunciation = transliterateHebrew(word);
+  const [playing, setPlaying] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const speak = useCallback(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      alert('当前浏览器暂不支持希伯来语朗读');
+      return;
+    }
+
+    // 取消当前所有朗读，避免重叠
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = 'he-IL';
+    utterance.rate = 0.85;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => setPlaying(true);
+    utterance.onend = () => setPlaying(false);
+    utterance.onerror = () => setPlaying(false);
+
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  }, [word]);
+
+  // 组件卸载时停止朗读
+  useEffect(() => {
+    return () => {
+      if (utteranceRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  return (
+    <span className="inline-flex items-center gap-0.5 align-bottom mx-0.5" dir="rtl">
+      <ruby
+        className="hebrew-ruby inline-flex flex-col items-center"
+        title={`发音：${pronunciation}`}
+      >
+        <span className="text-lg">{word}</span>
+        <rt className="text-[0.65em] leading-tight text-amber-700 italic font-medium">
+          {pronunciation}
+        </rt>
+      </ruby>
+      <button
+        type="button"
+        onClick={speak}
+        className="p-0.5 rounded hover:bg-bible-warm/50 transition-colors focus:outline-none focus:ring-1 focus:ring-bible-gold"
+        title="播放希伯来语发音"
+        aria-label={`播放 ${word} 的希伯来语发音`}
+      >
+        <SpeakerIcon playing={playing} />
+      </button>
+    </span>
+  );
+}
+
 export default function HebrewText({ text, className }: HebrewTextProps) {
   if (!text) return null;
 
@@ -150,20 +225,7 @@ export default function HebrewText({ text, className }: HebrewTextProps) {
     }
     const hebrew = matches[index];
     if (hebrew) {
-      const pronunciation = transliterateHebrew(hebrew);
-      nodes.push(
-        <ruby
-          key={`h-${index}`}
-          className="hebrew-ruby inline-flex flex-col items-center mx-0.5"
-          title={`发音：${pronunciation}`}
-          dir="rtl"
-        >
-          <span className="text-lg">{hebrew}</span>
-          <rt className="text-[0.65em] leading-tight text-amber-700 italic font-medium">
-            {pronunciation}
-          </rt>
-        </ruby>
-      );
+      nodes.push(<HebrewWord key={`h-${index}`} word={hebrew} />);
     }
   });
 
