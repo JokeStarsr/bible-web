@@ -13,6 +13,8 @@ public interface PraiseTrackMapper {
 
     List<PraiseTrack> findAllActive();
 
+    List<PraiseTrack> findActiveBySourceType(String sourceType);
+
     int countActive();
 
     int insert(PraiseTrack praiseTrack);

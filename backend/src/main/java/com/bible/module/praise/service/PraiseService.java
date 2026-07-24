@@ -18,6 +18,22 @@ public class PraiseService {
     private final Random random = new Random();
 
     public PraiseTrack getRandomTrack() {
+        List<PraiseTrack> publicDomain = praiseTrackMapper.findActiveBySourceType("public_domain");
+        List<PraiseTrack> externalLink = praiseTrackMapper.findActiveBySourceType("external_link");
+
+        boolean usePublicDomain = !publicDomain.isEmpty()
+                && (externalLink.isEmpty() || random.nextInt(100) < 80);
+
+        if (usePublicDomain) {
+            return publicDomain.get(random.nextInt(publicDomain.size()));
+        }
+        if (!externalLink.isEmpty()) {
+            return externalLink.get(random.nextInt(externalLink.size()));
+        }
+        if (!publicDomain.isEmpty()) {
+            return publicDomain.get(random.nextInt(publicDomain.size()));
+        }
+
         List<PraiseTrack> active = praiseTrackMapper.findAllActive();
         if (active.isEmpty()) {
             throw new BusinessException("NOT_FOUND", "暂无可用赞美资源");

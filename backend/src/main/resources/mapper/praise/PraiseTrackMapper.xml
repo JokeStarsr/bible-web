@@ -47,6 +47,10 @@
         SELECT * FROM praise_tracks WHERE status = 'active'
     </select>
 
+    <select id="findActiveBySourceType" resultMap="PraiseTrackResultMap">
+        SELECT * FROM praise_tracks WHERE status = 'active' AND source_type = #{sourceType}
+    </select>
+
     <select id="countActive" resultType="int">
         SELECT COUNT(*) FROM praise_tracks WHERE status = 'active'
     </select>

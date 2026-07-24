@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { DEFAULT_ROUTE_ID } from '@/data/bibleMaps';
 
 const MapComponent = dynamic(() => import('./MapComponent'), {
@@ -21,15 +21,21 @@ const MapControls = dynamic(
 export default function BibleMapsPage() {
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
   const [searchLocationId, setSearchLocationId] = useState<string | null>(null);
+  const [searchVersion, setSearchVersion] = useState(0);
+
+  const handleSearch = useCallback((locationId: string | null) => {
+    setSearchLocationId(locationId);
+    setSearchVersion((v) => v + 1);
+  }, []);
 
   return (
     <div className="relative w-full h-[calc(100vh-7rem)] min-h-[500px] -mx-4 -my-8 sm:-mx-4">
       <MapControls
         routeId={routeId}
         onRouteChange={setRouteId}
-        onSearch={setSearchLocationId}
+        onSearch={handleSearch}
       />
-      <MapComponent routeId={routeId} searchLocationId={searchLocationId} />
+      <MapComponent routeId={routeId} searchLocationId={searchLocationId} searchVersion={searchVersion} />
 
       <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-bible-warm px-3 py-2 text-xs text-bible-muted max-w-xs">
         提示：坐标为近似值，仅用于辅助读经，不代表考古定论。

@@ -24,7 +24,7 @@ import {
 // 带序号的自定义标记图标
 function numberedIcon(number: number, color: string) {
   return L.divIcon({
-    className: 'custom-marker',
+    className: 'custom-marker pulse-marker',
     html: `<div style="
       background-color: ${color};
       color: white;
@@ -48,30 +48,62 @@ function numberedIcon(number: number, color: string) {
 // 控制地图视野：路线切换时适配边界，搜索时飞抵目标地点
 function MapViewportController({
   orderedPositions,
+  routeId,
   searchLocationId,
+  searchVersion,
 }: {
   orderedPositions: [number, number][];
+  routeId: string;
   searchLocationId: string | null;
+  searchVersion: number;
 }) {
   const map = useMap();
-  const lastSearchIdRef = useRef<string | null>(null);
 
+  // 仅在初始挂载和 routeId 变化时 fitBounds，不依赖 orderedPositions 避免每次渲染都重置
   useEffect(() => {
     if (orderedPositions.length === 0) return;
     const bounds = L.latLngBounds(orderedPositions.map(([lat, lng]) => [lat, lng]));
-    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 8 });
-  }, [map, orderedPositions]);
+    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 12 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, routeId]);
 
+  // 搜索时通过 searchVersion 触发，不依赖 searchLocationId 引用和 lastSearchIdRef 守卫
   useEffect(() => {
-    if (!searchLocationId || searchLocationId === lastSearchIdRef.current) return;
+    if (!searchLocationId) return;
     const loc = BIBLE_LOCATIONS[searchLocationId];
     if (loc) {
-      lastSearchIdRef.current = searchLocationId;
-      // 使用 panTo + setZoom 替代 flyTo，减少动画过程中瓦片不加载的等待感
       map.panTo([loc.lat, loc.lng], { animate: true, duration: 0.6 });
       map.setZoom(11, { animate: true });
     }
-  }, [map, searchLocationId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, searchVersion]);
+
+  return null;
+}
+
+// 动画流动路线：使用 L.polyline 直接创建，通过 CSS stroke-dashoffset 动画实现流动效果
+function AnimatedRoute({
+  positions,
+}: {
+  positions: [number, number][];
+}) {
+  const map = useMap();
+  const polylineRef = useRef<L.Polyline | null>(null);
+
+  useEffect(() => {
+    if (positions.length === 0) return;
+    const polyline = L.polyline(positions, {
+      color: '#ffffff',
+      weight: 4,
+      opacity: 0.9,
+      dashArray: '10 20',
+      className: 'animated-route',
+    }).addTo(map);
+    polylineRef.current = polyline;
+    return () => {
+      map.removeLayer(polyline);
+    };
+  }, [map, positions]);
 
   return null;
 }
@@ -79,9 +111,10 @@ function MapViewportController({
 interface MapComponentProps {
   routeId: string;
   searchLocationId: string | null;
+  searchVersion: number;
 }
 
-export default function MapComponent({ routeId, searchLocationId }: MapComponentProps) {
+export default function MapComponent({ routeId, searchLocationId, searchVersion }: MapComponentProps) {
   const route = useMemo(
     () => getRouteById(routeId) || getRouteById(DEFAULT_ROUTE_ID)!,
     [routeId]
@@ -123,10 +156,33 @@ export default function MapComponent({ routeId, searchLocationId }: MapComponent
         keepBuffer={6}
         detectRetina
       />
+      <style>{`
+        @keyframes dashFlow {
+          to {
+            stroke-dashoffset: -100;
+          }
+        }
+        .animated-route {
+          animation: dashFlow 2s linear infinite;
+          stroke-dasharray: 10 20;
+        }
+        @keyframes pulse {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+          }
+        }
+        .pulse-marker > div {
+          animation: pulse 2s ease-in-out infinite;
+        }
+      `}</style>
       <Polyline
         positions={orderedPositions}
         pathOptions={{ color: route.color, weight: 3, opacity: 0.85, dashArray: '6 8' }}
       />
+      <AnimatedRoute positions={orderedPositions} />
       {uniqueLocations.map((loc, index) => (
         <Marker
           key={loc.id}
@@ -161,7 +217,9 @@ export default function MapComponent({ routeId, searchLocationId }: MapComponent
       ))}
       <MapViewportController
         orderedPositions={orderedPositions}
+        routeId={routeId}
         searchLocationId={searchLocationId}
+        searchVersion={searchVersion}
       />
     </MapContainer>
   );
