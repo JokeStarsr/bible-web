@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.annotation.mapper.VerseAnnotationMapper">
+
+    <resultMap id="VerseAnnotationResultMap" type="com.bible.module.annotation.entity.VerseAnnotation">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="version_id" property="versionId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="chapter_number" property="chapterNumber"/>
+        <result column="start_verse" property="startVerse"/>
+        <result column="end_verse" property="endVerse"/>
+        <result column="selected_text" property="selectedText"/>
+        <result column="note_content" property="noteContent"/>
+        <result column="visibility" property="visibility"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="VerseAnnotationResultMap">
+        SELECT * FROM user_verse_annotations
+        WHERE id = #{id} AND deleted_at IS NULL
+    </select>
+
+    <insert id="insert">
+        INSERT INTO user_verse_annotations(
+            id, user_id, version_id, book_id, chapter_number, start_verse, end_verse,
+            selected_text, note_content, visibility, created_at, updated_at
+        ) VALUES (
+            #{id}, #{userId}, #{versionId}, #{bookId}, #{chapterNumber}, #{startVerse}, #{endVerse},
+            #{selectedText}, #{noteContent}, #{visibility}, NOW(), NOW()
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE user_verse_annotations
+        <set>
+            <if test="selectedText != null">selected_text = #{selectedText},</if>
+            <if test="noteContent != null">note_content = #{noteContent},</if>
+            <if test="visibility != null">visibility = #{visibility},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id} AND deleted_at IS NULL
+    </update>
+
+    <update id="deleteById">
+        UPDATE user_verse_annotations SET deleted_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="findByUserId" resultMap="VerseAnnotationResultMap">
+        SELECT * FROM user_verse_annotations
+        WHERE user_id = #{userId} AND deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByUserAndChapter" resultMap="VerseAnnotationResultMap">
+        SELECT * FROM user_verse_annotations
+        WHERE user_id = #{userId}
+          AND version_id = #{versionId}
+          AND book_id = #{bookId}
+          AND chapter_number = #{chapterNumber}
+          AND deleted_at IS NULL
+        ORDER BY start_verse ASC
+    </select>
+
+    <select id="findPublicByChapter" resultMap="VerseAnnotationResultMap">
+        SELECT * FROM user_verse_annotations
+        WHERE visibility = 'public'
+          AND version_id = #{versionId}
+          AND book_id = #{bookId}
+          AND chapter_number = #{chapterNumber}
+          AND deleted_at IS NULL
+        ORDER BY start_verse ASC, created_at DESC
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM user_verse_annotations
+        WHERE user_id = #{userId} AND deleted_at IS NULL
+    </select>
+
+</mapper>

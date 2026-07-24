@@ -112,8 +112,11 @@ public class PraiseController {
         try {
             URI uri = URI.create(url);
             String host = uri.getHost();
-            return host != null && host.toLowerCase().endsWith("faithchinesechurch.org")
-                    && (url.endsWith(".mp3") || url.endsWith(".m4a"));
+            if (host == null) return false;
+            String lowerHost = host.toLowerCase();
+            boolean allowedHost = lowerHost.endsWith("faithchinesechurch.org")
+                    || lowerHost.endsWith("smallchurchmusic.com");
+            return allowedHost && (url.endsWith(".mp3") || url.endsWith(".m4a"));
         } catch (Exception e) {
             return false;
         }

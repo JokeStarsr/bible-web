@@ -18,6 +18,8 @@ public class GenerateScriptureResponse {
     @Data
     @Builder
     public static class VerseItem {
+        private UUID versionId;
+        private UUID bookId;
         private String bookName;
         private int chapterNumber;
         private int verseNumber;

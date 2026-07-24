@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api, { reflectionApi, praiseApi, contactApi } from '@/services/api';
 import HebrewText from '@/components/HebrewText';
+import ScriptureReader from '@/components/ScriptureReader';
 
 // 从导航栏点击“联系牧者”时自动打开弹窗
 function ContactModalOpener({
@@ -34,6 +35,8 @@ const generationOptions = [
 ];
 
 interface VerseItem {
+  versionId: string;
+  bookId: string;
   bookName: string;
   chapterNumber: number;
   verseNumber: number;
@@ -62,6 +65,7 @@ interface PraiseTrack {
 export default function HomePage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [scripture, setScripture] = useState<ScriptureData | null>(null);
   const [exegesis, setExegesis] = useState<any>(null);
@@ -135,6 +139,12 @@ export default function HomePage() {
       document.cookie = 'refreshToken=; path=/; max-age=0';
       window.location.href = '/login';
     } else {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (userInfo.id) setCurrentUserId(userInfo.id);
+      } catch {
+        // ignore
+      }
       setCheckingAuth(false);
     }
   }, []);
@@ -313,6 +323,56 @@ export default function HomePage() {
         <p className="text-bible-muted text-sm">随机生成经文，安静默想，深度解经</p>
       </div>
 
+      {/* 功能入口卡片 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <a
+          href="/daily-thought"
+          className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 hover:bg-amber-100 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center text-amber-700">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-sm">今日随想</p>
+            <p className="text-xs text-amber-700/70">记录灵修感动</p>
+          </div>
+        </a>
+        <a
+          href="/maps"
+          className="flex items-center gap-3 p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-800 hover:bg-indigo-100 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-700">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-sm">圣经地图</p>
+            <p className="text-xs text-indigo-700/70">探索圣经历史路线</p>
+          </div>
+        </a>
+        <button
+          onClick={() => {
+            setShowContactModal(true);
+            setContactSuccess('');
+            setError('');
+          }}
+          className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 hover:bg-emerald-100 transition-colors text-left w-full"
+        >
+          <div className="w-10 h-10 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-sm">联系牧者</p>
+            <p className="text-xs text-emerald-700/70">寻求牧养帮助</p>
+          </div>
+        </button>
+      </div>
+
       {/* 生成按钮组 */}
       <div className="flex flex-wrap justify-center gap-2">
         {generationOptions.map((opt) => (
@@ -344,19 +404,7 @@ export default function HomePage() {
       {/* 经文展示 */}
       {scripture && (
         <div className="space-y-6">
-          <div className="scripture-card">
-            <div className="text-center text-bible-gold text-sm font-semibold mb-4 tracking-wider">
-              {scripture.referenceText}
-            </div>
-            <div className="verse-text space-y-3">
-              {scripture.verses.map((v, i) => (
-                <p key={i}>
-                  <sup className="verse-number">{v.verseNumber}</sup>
-                  {v.text}
-                </p>
-              ))}
-            </div>
-          </div>
+          <ScriptureReader scripture={scripture} currentUserId={currentUserId} />
 
           {/* 解经按钮 */}
           <div className="text-center">

@@ -100,5 +100,69 @@ export const dailyThoughtApi = {
     api.get('/daily-thought/history', { params: { page, size } }),
 };
 
+// ==================== 经文划线/默想 API ====================
+export const annotationApi = {
+  create: (data: {
+    referenceText: string;
+    versionId: string;
+    bookId: string;
+    chapterNumber: number;
+    startVerse: number;
+    endVerse: number;
+    selectedText?: string;
+    noteContent?: string;
+    visibility?: 'private' | 'public';
+  }) => api.post('/annotations', data),
+
+  list: (params: { versionId: string; bookId: string; chapterNumber: number }) =>
+    api.get('/annotations', { params }),
+
+  listPublic: (params: { versionId: string; bookId: string; chapterNumber: number }) =>
+    api.get('/annotations/public', { params }),
+
+  update: (id: string, data: { noteContent?: string; visibility?: 'private' | 'public' }) =>
+    api.put(`/annotations/${id}`, data),
+
+  delete: (id: string) => api.delete(`/annotations/${id}`),
+};
+
+// ==================== 经文收藏 API ====================
+export const bookmarkApi = {
+  toggle: (data: {
+    versionId: string;
+    bookId: string;
+    chapterNumber: number;
+    verseNumber: number;
+  }) => api.post('/bookmarks', data),
+
+  list: (page = 1, size = 20) =>
+    api.get('/bookmarks', { params: { page, size } }),
+
+  check: (params: {
+    versionId: string;
+    bookId: string;
+    chapterNumber: number;
+    verseNumber: number;
+  }) => api.get('/bookmarks/check', { params }),
+};
+
+// ==================== 私信 API ====================
+export const messageApi = {
+  listSessions: (page = 1, size = 20) =>
+    api.get('/messages/sessions', { params: { page, size } }),
+
+  createSession: (userId: string) =>
+    api.post('/messages/sessions', { userId }),
+
+  listMessages: (sessionId: string, page = 1, size = 50) =>
+    api.get(`/messages/sessions/${sessionId}/messages`, { params: { page, size } }),
+
+  sendMessage: (sessionId: string, content: string) =>
+    api.post(`/messages/sessions/${sessionId}/messages`, { content: content.trim() }),
+
+  canMessage: (userId: string) =>
+    api.get(`/messages/can-message/${userId}`),
+};
+
 export default api;
 export { API_BASE };

@@ -11,6 +11,7 @@
         <result column="read_at" property="readAt"/>
         <result column="deleted_at" property="deletedAt"/>
         <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <select id="findById" resultMap="PrivateMessageResultMap">
@@ -18,8 +19,8 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO private_messages(id, session_id, sender_id, content, status, read_at, created_at)
-        VALUES(gen_random_uuid(), #{sessionId}, #{senderId}, #{content}, #{status}, #{readAt}, NOW())
+        INSERT INTO private_messages(id, session_id, sender_id, content, status, read_at, created_at, updated_at)
+        VALUES(#{id}, #{sessionId}, #{senderId}, #{content}, #{status}, #{readAt}, NOW(), NOW())
     </insert>
 
     <update id="markRead">

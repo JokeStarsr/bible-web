@@ -4,6 +4,7 @@
 
     <resultMap id="PrivateMessageSessionResultMap" type="com.bible.module.messaging.entity.PrivateMessageSession">
         <id column="id" property="id"/>
+        <result column="unlock_id" property="unlockId"/>
         <result column="user_a_id" property="userAId"/>
         <result column="user_b_id" property="userBId"/>
         <result column="last_message_at" property="lastMessageAt"/>
@@ -16,9 +17,15 @@
         SELECT * FROM private_message_sessions WHERE id = #{id}
     </select>
 
+    <select id="findByUsers" resultMap="PrivateMessageSessionResultMap">
+        SELECT * FROM private_message_sessions
+        WHERE (user_a_id = #{userAId} AND user_b_id = #{userBId})
+           OR (user_a_id = #{userBId} AND user_b_id = #{userAId})
+    </select>
+
     <insert id="insert">
-        INSERT INTO private_message_sessions(id, user_a_id, user_b_id, last_message_at, status, created_at, updated_at)
-        VALUES(gen_random_uuid(), #{userAId}, #{userBId}, #{lastMessageAt}, #{status}, NOW(), NOW())
+        INSERT INTO private_message_sessions(id, unlock_id, user_a_id, user_b_id, last_message_at, status, created_at, updated_at)
+        VALUES(#{id}, #{unlockId}, #{userAId}, #{userBId}, #{lastMessageAt}, #{status}, NOW(), NOW())
     </insert>
 
     <update id="updateStatus">

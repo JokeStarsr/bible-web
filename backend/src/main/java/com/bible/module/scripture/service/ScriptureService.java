@@ -71,7 +71,8 @@ public class ScriptureService {
                 book.getBookNameZh(), chapter, verses.get(0).getVerseNumber(),
                 chapter, verses.get(verses.size() - 1).getVerseNumber());
 
-        return buildResponse(userId, version, book, chapter, verses.get(0).getVerseNumber(),
+        Map<UUID, BibleBook> bookMap = Map.of(book.getId(), book);
+        return buildResponse(userId, version, bookMap, chapter, verses.get(0).getVerseNumber(),
                 chapter, verses.get(verses.size() - 1).getVerseNumber(),
                 "chapter_full", referenceText, verses);
     }
@@ -119,11 +120,17 @@ public class ScriptureService {
 
         BibleVerse first = verses.get(0);
         BibleVerse last = verses.get(verses.size() - 1);
-        BibleBook firstBook = bookMapper.findById(first.getBookId());
-        BibleBook lastBook = bookMapper.findById(last.getBookId());
+
+        Set<UUID> bookIds = verses.stream().map(BibleVerse::getBookId).collect(Collectors.toSet());
+        Map<UUID, BibleBook> bookMap = bookIds.stream()
+                .map(bookMapper::findById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(BibleBook::getId, b -> b));
+        BibleBook firstBook = bookMap.get(first.getBookId());
+        BibleBook lastBook = bookMap.get(last.getBookId());
 
         String referenceText;
-        if (firstBook.getId().equals(lastBook.getId())) {
+        if (firstBook != null && lastBook != null && firstBook.getId().equals(lastBook.getId())) {
             // 同一书卷
             if (first.getChapterNumber() == last.getChapterNumber()) {
                 referenceText = String.format("%s %d:%d-%d",
@@ -134,30 +141,35 @@ public class ScriptureService {
                         firstBook.getBookNameZh(), first.getChapterNumber(),
                         first.getVerseNumber(), last.getChapterNumber(), last.getVerseNumber());
             }
-        } else {
+        } else if (firstBook != null && lastBook != null) {
             // 跨书卷
             referenceText = String.format("%s %d:%d - %s %d:%d",
                     firstBook.getBookNameZh(), first.getChapterNumber(), first.getVerseNumber(),
                     lastBook.getBookNameZh(), last.getChapterNumber(), last.getVerseNumber());
+        } else {
+            referenceText = String.format("%d:%d - %d:%d",
+                    first.getChapterNumber(), first.getVerseNumber(),
+                    last.getChapterNumber(), last.getVerseNumber());
         }
 
-        return buildResponse(userId, version, firstBook,
+        return buildResponse(userId, version, bookMap,
                 first.getChapterNumber(), first.getVerseNumber(),
                 last.getChapterNumber(), last.getVerseNumber(),
                 type, referenceText, verses);
     }
 
     private GenerateScriptureResponse buildResponse(UUID userId, BibleVersion version,
-                                                     BibleBook book, int startChapter, int startVerse,
+                                                     Map<UUID, BibleBook> bookMap, int startChapter, int startVerse,
                                                      int endChapter, int endVerse, String type,
                                                      String referenceText, List<BibleVerse> verses) {
-        // 保存生成记录
+        // 保存生成记录（以首卷书为准）
+        BibleBook primaryBook = bookMap.get(verses.get(0).getBookId());
         ScriptureGenerationRecord record = new ScriptureGenerationRecord();
         record.setId(UUID.randomUUID());
         record.setUserId(userId);
         record.setVersionId(version.getId());
         record.setGenerationType(type);
-        record.setBookId(book.getId());
+        record.setBookId(primaryBook != null ? primaryBook.getId() : verses.get(0).getBookId());
         record.setStartChapter(startChapter);
         record.setStartVerse(startVerse);
         record.setEndChapter(endChapter);
@@ -168,12 +180,17 @@ public class ScriptureService {
         generationRecordMapper.insert(record);
 
         List<GenerateScriptureResponse.VerseItem> items = verses.stream()
-                .map(v -> GenerateScriptureResponse.VerseItem.builder()
-                        .bookName(book.getBookNameZh())
-                        .chapterNumber(v.getChapterNumber())
-                        .verseNumber(v.getVerseNumber())
-                        .text(v.getVerseText())
-                        .build())
+                .map(v -> {
+                    BibleBook b = bookMap.get(v.getBookId());
+                    return GenerateScriptureResponse.VerseItem.builder()
+                            .versionId(version.getId())
+                            .bookId(v.getBookId())
+                            .bookName(b != null ? b.getBookNameZh() : "")
+                            .chapterNumber(v.getChapterNumber())
+                            .verseNumber(v.getVerseNumber())
+                            .text(v.getVerseText())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return GenerateScriptureResponse.builder()

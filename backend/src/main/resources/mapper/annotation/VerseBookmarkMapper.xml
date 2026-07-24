@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.annotation.mapper.VerseBookmarkMapper">
+
+    <resultMap id="VerseBookmarkResultMap" type="com.bible.module.annotation.entity.VerseBookmark">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="version_id" property="versionId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="chapter_number" property="chapterNumber"/>
+        <result column="verse_number" property="verseNumber"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="VerseBookmarkResultMap">
+        SELECT * FROM verse_bookmarks WHERE id = #{id}
+    </select>
+
+    <select id="findByUserAndVerse" resultMap="VerseBookmarkResultMap">
+        SELECT * FROM verse_bookmarks
+        WHERE user_id = #{userId}
+          AND version_id = #{versionId}
+          AND book_id = #{bookId}
+          AND chapter_number = #{chapterNumber}
+          AND verse_number = #{verseNumber}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO verse_bookmarks(id, user_id, version_id, book_id, chapter_number, verse_number, created_at)
+        VALUES(#{id}, #{userId}, #{versionId}, #{bookId}, #{chapterNumber}, #{verseNumber}, NOW())
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM verse_bookmarks WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByUserAndVerse">
+        DELETE FROM verse_bookmarks
+        WHERE user_id = #{userId}
+          AND version_id = #{versionId}
+          AND book_id = #{bookId}
+          AND chapter_number = #{chapterNumber}
+          AND verse_number = #{verseNumber}
+    </delete>
+
+    <select id="findByUserId" resultMap="VerseBookmarkResultMap">
+        SELECT * FROM verse_bookmarks
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM verse_bookmarks WHERE user_id = #{userId}
+    </select>
+
+</mapper>

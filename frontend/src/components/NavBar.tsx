@@ -4,27 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 
-interface FeatureLinkProps {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  bg: string;
-  hover: string;
-  text: string;
-  onClick?: () => void;
-}
-
-const FeatureLink = ({ href, label, icon, bg, hover, text, onClick }: FeatureLinkProps) => (
-  <a
-    href={href}
-    onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${bg} ${hover} ${text} shadow-sm`}
-  >
-    {icon}
-    <span>{label}</span>
-  </a>
-);
-
 export default function NavBar() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -80,45 +59,6 @@ export default function NavBar() {
     setMobileMenuOpen(false);
     router.push('/login');
   };
-
-  const featureLinks: FeatureLinkProps[] = [
-    {
-      href: '/daily-thought',
-      label: '今日随想',
-      bg: 'bg-amber-50',
-      hover: 'hover:bg-amber-100',
-      text: 'text-amber-700',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      ),
-    },
-    {
-      href: '/maps',
-      label: '圣经地图',
-      bg: 'bg-indigo-50',
-      hover: 'hover:bg-indigo-100',
-      text: 'text-indigo-700',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      href: '/?contact=open',
-      label: '联系牧者',
-      bg: 'bg-emerald-50',
-      hover: 'hover:bg-emerald-100',
-      text: 'text-emerald-700',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
-  ];
 
   return (
     <header className="border-b border-bible-warm bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -186,25 +126,9 @@ export default function NavBar() {
         </button>
       </div>
 
-      {/* 功能入口栏：今日随想 / 圣经地图 / 联系牧者 */}
-      <div className="hidden sm:block border-t border-bible-warm/50 bg-bible-cream/50">
-        <div className="max-w-5xl mx-auto px-4 py-2.5">
-          <div className="flex items-center justify-center gap-4">
-            {featureLinks.map((link) => (
-              <FeatureLink key={link.href} {...link} />
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* 移动端下拉菜单 */}
       {mobileMenuOpen && (
         <div className="sm:hidden border-t border-bible-warm bg-white/95 px-4 py-3 space-y-3">
-          <div className="flex flex-wrap gap-3">
-            {featureLinks.map((link) => (
-              <FeatureLink key={link.href} {...link} onClick={() => setMobileMenuOpen(false)} />
-            ))}
-          </div>
           {isLoggedIn ? (
             <>
               <a
