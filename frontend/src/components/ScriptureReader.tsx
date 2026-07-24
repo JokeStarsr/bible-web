@@ -131,11 +131,14 @@ export default function ScriptureReader({
     }
   };
 
-  // 监听文本选择
+  // 监听文本选择（使用 selectionchange 事件，兼容所有平台：PC/Android/iOS）
   useEffect(() => {
-    const handleSelectionEnd = () => {
-      // 用 setTimeout 确保浏览器完成选区绘制后再读取
-      setTimeout(() => {
+    let selectionTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleSelectionChange = () => {
+      // 防抖：移动端选区调整会频繁触发 selectionchange
+      if (selectionTimer) clearTimeout(selectionTimer);
+      selectionTimer = setTimeout(() => {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed || !containerRef.current) {
           setToolbarPos(null);
@@ -165,36 +168,52 @@ export default function ScriptureReader({
         }
         setSelectedRange({ start: Math.min(start, end), end: Math.max(start, end) });
         setSelectedText(selected);
+
+        // 工具栏定位：使用 getBoundingClientRect 获取选区在视口中的位置
         const rect = range.getBoundingClientRect();
         const containerRect = containerRef.current.getBoundingClientRect();
+        // 移动端工具栏位置略高一些，避免被手指遮挡
+        const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
         setToolbarPos({
           x: rect.left - containerRect.left + rect.width / 2,
-          y: rect.top - containerRect.top - 12,
+          y: rect.top - containerRect.top - (isMobile ? 20 : 12),
         });
-      }, 10);
+      }, 100);
     };
 
+    // 关闭工具栏：点击经文区域外部时关闭
     const handleDismiss = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('[data-annotation-toolbar]') || target.closest('[data-annotation-modal]')) {
         return;
       }
-      // 如果点击的不是经文区域内的文字，关闭工具栏
       if (!containerRef.current?.contains(target)) {
         setToolbarPos(null);
         setSelectedRange(null);
       }
     };
 
-    document.addEventListener('mouseup', handleSelectionEnd);
-    document.addEventListener('touchend', handleSelectionEnd);
+    document.addEventListener('selectionchange', handleSelectionChange);
     document.addEventListener('mousedown', handleDismiss);
-    document.addEventListener('touchstart', handleDismiss);
+    // 移动端：仅在 touchend 时关闭，不在 touchstart 关闭（避免干扰长按选词）
+    document.addEventListener('touchend', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-annotation-toolbar]') || target.closest('[data-annotation-modal]')) {
+        return;
+      }
+      if (!containerRef.current?.contains(target)) {
+        // 延迟关闭，给 selectionchange 时间触发
+        setTimeout(() => {
+          setToolbarPos(null);
+          setSelectedRange(null);
+        }, 200);
+      }
+    });
+
     return () => {
-      document.removeEventListener('mouseup', handleSelectionEnd);
-      document.removeEventListener('touchend', handleSelectionEnd);
+      if (selectionTimer) clearTimeout(selectionTimer);
+      document.removeEventListener('selectionchange', handleSelectionChange);
       document.removeEventListener('mousedown', handleDismiss);
-      document.removeEventListener('touchstart', handleDismiss);
     };
   }, []);
 

@@ -48,6 +48,11 @@ body {
   line-height: 2.2;
   font-size: 1.15rem;
   letter-spacing: 0.02em;
+  /* 确保所有移动端浏览器都能选中文字 */
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+  touch-action: manipulation;
 }
 
 .verse-number {
