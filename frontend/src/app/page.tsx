@@ -1,9 +1,28 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import api, { reflectionApi, praiseApi, contactApi } from '@/services/api';
 import HebrewText from '@/components/HebrewText';
+
+// 从导航栏点击“联系牧者”时自动打开弹窗
+function ContactModalOpener({
+  onOpen,
+}: {
+  onOpen: () => void;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get('contact') === 'open') {
+      onOpen();
+      router.replace('/', { scroll: false });
+    }
+  }, [searchParams, router, onOpen]);
+
+  return null;
+}
 
 const generationOptions = [
   { type: 'verse_1', label: '1节' },
@@ -278,6 +297,16 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
+      <Suspense fallback={null}>
+        <ContactModalOpener
+          onOpen={() => {
+            setShowContactModal(true);
+            setContactSuccess('');
+            setError('');
+          }}
+        />
+      </Suspense>
+
       {/* 欢迎区域 */}
       <div className="text-center pt-4 pb-6">
         <h1 className="text-2xl font-bold text-bible-dark mb-1">每日领受神的话语</h1>
@@ -296,24 +325,6 @@ export default function HomePage() {
             {opt.label}
           </button>
         ))}
-      </div>
-
-      {/* 快捷入口 */}
-      <div className="flex justify-center gap-4 text-sm text-bible-muted">
-        <a href="/daily-thought" className="hover:text-bible-gold transition-colors">
-          今日随想
-        </a>
-        <span className="text-bible-warm">|</span>
-        <button
-          onClick={() => {
-            setShowContactModal(true);
-            setContactSuccess('');
-            setError('');
-          }}
-          className="hover:text-bible-gold transition-colors"
-        >
-          联系牧者
-        </button>
       </div>
 
       {/* 错误提示 */}

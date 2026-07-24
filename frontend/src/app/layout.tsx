@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="w-full bg-red-50 border-b border-red-100">
           <div className="max-w-5xl mx-auto px-4 py-2.5 text-center">
             <p className="text-red-600 font-bold text-sm md:text-base">
-              以上答复仅供参考，具体还需要自己祷告寻求。
+              亲爱的小羊们，这里的所有话语只提供参考，我们跟神的关系还是取决于各自的祷告和圣灵的感动。
             </p>
           </div>
         </div>
