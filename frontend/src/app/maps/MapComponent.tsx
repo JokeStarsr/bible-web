@@ -21,27 +21,38 @@ import {
   getRouteLocations,
 } from '@/data/bibleMaps';
 
-// 带序号的自定义标记图标
-function numberedIcon(number: number, color: string) {
+// 带序号+中文名称的标记图标
+function labeledIcon(number: number, name: string, color: string) {
   return L.divIcon({
-    className: 'custom-marker pulse-marker',
-    html: `<div style="
-      background-color: ${color};
-      color: white;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: bold;
-      border: 2px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    ">${number}</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14],
+    className: 'custom-marker-label',
+    html: `<div style="display:flex;flex-direction:column;align-items:center;">
+      <div class="marker-circle" style="
+        background-color: ${color};
+        color: white;
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: bold;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      ">${number}</div>
+      <div class="marker-label" style="
+        margin-top: 2px;
+        font-size: 12px; font-weight: 700;
+        color: #1a1a2e;
+        white-space: nowrap;
+        background: rgba(255,255,255,0.88);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0.12);
+        text-shadow: 0 0 2px rgba(255,255,255,0.9);
+        line-height: 1.3;
+        pointer-events: none;
+      ">${name}</div>
+    </div>`,
+    iconSize: [120, 48],
+    iconAnchor: [60, 48],
+    popupAnchor: [0, -50],
   });
 }
 
@@ -176,15 +187,17 @@ function MapContent({
 
   return (
     <>
-      {/* 高清地图瓦片（CartoDB Voyager：清晰、可靠、支持高缩放级别） */}
+      {/* 高清地图瓦片（CartoDB Voyager：全球 CDN，快速加载） */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         subdomains="abcd"
         maxZoom={20}
         maxNativeZoom={20}
-        keepBuffer={6}
+        keepBuffer={10}
         updateWhenZooming={false}
+        updateInterval={300}
+        crossOrigin={true}
       />
 
       {/* CSS 动画定义 */}
@@ -206,8 +219,15 @@ function MapContent({
           0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
           50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
         }
-        .pulse-marker > div {
+        .custom-marker-label .marker-circle {
           animation: markerPulse 2.5s ease-in-out infinite;
+        }
+        .custom-marker-label .marker-label {
+          transition: opacity 0.2s;
+        }
+        /* 缩小地图时标签透明度降低，减少视觉杂乱 */
+        .leaflet-zoom-anim .custom-marker-label .marker-label {
+          opacity: 0.5;
         }
       `}</style>
 
@@ -225,7 +245,7 @@ function MapContent({
         <Marker
           key={loc.id}
           position={[loc.lat, loc.lng]}
-          icon={numberedIcon(index + 1, route.color)}
+          icon={labeledIcon(index + 1, loc.name, route.color)}
           ref={(ref) => {
             markerRefs.current[loc.id] = ref;
           }}
@@ -275,6 +295,7 @@ export default function MapComponent({ routeId, searchTrigger }: MapComponentPro
       zoom={6}
       scrollWheelZoom
       zoomControl
+      fadeAnimation={false}
       className="h-full w-full"
       style={{ background: '#f5f0e8' }}
     >
