@@ -359,12 +359,7 @@ export default function ScriptureReader({
           <div className="text-center text-bible-muted py-2 text-sm">正在加载标注...</div>
         )}
 
-        <div className="verse-text space-y-3 select-text" onContextMenu={(e) => {
-            // 移动端：阻止浏览器默认上下文菜单"复制/全选"，避免覆盖我们的工具栏
-            if (/Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent)) {
-              e.preventDefault();
-            }
-          }}>
+        <div className="verse-text space-y-3 select-text">
           {scripture.verses.map((v, idx) => {
             const bookmarked = bookmarks[`${v.bookId}:${v.chapterNumber}:${v.verseNumber}`];
             const publicList = publicAnnotationsForVerse(idx);

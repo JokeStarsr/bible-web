@@ -145,14 +145,20 @@ function AnimatedRoute({
 }
 
 // 动态瓦片层：根据地图中心自动切换高德（中国）与 OpenStreetMap（境外）
+// 使用 lazy initializer 同步计算初始 source，避免 key 切换导致 Leaflet 状态混乱
 function SmartTileLayer() {
   const map = useMap();
-  const [source, setSource] = useState<'gaode' | 'osm'>('gaode');
+  const [source, setSource] = useState<'gaode' | 'osm'>(() => {
+    const center = map.getCenter();
+    const inChina =
+      center.lat >= 18 && center.lat <= 54 &&
+      center.lng >= 73 && center.lng <= 135;
+    return inChina ? 'gaode' : 'osm';
+  });
 
   useEffect(() => {
     const checkRegion = () => {
       const center = map.getCenter();
-      // 中国大致范围：纬度 18-54，经度 73-135
       const inChina =
         center.lat >= 18 && center.lat <= 54 &&
         center.lng >= 73 && center.lng <= 135;
@@ -161,7 +167,6 @@ function SmartTileLayer() {
         return prev !== next ? next : prev;
       });
     };
-    checkRegion();
     map.on('moveend', checkRegion);
     return () => {
       map.off('moveend', checkRegion);
