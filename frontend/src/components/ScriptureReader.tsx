@@ -53,6 +53,7 @@ export default function ScriptureReader({
   currentUserId?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const modalOpenRef = useRef(false); // 追踪弹窗是否打开，防止 selectionchange 误清除 selectedRange
   const [userAnnotations, setUserAnnotations] = useState<Annotation[]>([]);
   const [publicAnnotations, setPublicAnnotations] = useState<Annotation[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkMap>({});
@@ -72,6 +73,11 @@ export default function ScriptureReader({
 
   // 私信弹窗
   const [chatTarget, setChatTarget] = useState<AuthorInfo | null>(null);
+
+  // 同步 modalOpenRef
+  useEffect(() => {
+    modalOpenRef.current = showAnnotationModal;
+  }, [showAnnotationModal]);
 
   // 加载标注与收藏
   useEffect(() => {
@@ -139,6 +145,9 @@ export default function ScriptureReader({
       // 防抖：移动端选区调整会频繁触发 selectionchange
       if (selectionTimer) clearTimeout(selectionTimer);
       selectionTimer = setTimeout(() => {
+        // 弹窗打开时不清理选区状态，避免弹窗因 selectedRange 被清空而消失
+        if (modalOpenRef.current) return;
+
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed || !containerRef.current) {
           setToolbarPos(null);
@@ -172,12 +181,28 @@ export default function ScriptureReader({
         // 工具栏定位：使用 getBoundingClientRect 获取选区在视口中的位置
         const rect = range.getBoundingClientRect();
         const containerRect = containerRef.current.getBoundingClientRect();
-        // 移动端工具栏位置略高一些，避免被手指遮挡
         const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
-        setToolbarPos({
-          x: rect.left - containerRect.left + rect.width / 2,
-          y: rect.top - containerRect.top - (isMobile ? 20 : 12),
-        });
+        if (isMobile) {
+          // 移动端：工具栏固定在屏幕底部，避免被浏览器原生"复制/全选"弹框覆盖
+          setToolbarPos({
+            x: rect.left - containerRect.left + rect.width / 2,
+            y: -1, // 特殊标记：移动端底部固定模式
+          });
+        } else {
+          setToolbarPos({
+            x: rect.left - containerRect.left + rect.width / 2,
+            y: rect.top - containerRect.top - 12,
+          });
+        }
+
+        // PC 端：清除并恢复选区，防止 Chrome 自带"复制/更多"弹窗同时出现
+        if (!isMobile) {
+          // 保存选区，清除后立即恢复，这会让 Chrome 的选区弹窗消失
+          selection.removeAllRanges();
+          requestAnimationFrame(() => {
+            selection.addRange(range);
+          });
+        }
       }, 100);
     };
 
@@ -334,7 +359,12 @@ export default function ScriptureReader({
           <div className="text-center text-bible-muted py-2 text-sm">正在加载标注...</div>
         )}
 
-        <div className="verse-text space-y-3 select-text">
+        <div className="verse-text space-y-3 select-text" onContextMenu={(e) => {
+            // 移动端：阻止浏览器默认上下文菜单"复制/全选"，避免覆盖我们的工具栏
+            if (/Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent)) {
+              e.preventDefault();
+            }
+          }}>
           {scripture.verses.map((v, idx) => {
             const bookmarked = bookmarks[`${v.bookId}:${v.chapterNumber}:${v.verseNumber}`];
             const publicList = publicAnnotationsForVerse(idx);
@@ -402,8 +432,16 @@ export default function ScriptureReader({
         {toolbarPos && selectedRange && (
           <div
             data-annotation-toolbar
-            className="absolute z-20 -translate-x-1/2 -translate-y-full flex items-center gap-1 bg-white border border-bible-warm rounded-lg shadow-lg px-2 py-1.5"
-            style={{ left: toolbarPos.x, top: toolbarPos.y }}
+            className={
+              toolbarPos.y === -1
+                ? 'fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-1 bg-white border border-bible-warm rounded-lg shadow-lg px-2 py-1.5'
+                : 'absolute z-20 -translate-x-1/2 -translate-y-full flex items-center gap-1 bg-white border border-bible-warm rounded-lg shadow-lg px-2 py-1.5'
+            }
+            style={
+              toolbarPos.y === -1
+                ? {}
+                : { left: toolbarPos.x, top: toolbarPos.y }
+            }
           >
             <button
               onClick={openAnnotationModal}
