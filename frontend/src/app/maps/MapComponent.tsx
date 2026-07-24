@@ -86,8 +86,8 @@ function MapController({
     const loc = BIBLE_LOCATIONS[searchTrigger.locationId];
     if (!loc) return;
 
-    // 使用 flyTo 实现平滑飞行动画
-    map.flyTo([loc.lat, loc.lng], 11, { animate: true, duration: 1.2 });
+    // 使用 flyTo 实现平滑飞行动画，zoom 14 获得城市级清晰视图
+    map.flyTo([loc.lat, loc.lng], 14, { animate: true, duration: 1.2 });
   }, [map, searchTrigger]);
 
   return null;
@@ -176,14 +176,14 @@ function MapContent({
 
   return (
     <>
-      {/* 高德地图瓦片（深色风格 style=7，适合圣经主题） */}
+      {/* 高清地图瓦片（CartoDB Voyager：清晰、可靠、支持高缩放级别） */}
       <TileLayer
-        attribution='&copy; 高德地图'
-        url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}"
-        subdomains="1234"
-        maxZoom={18}
-        maxNativeZoom={18}
-        keepBuffer={4}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        subdomains="abcd"
+        maxZoom={20}
+        maxNativeZoom={20}
+        keepBuffer={6}
         updateWhenZooming={false}
       />
 
@@ -306,7 +306,8 @@ export function MapControls({
     if (!q) return [];
     return SEARCHABLE_LOCATIONS.filter(
       (loc) =>
-        loc.name.includes(value) ||
+        loc.name.toLowerCase().includes(q) ||
+        loc.id.toLowerCase().includes(q) ||
         (loc.nameEn && loc.nameEn.toLowerCase().includes(q))
     ).slice(0, 8);
   };
@@ -335,8 +336,8 @@ export function MapControls({
   const executeSearch = () => {
     const matched = getMatchedLocations(query);
     if (matched.length === 0) return;
-    // 优先精确匹配名称；否则取第一个建议
-    const exact = matched.find((loc) => loc.name === query.trim());
+    // 优先精确匹配名称（忽略大小写）；否则取第一个建议
+    const exact = matched.find((loc) => loc.name.toLowerCase() === query.trim().toLowerCase());
     selectLocation(exact || matched[0]);
   };
 
