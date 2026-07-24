@@ -55,6 +55,15 @@ public class VerseAnnotationController {
         return ApiResponse.ok("更新成功", annotationService.update(id, userId, req));
     }
 
+    @GetMapping("/my")
+    public ApiResponse<List<AnnotationResponse>> listMyAnnotations(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "50") int size,
+            Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        return ApiResponse.ok(annotationService.listMyAnnotations(userId, page, size));
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable UUID id, Authentication auth) {
         UUID userId = (UUID) auth.getPrincipal();

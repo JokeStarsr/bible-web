@@ -187,17 +187,18 @@ function MapContent({
 
   return (
     <>
-      {/* 高清地图瓦片（CartoDB Voyager：全球 CDN，快速加载） */}
+      {/* 高清中文地图瓦片（高德地图：国内CDN，中文标注，极速加载） */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
-        maxZoom={20}
-        maxNativeZoom={20}
-        keepBuffer={10}
+        attribution='&copy; <a href="https://www.amap.com/">高德地图</a>'
+        url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+        subdomains={['1', '2', '3', '4']}
+        maxZoom={18}
+        maxNativeZoom={18}
+        keepBuffer={20}
         updateWhenZooming={false}
-        updateInterval={300}
+        updateInterval={150}
         crossOrigin={true}
+        tileSize={256}
       />
 
       {/* CSS 动画定义 */}
@@ -296,6 +297,7 @@ export default function MapComponent({ routeId, searchTrigger }: MapComponentPro
       scrollWheelZoom
       zoomControl
       fadeAnimation={false}
+      zoomAnimation={false}
       className="h-full w-full"
       style={{ background: '#f5f0e8' }}
     >

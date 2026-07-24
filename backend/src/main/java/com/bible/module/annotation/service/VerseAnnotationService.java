@@ -112,6 +112,14 @@ public class VerseAnnotationService {
                 .collect(Collectors.toList());
     }
 
+    public List<AnnotationResponse> listMyAnnotations(UUID userId, int page, int size) {
+        int offset = (page - 1) * size;
+        List<VerseAnnotation> annotations = annotationMapper.findByUserId(userId, offset, size);
+        return annotations.stream()
+                .map(a -> toResponse(a, null))
+                .collect(Collectors.toList());
+    }
+
     public int countCommonAnnotatedVerses(UUID userA, UUID userB) {
         List<VerseAnnotation> listA = annotationMapper.findByUserId(userA, 0, Integer.MAX_VALUE);
         List<VerseAnnotation> listB = annotationMapper.findByUserId(userB, 0, Integer.MAX_VALUE);

@@ -120,6 +120,10 @@ export const annotationApi = {
   listPublic: (params: { versionId: string; bookId: string; chapterNumber: number }) =>
     api.get('/annotations/public', { params }),
 
+  /** 获取我的所有标注（划线/默想） */
+  listMy: (page = 1, size = 50) =>
+    api.get('/annotations/my', { params: { page, size } }),
+
   update: (id: string, data: { noteContent?: string; visibility?: 'private' | 'public' }) =>
     api.put(`/annotations/${id}`, data),
 

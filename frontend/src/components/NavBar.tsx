@@ -70,34 +70,39 @@ export default function NavBar() {
         {/* 桌面导航：仅保留用户入口 */}
         <nav className="hidden sm:flex items-center gap-4 text-sm">
           {isLoggedIn ? (
-            <div className="relative">
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 text-bible-dark hover:text-bible-gold transition-colors"
-              >
-                <span className="w-7 h-7 rounded-full bg-bible-gold/10 text-bible-gold flex items-center justify-center text-xs font-bold">
-                  {username.charAt(0).toUpperCase()}
-                </span>
-                <span>{username}</span>
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-lg shadow-lg border border-bible-warm py-1 z-50">
-                  <a
-                    href="/profile"
-                    className="block w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    个人中心
-                  </a>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
-                  >
-                    退出登录
-                  </button>
-                </div>
-              )}
-            </div>
+            <>
+              <a href="/messages" className="text-bible-muted hover:text-bible-gold transition-colors">
+                私信
+              </a>
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex items-center gap-2 text-bible-dark hover:text-bible-gold transition-colors"
+                >
+                  <span className="w-7 h-7 rounded-full bg-bible-gold/10 text-bible-gold flex items-center justify-center text-xs font-bold">
+                    {username.charAt(0).toUpperCase()}
+                  </span>
+                  <span>{username}</span>
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-lg shadow-lg border border-bible-warm py-1 z-50">
+                    <a
+                      href="/profile"
+                      className="block w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      个人中心
+                    </a>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
+                    >
+                      退出登录
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <>
               <a href="/login" className="text-bible-muted hover:text-bible-gold transition-colors">
@@ -131,6 +136,13 @@ export default function NavBar() {
         <div className="sm:hidden border-t border-bible-warm bg-white/95 px-4 py-3 space-y-3">
           {isLoggedIn ? (
             <>
+              <a
+                href="/messages"
+                className="block text-bible-dark hover:text-bible-gold"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                私信
+              </a>
               <a
                 href="/profile"
                 className="block text-bible-dark hover:text-bible-gold"
