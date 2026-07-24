@@ -49,13 +49,12 @@ function numberedIcon(number: number, color: string) {
 function MapViewportController({
   orderedPositions,
   searchLocationId,
-  uniqueLocations,
 }: {
   orderedPositions: [number, number][];
   searchLocationId: string | null;
-  uniqueLocations: BibleLocation[];
 }) {
   const map = useMap();
+  const lastSearchIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (orderedPositions.length === 0) return;
@@ -64,12 +63,15 @@ function MapViewportController({
   }, [map, orderedPositions]);
 
   useEffect(() => {
-    if (!searchLocationId) return;
-    const loc = uniqueLocations.find((l) => l.id === searchLocationId);
+    if (!searchLocationId || searchLocationId === lastSearchIdRef.current) return;
+    const loc = BIBLE_LOCATIONS[searchLocationId];
     if (loc) {
-      map.flyTo([loc.lat, loc.lng], 10, { duration: 1.2 });
+      lastSearchIdRef.current = searchLocationId;
+      // 使用 panTo + setZoom 替代 flyTo，减少动画过程中瓦片不加载的等待感
+      map.panTo([loc.lat, loc.lng], { animate: true, duration: 0.6 });
+      map.setZoom(11, { animate: true });
     }
-  }, [map, searchLocationId, uniqueLocations]);
+  }, [map, searchLocationId]);
 
   return null;
 }
@@ -114,13 +116,12 @@ export default function MapComponent({ routeId, searchLocationId }: MapComponent
     >
       <TileLayer
         attribution='&copy; 高德地图'
-        url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+        url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}"
         subdomains="1234"
         maxZoom={18}
         maxNativeZoom={18}
-        keepBuffer={4}
-        updateWhenZooming={false}
-        updateInterval={100}
+        keepBuffer={6}
+        detectRetina
       />
       <Polyline
         positions={orderedPositions}
@@ -161,7 +162,6 @@ export default function MapComponent({ routeId, searchLocationId }: MapComponent
       <MapViewportController
         orderedPositions={orderedPositions}
         searchLocationId={searchLocationId}
-        uniqueLocations={uniqueLocations}
       />
     </MapContainer>
   );
@@ -184,6 +184,16 @@ export function MapControls({
 
   const route = getRouteById(routeId) || getRouteById(DEFAULT_ROUTE_ID)!;
 
+  const getMatchedLocations = (value: string) => {
+    const q = value.toLowerCase().trim();
+    if (!q) return [];
+    return SEARCHABLE_LOCATIONS.filter(
+      (loc) =>
+        loc.name.includes(value) ||
+        (loc.nameEn && loc.nameEn.toLowerCase().includes(q))
+    ).slice(0, 8);
+  };
+
   const handleInputChange = (value: string) => {
     setQuery(value);
     if (!value.trim()) {
@@ -192,12 +202,7 @@ export function MapControls({
       onSearch(null);
       return;
     }
-    const q = value.toLowerCase();
-    const matched = SEARCHABLE_LOCATIONS.filter(
-      (loc) =>
-        loc.name.includes(value) ||
-        (loc.nameEn && loc.nameEn.toLowerCase().includes(q))
-    ).slice(0, 8);
+    const matched = getMatchedLocations(value);
     setSuggestions(matched);
     setShowSuggestions(true);
   };
@@ -208,6 +213,21 @@ export function MapControls({
     setShowSuggestions(false);
     onSearch(loc.id);
     inputRef.current?.blur();
+  };
+
+  const executeSearch = () => {
+    const matched = getMatchedLocations(query);
+    if (matched.length === 0) return;
+    // 优先精确匹配名称；否则取第一个建议
+    const exact = matched.find((loc) => loc.name === query.trim());
+    selectLocation(exact || matched[0]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      executeSearch();
+    }
   };
 
   return (
@@ -236,15 +256,25 @@ export function MapControls({
         <label className="block text-xs font-semibold text-bible-muted mb-1.5">
           搜索地名
         </label>
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onFocus={() => query && suggestions.length > 0 && setShowSuggestions(true)}
-          placeholder="输入地名，如：耶路撒冷"
-          className="w-full text-sm bg-transparent border border-bible-warm rounded px-2 py-1.5 text-bible-dark placeholder:text-bible-muted/60 focus:outline-none focus:border-bible-gold"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => query && suggestions.length > 0 && setShowSuggestions(true)}
+            placeholder="输入地名，如：耶路撒冷"
+            className="flex-1 text-sm bg-transparent border border-bible-warm rounded px-2 py-1.5 text-bible-dark placeholder:text-bible-muted/60 focus:outline-none focus:border-bible-gold"
+          />
+          <button
+            type="button"
+            onClick={executeSearch}
+            className="px-3 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors"
+          >
+            搜索
+          </button>
+        </div>
         {showSuggestions && suggestions.length > 0 && (
           <ul className="absolute left-3 right-3 top-full mt-1 bg-white rounded-lg shadow-lg border border-bible-warm max-h-48 overflow-auto">
             {suggestions.map((loc) => (
