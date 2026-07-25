@@ -144,70 +144,6 @@ function AnimatedRoute({
   return null;
 }
 
-// 动态瓦片层：根据地图中心自动切换高德（中国）与 OpenStreetMap（境外）
-// 使用 lazy initializer 同步计算初始 source，避免 key 切换导致 Leaflet 状态混乱
-function SmartTileLayer() {
-  const map = useMap();
-  const [source, setSource] = useState<'gaode' | 'osm'>(() => {
-    const center = map.getCenter();
-    const inChina =
-      center.lat >= 18 && center.lat <= 54 &&
-      center.lng >= 73 && center.lng <= 135;
-    return inChina ? 'gaode' : 'osm';
-  });
-
-  useEffect(() => {
-    const checkRegion = () => {
-      const center = map.getCenter();
-      const inChina =
-        center.lat >= 18 && center.lat <= 54 &&
-        center.lng >= 73 && center.lng <= 135;
-      setSource((prev) => {
-        const next = inChina ? 'gaode' : 'osm';
-        return prev !== next ? next : prev;
-      });
-    };
-    map.on('moveend', checkRegion);
-    return () => {
-      map.off('moveend', checkRegion);
-    };
-  }, [map]);
-
-  if (source === 'osm') {
-    return (
-      <TileLayer
-        key="osm"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        subdomains={['a', 'b', 'c']}
-        maxZoom={19}
-        maxNativeZoom={19}
-        keepBuffer={20}
-        updateWhenZooming={false}
-        updateInterval={150}
-        crossOrigin={true}
-        tileSize={256}
-      />
-    );
-  }
-
-  return (
-    <TileLayer
-      key="gaode"
-      attribution='&copy; <a href="https://www.amap.com/">高德地图</a>'
-      url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
-      subdomains={['1', '2', '3', '4']}
-      maxZoom={18}
-      maxNativeZoom={18}
-      keepBuffer={20}
-      updateWhenZooming={false}
-      updateInterval={150}
-      crossOrigin={true}
-      tileSize={256}
-    />
-  );
-}
-
 // 地图主内容（稳定子组件，避免 TileLayer 不必要的重挂载）
 function MapContent({
   routeId,
@@ -251,8 +187,19 @@ function MapContent({
 
   return (
     <>
-      {/* 智能瓦片层：中国大陆用高德（中文标注），境外自动切 OpenStreetMap（全球覆盖） */}
-      <SmartTileLayer />
+      {/* OpenStreetMap 瓦片层：全球覆盖，加载快速可靠 */}
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        subdomains={['a', 'b', 'c']}
+        maxZoom={19}
+        maxNativeZoom={19}
+        keepBuffer={20}
+        updateWhenZooming={false}
+        updateInterval={150}
+        crossOrigin={true}
+        tileSize={256}
+      />
 
       {/* CSS 动画定义 */}
       <style>{`
