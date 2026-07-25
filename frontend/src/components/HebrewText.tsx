@@ -182,47 +182,59 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
     }
 
     const synth = window.speechSynthesis;
-    try { synth.resume(); } catch { /* ignore */ }
-    synth.cancel();
+    // 标记已播放，防止重复点击
+    setPlaying(true);
 
-    const voices = synth.getVoices();
+    const doSpeak = () => {
+      // Chrome 在后台 tab 或长时间未使用后可能进入暂停状态，先 resume
+      try { synth.resume(); } catch { /* ignore */ }
 
-    // 优先使用母语语音朗读原文
-    let nativeVoice: SpeechSynthesisVoice | undefined;
-    let langCode: string;
-    if (lang === 'hebrew') {
-      nativeVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
-      langCode = 'he-IL';
-    } else {
-      nativeVoice = voices.find((v) => v.lang.startsWith('el'));
-      langCode = 'el-GR';
-    }
+      const voices = synth.getVoices();
 
-    const utterance = new SpeechSynthesisUtterance(
-      nativeVoice ? word : pronunciation
-    );
+      let nativeVoice: SpeechSynthesisVoice | undefined;
+      let langCode: string;
+      if (lang === 'hebrew') {
+        nativeVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
+        langCode = 'he-IL';
+      } else {
+        nativeVoice = voices.find((v) => v.lang.startsWith('el'));
+        langCode = 'el-GR';
+      }
 
-    if (nativeVoice) {
-      utterance.lang = langCode;
-      utterance.voice = nativeVoice;
-      utterance.rate = 0.85;
-    } else {
-      // 无母语语音：朗读音译，用英语语音
-      utterance.lang = 'en-US';
-      utterance.rate = 0.8;
-      const enVoice = voices.find((v) => v.lang.startsWith('en'));
-      if (enVoice) utterance.voice = enVoice;
-    }
+      const textToSpeak = nativeVoice ? word : pronunciation;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
 
-    utterance.onstart = () => setPlaying(true);
-    utterance.onend = () => setPlaying(false);
-    utterance.onerror = () => {
-      setPlaying(false);
-      setErrorTip('朗读失败，请重试');
-      clearErrorTip();
+      if (nativeVoice) {
+        utterance.lang = langCode;
+        utterance.voice = nativeVoice;
+        utterance.rate = 0.85;
+      } else {
+        // 无母语语音：朗读音译，用英语语音
+        utterance.lang = 'en-US';
+        utterance.rate = 0.8;
+        const enVoice = voices.find((v) => v.lang.startsWith('en'));
+        if (enVoice) utterance.voice = enVoice;
+      }
+
+      utterance.onstart = () => setPlaying(true);
+      utterance.onend = () => setPlaying(false);
+      utterance.onerror = (e) => {
+        setPlaying(false);
+        // Chrome 常见错误 "interrupted" / "canceled" 不提示用户
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+          setErrorTip('朗读失败，请重试');
+          clearErrorTip();
+        }
+      };
+
+      synth.speak(utterance);
     };
 
-    synth.speak(utterance);
+    // 必须先用 cancel() 清除队列，但 cancel() 是异步的
+    // Chrome 的 bug：cancel() 后立即 speak() 会静默丢弃
+    // 用 setTimeout 延迟 80ms 确保 cancel 完成
+    synth.cancel();
+    setTimeout(doSpeak, 80);
   }, [word, pronunciation, lang, clearErrorTip]);
 
   useEffect(() => {
