@@ -167,6 +167,7 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
   const pronunciation = lang === 'hebrew' ? transliterateHebrew(word) : transliterateGreek(word);
   const [playing, setPlaying] = useState(false);
   const [errorTip, setErrorTip] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearErrorTip = useCallback(() => {
@@ -175,73 +176,59 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
   }, []);
 
   const speak = useCallback(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      setErrorTip('当前浏览器不支持语音朗读');
-      clearErrorTip();
-      return;
+    // 停止之前的播放
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
-
-    const synth = window.speechSynthesis;
-    // 标记已播放，防止重复点击
     setPlaying(true);
 
-    const doSpeak = () => {
-      // Chrome 在后台 tab 或长时间未使用后可能进入暂停状态，先 resume
-      try { synth.resume(); } catch { /* ignore */ }
+    // 通过后端 edge-tts 获取母语发音（希伯来语/希腊语原生语音）
+    const ttsUrl = `/api/v1/tts/speak?text=${encodeURIComponent(word)}&lang=${lang === 'hebrew' ? 'he' : 'el'}`;
+    const audio = new Audio(ttsUrl);
 
-      const voices = synth.getVoices();
-
-      let nativeVoice: SpeechSynthesisVoice | undefined;
-      let langCode: string;
-      if (lang === 'hebrew') {
-        nativeVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
-        langCode = 'he-IL';
-      } else {
-        nativeVoice = voices.find((v) => v.lang.startsWith('el'));
-        langCode = 'el-GR';
-      }
-
-      const textToSpeak = nativeVoice ? word : pronunciation;
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-
-      if (nativeVoice) {
-        utterance.lang = langCode;
-        utterance.voice = nativeVoice;
-        utterance.rate = 0.85;
-      } else {
-        // 无母语语音：朗读音译，用英语语音
-        utterance.lang = 'en-US';
-        utterance.rate = 0.8;
-        const enVoice = voices.find((v) => v.lang.startsWith('en'));
-        if (enVoice) utterance.voice = enVoice;
-      }
-
-      utterance.onstart = () => setPlaying(true);
-      utterance.onend = () => setPlaying(false);
-      utterance.onerror = (e) => {
-        setPlaying(false);
-        // Chrome 常见错误 "interrupted" / "canceled" 不提示用户
-        if (e.error !== 'interrupted' && e.error !== 'canceled') {
-          setErrorTip('朗读失败，请重试');
-          clearErrorTip();
-        }
-      };
-
-      synth.speak(utterance);
+    const onEnd = () => {
+      setPlaying(false);
+      audioRef.current = null;
     };
 
-    // 必须先用 cancel() 清除队列，但 cancel() 是异步的
-    // Chrome 的 bug：cancel() 后立即 speak() 会静默丢弃
-    // 用 setTimeout 延迟 80ms 确保 cancel 完成
-    synth.cancel();
-    setTimeout(doSpeak, 80);
-  }, [word, pronunciation, lang, clearErrorTip]);
+    audio.oncanplay = () => {
+      audio.play().catch(() => {
+        setErrorTip('播放失败，请重试');
+        setPlaying(false);
+        clearErrorTip();
+      });
+    };
+    audio.onended = onEnd;
+    audio.onerror = () => {
+      setPlaying(false);
+      setErrorTip('语音服务暂不可用');
+      clearErrorTip();
+      audioRef.current = null;
+    };
+
+    // 超时保护：5 秒未加载则提示
+    const loadTimeout = setTimeout(() => {
+      if (audio.readyState < 2) {
+        setPlaying(false);
+        setErrorTip('语音加载超时');
+        clearErrorTip();
+      }
+    }, 5000);
+
+    audio.addEventListener('canplay', () => clearTimeout(loadTimeout), { once: true });
+    audio.addEventListener('error', () => clearTimeout(loadTimeout), { once: true });
+
+    audioRef.current = audio;
+    audio.load();
+  }, [word, lang, clearErrorTip]);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
   }, []);

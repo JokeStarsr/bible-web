@@ -28,9 +28,14 @@ RUN mvn -B clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-RUN apk add --no-cache curl tzdata && \
+RUN apk add --no-cache curl tzdata python3 py3-pip && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/Shanghai" > /etc/timezone
+    echo "Asia/Shanghai" > /etc/timezone && \
+    pip3 install --no-cache-dir edge-tts
+
+# Copy TTS script
+COPY bible-tts.py /usr/local/bin/bible-tts.py
+RUN chmod +x /usr/local/bin/bible-tts.py
 
 COPY --from=builder /build/target/*.jar app.jar
 
