@@ -187,13 +187,13 @@ function MapContent({
 
   return (
     <>
-      {/* OpenStreetMap 瓦片层：全球覆盖，加载快速可靠 */}
+      {/* OpenStreetMap 瓦片层（法国镜像，国内可访问，全球覆盖） */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
         subdomains={['a', 'b', 'c']}
-        maxZoom={19}
-        maxNativeZoom={19}
+        maxZoom={20}
+        maxNativeZoom={20}
         keepBuffer={20}
         updateWhenZooming={false}
         updateInterval={150}
