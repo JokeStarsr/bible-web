@@ -156,7 +156,7 @@ function HebrewWord({ word }: { word: string }) {
   const pronunciation = transliterateHebrew(word);
   const [playing, setPlaying] = useState(false);
   const [errorTip, setErrorTip] = useState<string | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearErrorTip = useCallback(() => {
@@ -164,80 +164,56 @@ function HebrewWord({ word }: { word: string }) {
     timeoutRef.current = setTimeout(() => setErrorTip(null), 3000);
   }, []);
 
-  const doSpeak = useCallback((voices: SpeechSynthesisVoice[]) => {
-    const synth = window.speechSynthesis;
-    const hebrewVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
-
-    if (voices.length > 0 && !hebrewVoice) {
-      setErrorTip('未找到希伯来语语音，请尝试切换浏览器');
-      clearErrorTip();
-      return;
+  const speak = useCallback(() => {
+    // 停止之前的播放
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
 
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = 'he-IL';
-    utterance.rate = 0.85;
-    utterance.pitch = 1;
-    if (hebrewVoice) {
-      utterance.voice = hebrewVoice;
-    }
+    // 通过后端代理 Google TTS，不依赖浏览器语音库
+    const ttsUrl = `/api/v1/tts/speak?text=${encodeURIComponent(word)}&lang=he`;
+    const audio = new Audio(ttsUrl);
 
-    utterance.onstart = () => setPlaying(true);
-    utterance.onend = () => setPlaying(false);
-    utterance.onerror = () => {
+    audio.oncanplay = () => {
+      setPlaying(true);
+      audio.play().catch(() => {
+        setErrorTip('播放失败，请重试');
+        setPlaying(false);
+        clearErrorTip();
+      });
+    };
+    audio.onended = () => setPlaying(false);
+    audio.onerror = () => {
       setPlaying(false);
-      setErrorTip('朗读失败，请重试');
+      setErrorTip('语音服务暂不可用');
       clearErrorTip();
     };
 
-    utteranceRef.current = utterance;
-    synth.speak(utterance);
+    // 超时保护：5 秒未加载则提示
+    const loadTimeout = setTimeout(() => {
+      if (audio.readyState < 2) {
+        setPlaying(false);
+        setErrorTip('语音加载超时');
+        clearErrorTip();
+      }
+    }, 5000);
+
+    audio.addEventListener('canplay', () => clearTimeout(loadTimeout), { once: true });
+    audio.addEventListener('error', () => clearTimeout(loadTimeout), { once: true });
+
+    audioRef.current = audio;
+    // 触发加载
+    audio.load();
   }, [word, clearErrorTip]);
 
-  const speak = useCallback(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      setErrorTip('当前浏览器不支持语音朗读');
-      clearErrorTip();
-      return;
-    }
-
-    const synth = window.speechSynthesis;
-
-    // Chrome 在后台 tab 或长时间未使用后可能进入暂停状态，先 resume
-    try {
-      synth.resume();
-    } catch {
-      // ignore
-    }
-
-    // 取消当前所有朗读，避免重叠
-    synth.cancel();
-
-    const voices = synth.getVoices();
-    if (voices.length === 0 && 'onvoiceschanged' in synth) {
-      // 某些浏览器需要等待语音列表加载
-      const handleVoicesChanged = () => {
-        synth.removeEventListener('voiceschanged', handleVoicesChanged);
-        doSpeak(synth.getVoices());
-      };
-      synth.addEventListener('voiceschanged', handleVoicesChanged);
-      // 超时兜底
-      timeoutRef.current = setTimeout(() => {
-        synth.removeEventListener('voiceschanged', handleVoicesChanged);
-        doSpeak(synth.getVoices());
-      }, 800);
-      return;
-    }
-
-    doSpeak(voices);
-  }, [doSpeak]);
-
-  // 组件卸载时停止朗读
+  // 组件卸载时停止播放
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (utteranceRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
   }, []);
