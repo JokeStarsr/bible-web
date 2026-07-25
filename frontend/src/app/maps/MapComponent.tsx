@@ -187,13 +187,26 @@ function MapContent({
 
   return (
     <>
-      {/* OpenStreetMap 瓦片层（法国镜像，国内可访问，全球覆盖） */}
+      {/* OSM 法国镜像：全球覆盖，作为底层 */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
         subdomains={['a', 'b', 'c']}
         maxZoom={20}
         maxNativeZoom={20}
+        keepBuffer={20}
+        updateWhenZooming={false}
+        updateInterval={150}
+        crossOrigin={true}
+        tileSize={256}
+      />
+      {/* 高德地图：限定中国范围，国内加载极快，覆盖在 OSM 之上 */}
+      <TileLayer
+        url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+        subdomains={['1', '2', '3', '4']}
+        bounds={[[18, 73], [54, 135]]}
+        maxZoom={18}
+        maxNativeZoom={18}
         keepBuffer={20}
         updateWhenZooming={false}
         updateInterval={150}
