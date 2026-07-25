@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { dailyThoughtApi } from '@/services/api';
+import HebrewText from '@/components/HebrewText';
 
 interface ScriptureMatch {
   reference: string;
@@ -147,7 +148,7 @@ export default function DailyThoughtPage() {
           <div className="scripture-card bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200">
             <h2 className="text-xl font-bold text-bible-dark mb-4">牧养回应</h2>
             <div className="text-bible-text leading-relaxed whitespace-pre-wrap">
-              {result.pastoralResponse}
+              <HebrewText text={result.pastoralResponse} />
             </div>
           </div>
 
@@ -175,7 +176,7 @@ export default function DailyThoughtPage() {
             <div className="scripture-card bg-gradient-to-br from-bible-gold/10 to-amber-100/50 border-bible-gold/30">
               <h2 className="text-xl font-bold text-bible-dark mb-4">✨ 神可能想对你说</h2>
               <div className="text-lg text-bible-dark leading-relaxed font-medium whitespace-pre-wrap">
-                {result.divineWord}
+                <HebrewText text={result.divineWord} />
               </div>
             </div>
           )}
@@ -185,7 +186,7 @@ export default function DailyThoughtPage() {
             <div className="scripture-card bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200">
               <h2 className="text-xl font-bold text-bible-dark mb-4">🎵 主题赞美诗歌</h2>
               <div className="text-bible-text leading-relaxed whitespace-pre-wrap">
-                {result.hymn}
+                <HebrewText text={result.hymn} />
               </div>
             </div>
           )}

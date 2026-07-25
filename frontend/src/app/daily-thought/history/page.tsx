@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { dailyThoughtApi } from '@/services/api';
+import HebrewText from '@/components/HebrewText';
 
 interface ScriptureMatch {
   reference: string;
@@ -210,14 +211,14 @@ export default function DailyThoughtHistoryPage() {
                           <div className="scripture-card">
                             <h2 className="text-lg font-bold text-bible-dark mb-2">我的随想</h2>
                             <div className="text-bible-text leading-relaxed whitespace-pre-wrap bg-bible-warm/20 rounded-lg p-4">
-                              {record.content}
+                              <HebrewText text={record.content} />
                             </div>
                           </div>
 
                           <div className="scripture-card bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200">
                             <h2 className="text-xl font-bold text-bible-dark mb-4">牧养回应</h2>
                             <div className="text-bible-text leading-relaxed whitespace-pre-wrap">
-                              {record.pastoralResponse}
+                              <HebrewText text={record.pastoralResponse} />
                             </div>
                           </div>
 
@@ -243,7 +244,7 @@ export default function DailyThoughtHistoryPage() {
                             <div className="scripture-card bg-gradient-to-br from-bible-gold/10 to-amber-100/50 border-bible-gold/30">
                               <h2 className="text-xl font-bold text-bible-dark mb-4">✨ 神可能想对你说</h2>
                               <div className="text-lg text-bible-dark leading-relaxed font-medium whitespace-pre-wrap">
-                                {record.divineWord}
+                                <HebrewText text={record.divineWord} />
                               </div>
                             </div>
                           )}
@@ -252,7 +253,7 @@ export default function DailyThoughtHistoryPage() {
                             <div className="scripture-card bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200">
                               <h2 className="text-xl font-bold text-bible-dark mb-4">🎵 主题赞美诗歌</h2>
                               <div className="text-bible-text leading-relaxed whitespace-pre-wrap">
-                                {record.hymn}
+                                <HebrewText text={record.hymn} />
                               </div>
                             </div>
                           )}
