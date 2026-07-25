@@ -5,25 +5,48 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 // 希伯来文 Unicode 范围：基本希伯来文 + 字母呈现形式-A
 const HEBREW_REGEX = /[\u0590-\u05FF\uFB1D-\uFB4F]+/g;
 
-// 元音、发音符号、吟诵符号等（NFD 规范化后会和基字符分离）
+// 元音映射（NFD 规范化后与基字符分离）
+const VOWEL_MAP: Record<string, string> = {
+  '\u05B0': 'e',  // SHEVA
+  '\u05B1': 'e',  // HATAF SEGOL
+  '\u05B2': 'a',  // HATAF PATAH
+  '\u05B3': 'o',  // HATAF QAMATS
+  '\u05B4': 'i',  // HIRIQ
+  '\u05B5': 'e',  // TSERE
+  '\u05B6': 'e',  // SEGOL
+  '\u05B7': 'a',  // PATAH
+  '\u05B8': 'a',  // QAMATS
+  '\u05B9': 'o',  // HOLAM
+  '\u05BA': 'o',  // HOLAM HASER
+  '\u05BB': 'u',  // QUBUTS
+};
+
+// 仍然忽略的标记（dagesh、吟诵符号等）
 const IGNORED_MARKS = new Set([
-  // 元音
-  '\u05B0', '\u05B1', '\u05B2', '\u05B3', '\u05B4', '\u05B5', '\u05B6',
-  '\u05B7', '\u05B8', '\u05B9', '\u05BA', '\u05BB', '\u05BC', '\u05BD',
-  '\u05BE', '\u05BF', '\u05C0', '\u05C3', '\u05C4', '\u05C5', '\u05C6', '\u05C7',
+  '\u05BC', // DAGESH（由辅音逻辑处理）
+  '\u05BD', // METEG
+  '\u05BF', // RAFE
+  '\u05C0', // PASEQ
+  '\u05C3', // SOF PASUQ
+  '\u05C4', '\u05C5', '\u05C6', '\u05C7',
   // 吟诵符号
   ...Array.from({ length: 31 }, (_, i) => String.fromCharCode(0x0591 + i)),
 ]);
 
-// 希伯来辅音到拉丁音译的映射（含词尾形式）
+// 带dagesh的辅音（beged kefet 字母，dagesh 改变发音）
+const CONSONANT_WITH_DAGESH: Record<string, string> = {
+  'ב': 'b',
+  'כ': 'k',
+  'ך': 'k',
+  'פ': 'p',
+};
+
+// 希伯来辅音到拉丁音译的映射（无 dagesh）
 const CONSONANT_MAP: Record<string, string> = {
   'א': '',
-  'ב': 'b',
-  'בּ': 'b',
+  'ב': 'v',
   'ג': 'g',
-  'גּ': 'g',
   'ד': 'd',
-  'דּ': 'd',
   'ה': 'h',
   'ו': 'v',
   'ז': 'z',
@@ -31,9 +54,7 @@ const CONSONANT_MAP: Record<string, string> = {
   'ט': 't',
   'י': 'y',
   'כ': 'ch',
-  'כּ': 'k',
   'ך': 'ch',
-  'ךּ': 'k',
   'ל': 'l',
   'מ': 'm',
   'ם': 'm',
@@ -42,7 +63,6 @@ const CONSONANT_MAP: Record<string, string> = {
   'ס': 's',
   'ע': '',
   'פ': 'f',
-  'פּ': 'p',
   'ף': 'f',
   'ץ': 'ts',
   'צ': 'ts',
@@ -50,7 +70,6 @@ const CONSONANT_MAP: Record<string, string> = {
   'ר': 'r',
   'ש': 'sh',
   'ת': 't',
-  'תּ': 't',
 };
 
 function isHebrewMark(ch: string): boolean {
@@ -95,13 +114,20 @@ function transliterateHebrew(word: string): string {
     const ch = String.fromCodePoint(codePoint);
     const charLen = codePoint > 0xFFFF ? 2 : 1;
 
-    // 忽略元音、吟诵符号、dagesh 等附标
+    // 忽略吟诵符号、dagesh 等
     if (IGNORED_MARKS.has(ch)) {
       i += charLen;
       continue;
     }
 
-    // 处理 shin(ׁ) / sin(ׂ) 点（可能在元音之后）
+    // 处理元音
+    if (VOWEL_MAP[ch]) {
+      result += VOWEL_MAP[ch];
+      i += charLen;
+      continue;
+    }
+
+    // 处理 shin(ׁ) / sin(ׂ) 点
     if (ch === 'ש') {
       const dot = peekShinDot(normalized, i + charLen);
       if (dot) {
@@ -114,12 +140,39 @@ function transliterateHebrew(word: string): string {
       continue;
     }
 
-    const mapped = CONSONANT_MAP[ch];
-    if (mapped !== undefined) {
-      result += mapped;
+    // 处理 vav 特殊情况：וֹ → o, וּ → u
+    if (ch === 'ו') {
+      const nextCh = normalized[i + charLen];
+      if (nextCh === '\u05B9') { // HOLAM → o
+        result += 'o';
+        skipIndices.add(i + charLen);
+        i += charLen * 2;
+        continue;
+      }
+      if (nextCh === '\u05BC') { // DAGESH → u
+        result += 'u';
+        skipIndices.add(i + charLen);
+        i += charLen * 2;
+        continue;
+      }
+      result += 'v';
+      i += charLen;
+      continue;
+    }
+
+    // 处理其他辅音：检查是否有 dagesh
+    const nextCh = normalized[i + charLen];
+    if (nextCh === '\u05BC' && CONSONANT_WITH_DAGESH[ch]) {
+      result += CONSONANT_WITH_DAGESH[ch];
+      skipIndices.add(i + charLen);
     } else {
-      // 保留希伯来文中的连字符、空格等可见字符
-      result += ch;
+      const mapped = CONSONANT_MAP[ch];
+      if (mapped !== undefined) {
+        result += mapped;
+      } else {
+        // 保留连字符、空格等
+        result += ch;
+      }
     }
 
     i += charLen;
@@ -156,7 +209,6 @@ function HebrewWord({ word }: { word: string }) {
   const pronunciation = transliterateHebrew(word);
   const [playing, setPlaying] = useState(false);
   const [errorTip, setErrorTip] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearErrorTip = useCallback(() => {
@@ -165,55 +217,53 @@ function HebrewWord({ word }: { word: string }) {
   }, []);
 
   const speak = useCallback(() => {
-    // 停止之前的播放
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      setErrorTip('当前浏览器不支持语音朗读');
+      clearErrorTip();
+      return;
     }
 
-    // 通过后端代理 Google TTS，不依赖浏览器语音库
-    const ttsUrl = `/api/v1/tts/speak?text=${encodeURIComponent(word)}&lang=he`;
-    const audio = new Audio(ttsUrl);
+    const synth = window.speechSynthesis;
+    try { synth.resume(); } catch { /* ignore */ }
+    synth.cancel();
 
-    audio.oncanplay = () => {
-      setPlaying(true);
-      audio.play().catch(() => {
-        setErrorTip('播放失败，请重试');
-        setPlaying(false);
-        clearErrorTip();
-      });
-    };
-    audio.onended = () => setPlaying(false);
-    audio.onerror = () => {
+    const voices = synth.getVoices();
+    // 优先使用希伯来语语音朗读原文
+    const hebrewVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
+
+    const utterance = new SpeechSynthesisUtterance(
+      hebrewVoice ? word : pronunciation
+    );
+
+    if (hebrewVoice) {
+      utterance.lang = 'he-IL';
+      utterance.voice = hebrewVoice;
+      utterance.rate = 0.85;
+    } else {
+      // 无希伯来语语音：朗读音译，用英语语音
+      utterance.lang = 'en-US';
+      utterance.rate = 0.8;
+      const enVoice = voices.find((v) => v.lang.startsWith('en'));
+      if (enVoice) utterance.voice = enVoice;
+    }
+
+    utterance.onstart = () => setPlaying(true);
+    utterance.onend = () => setPlaying(false);
+    utterance.onerror = () => {
       setPlaying(false);
-      setErrorTip('语音服务暂不可用');
+      setErrorTip('朗读失败，请重试');
       clearErrorTip();
     };
 
-    // 超时保护：5 秒未加载则提示
-    const loadTimeout = setTimeout(() => {
-      if (audio.readyState < 2) {
-        setPlaying(false);
-        setErrorTip('语音加载超时');
-        clearErrorTip();
-      }
-    }, 5000);
-
-    audio.addEventListener('canplay', () => clearTimeout(loadTimeout), { once: true });
-    audio.addEventListener('error', () => clearTimeout(loadTimeout), { once: true });
-
-    audioRef.current = audio;
-    // 触发加载
-    audio.load();
-  }, [word, clearErrorTip]);
+    synth.speak(utterance);
+  }, [word, pronunciation, clearErrorTip]);
 
   // 组件卸载时停止播放
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
       }
     };
   }, []);
