@@ -4,83 +4,38 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // 希伯来文 Unicode 范围：基本希伯来文 + 字母呈现形式-A
 const HEBREW_REGEX = /[\u0590-\u05FF\uFB1D-\uFB4F]+/g;
+// 希腊文 Unicode 范围：Greek and Coptic + Greek Extended
+const GREEK_REGEX = /[\u0370-\u03FF\u1F00-\u1FFF]+/g;
+// 联合匹配
+const ANCIENT_REGEX = /[\u0370-\u03FF\u1F00-\u1FFF\u0590-\u05FF\uFB1D-\uFB4F]+/g;
 
-// 元音映射（NFD 规范化后与基字符分离）
-const VOWEL_MAP: Record<string, string> = {
-  '\u05B0': 'e',  // SHEVA
-  '\u05B1': 'e',  // HATAF SEGOL
-  '\u05B2': 'a',  // HATAF PATAH
-  '\u05B3': 'o',  // HATAF QAMATS
-  '\u05B4': 'i',  // HIRIQ
-  '\u05B5': 'e',  // TSERE
-  '\u05B6': 'e',  // SEGOL
-  '\u05B7': 'a',  // PATAH
-  '\u05B8': 'a',  // QAMATS
-  '\u05B9': 'o',  // HOLAM
-  '\u05BA': 'o',  // HOLAM HASER
-  '\u05BB': 'u',  // QUBUTS
+// ========== 希伯来语音译 ==========
+
+const HEBREW_VOWEL_MAP: Record<string, string> = {
+  '\u05B0': 'e', '\u05B1': 'e', '\u05B2': 'a', '\u05B3': 'o',
+  '\u05B4': 'i', '\u05B5': 'e', '\u05B6': 'e', '\u05B7': 'a',
+  '\u05B8': 'a', '\u05B9': 'o', '\u05BA': 'o', '\u05BB': 'u',
 };
 
-// 仍然忽略的标记（dagesh、吟诵符号等）
-const IGNORED_MARKS = new Set([
-  '\u05BC', // DAGESH（由辅音逻辑处理）
-  '\u05BD', // METEG
-  '\u05BF', // RAFE
-  '\u05C0', // PASEQ
-  '\u05C3', // SOF PASUQ
-  '\u05C4', '\u05C5', '\u05C6', '\u05C7',
-  // 吟诵符号
+const HEBREW_IGNORED = new Set([
+  '\u05BC', '\u05BD', '\u05BF', '\u05C0', '\u05C3', '\u05C4', '\u05C5', '\u05C6', '\u05C7',
   ...Array.from({ length: 31 }, (_, i) => String.fromCharCode(0x0591 + i)),
 ]);
 
-// 带dagesh的辅音（beged kefet 字母，dagesh 改变发音）
-const CONSONANT_WITH_DAGESH: Record<string, string> = {
-  'ב': 'b',
-  'כ': 'k',
-  'ך': 'k',
-  'פ': 'p',
-};
+const HEBREW_DAGESH: Record<string, string> = { 'ב': 'b', 'כ': 'k', 'ך': 'k', 'פ': 'p' };
 
-// 希伯来辅音到拉丁音译的映射（无 dagesh）
-const CONSONANT_MAP: Record<string, string> = {
-  'א': '',
-  'ב': 'v',
-  'ג': 'g',
-  'ד': 'd',
-  'ה': 'h',
-  'ו': 'v',
-  'ז': 'z',
-  'ח': 'ch',
-  'ט': 't',
-  'י': 'y',
-  'כ': 'ch',
-  'ך': 'ch',
-  'ל': 'l',
-  'מ': 'm',
-  'ם': 'm',
-  'נ': 'n',
-  'ן': 'n',
-  'ס': 's',
-  'ע': '',
-  'פ': 'f',
-  'ף': 'f',
-  'ץ': 'ts',
-  'צ': 'ts',
-  'ק': 'k',
-  'ר': 'r',
-  'ש': 'sh',
-  'ת': 't',
+const HEBREW_CONSONANT: Record<string, string> = {
+  'א': '', 'ב': 'v', 'ג': 'g', 'ד': 'd', 'ה': 'h', 'ו': 'v',
+  'ז': 'z', 'ח': 'ch', 'ט': 't', 'י': 'y', 'כ': 'ch', 'ך': 'ch',
+  'ל': 'l', 'מ': 'm', 'ם': 'm', 'נ': 'n', 'ן': 'n', 'ס': 's',
+  'ע': '', 'פ': 'f', 'ף': 'f', 'ץ': 'ts', 'צ': 'ts', 'ק': 'k',
+  'ר': 'r', 'ש': 'sh', 'ת': 't',
 };
 
 function isHebrewMark(ch: string): boolean {
   const cp = ch.codePointAt(0) || 0;
-  // 元音、发音符号、吟诵符号（不含 shin/sin 点，它们决定辅音发音）
-  return (
-    (cp >= 0x0591 && cp <= 0x05af) ||
-    (cp >= 0x05b0 && cp <= 0x05bc) ||
-    (cp >= 0x05bd && cp <= 0x05c0) ||
-    (cp >= 0x05c3 && cp <= 0x05c7)
-  );
+  return (cp >= 0x0591 && cp <= 0x05af) || (cp >= 0x05b0 && cp <= 0x05bc) ||
+         (cp >= 0x05bd && cp <= 0x05c0) || (cp >= 0x05c3 && cp <= 0x05c7);
 }
 
 function peekShinDot(normalized: string, startIndex: number): { sound: 'sh' | 's'; index: number } | null {
@@ -96,101 +51,105 @@ function peekShinDot(normalized: string, startIndex: number): { sound: 'sh' | 's
 }
 
 function transliterateHebrew(word: string): string {
-  // NFD 把基字符和附标分离，便于单独处理 shin/sin 点、元音等
   const normalized = word.normalize('NFD');
   let result = '';
   let i = 0;
-  const skipIndices = new Set<number>();
+  const skip = new Set<number>();
 
   while (i < normalized.length) {
-    if (skipIndices.has(i)) {
-      i++;
-      continue;
-    }
+    if (skip.has(i)) { i++; continue; }
+    const cp = normalized.codePointAt(i);
+    if (cp === undefined) break;
+    const ch = String.fromCodePoint(cp);
+    const len = cp > 0xFFFF ? 2 : 1;
 
-    const codePoint = normalized.codePointAt(i);
-    if (codePoint === undefined) break;
+    if (HEBREW_IGNORED.has(ch)) { i += len; continue; }
+    if (HEBREW_VOWEL_MAP[ch]) { result += HEBREW_VOWEL_MAP[ch]; i += len; continue; }
 
-    const ch = String.fromCodePoint(codePoint);
-    const charLen = codePoint > 0xFFFF ? 2 : 1;
-
-    // 忽略吟诵符号、dagesh 等
-    if (IGNORED_MARKS.has(ch)) {
-      i += charLen;
-      continue;
-    }
-
-    // 处理元音
-    if (VOWEL_MAP[ch]) {
-      result += VOWEL_MAP[ch];
-      i += charLen;
-      continue;
-    }
-
-    // 处理 shin(ׁ) / sin(ׂ) 点
     if (ch === 'ש') {
-      const dot = peekShinDot(normalized, i + charLen);
-      if (dot) {
-        result += dot.sound;
-        skipIndices.add(dot.index);
-      } else {
-        result += 'sh';
-      }
-      i += charLen;
-      continue;
+      const dot = peekShinDot(normalized, i + len);
+      if (dot) { result += dot.sound; skip.add(dot.index); }
+      else result += 'sh';
+      i += len; continue;
     }
 
-    // 处理 vav 特殊情况：וֹ → o, וּ → u
     if (ch === 'ו') {
-      const nextCh = normalized[i + charLen];
-      if (nextCh === '\u05B9') { // HOLAM → o
-        result += 'o';
-        skipIndices.add(i + charLen);
-        i += charLen * 2;
-        continue;
-      }
-      if (nextCh === '\u05BC') { // DAGESH → u
-        result += 'u';
-        skipIndices.add(i + charLen);
-        i += charLen * 2;
-        continue;
-      }
-      result += 'v';
-      i += charLen;
-      continue;
+      const next = normalized[i + len];
+      if (next === '\u05B9') { result += 'o'; skip.add(i + len); i += len * 2; continue; }
+      if (next === '\u05BC') { result += 'u'; skip.add(i + len); i += len * 2; continue; }
+      result += 'v'; i += len; continue;
     }
 
-    // 处理其他辅音：检查是否有 dagesh
-    const nextCh = normalized[i + charLen];
-    if (nextCh === '\u05BC' && CONSONANT_WITH_DAGESH[ch]) {
-      result += CONSONANT_WITH_DAGESH[ch];
-      skipIndices.add(i + charLen);
+    const next = normalized[i + len];
+    if (next === '\u05BC' && HEBREW_DAGESH[ch]) {
+      result += HEBREW_DAGESH[ch]; skip.add(i + len);
     } else {
-      const mapped = CONSONANT_MAP[ch];
-      if (mapped !== undefined) {
-        result += mapped;
-      } else {
-        // 保留连字符、空格等
-        result += ch;
-      }
+      result += HEBREW_CONSONANT[ch] ?? ch;
     }
-
-    i += charLen;
+    i += len;
   }
-
   return result || 'Hebrew';
 }
+
+// ========== 希腊语音译 ==========
+
+const GREEK_MAP: Record<string, string> = {
+  'α': 'a', 'β': 'b', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z',
+  'η': 'e', 'θ': 'th', 'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm',
+  'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p', 'ρ': 'r', 'σ': 's',
+  'ς': 's', 'τ': 't', 'υ': 'u', 'φ': 'ph', 'χ': 'ch', 'ψ': 'ps',
+  'ω': 'o',
+  // 大写
+  'Α': 'A', 'Β': 'B', 'Γ': 'G', 'Δ': 'D', 'Ε': 'E', 'Ζ': 'Z',
+  'Η': 'E', 'Θ': 'Th', 'Ι': 'I', 'Κ': 'K', 'Λ': 'L', 'Μ': 'M',
+  'Ν': 'N', 'Ξ': 'X', 'Ο': 'O', 'Π': 'P', 'Ρ': 'R', 'Σ': 'S',
+  'Τ': 'T', 'Υ': 'U', 'Φ': 'Ph', 'Χ': 'Ch', 'Ψ': 'Ps', 'Ω': 'O',
+};
+
+// 希腊语中可忽略的变音符号（NFD 规范化后）
+const GREEK_DIACRITIC = new Set([
+  '\u0300', '\u0301', '\u0304', '\u0306', '\u0308', '\u0313', '\u0314', '\u0342', '\u0345',
+]);
+
+function transliterateGreek(word: string): string {
+  // NFD 分解预组合字符（如 ά → α + ́）
+  const normalized = word.normalize('NFD');
+  let result = '';
+  for (let i = 0; i < normalized.length; i++) {
+    const ch = normalized[i];
+    if (GREEK_DIACRITIC.has(ch)) continue;
+    if (ch === '\u03C2') { result += 's'; continue; } // 词尾 sigma
+    result += GREEK_MAP[ch] ?? ch;
+  }
+  // 希腊语小写全转小写，便于朗读
+  return result.toLowerCase() || 'Greek';
+}
+
+// ========== 检测语言类型 ==========
+
+type LangType = 'hebrew' | 'greek';
+
+function detectLang(word: string): LangType {
+  return HEBREW_REGEX.test(word) ? 'hebrew' : 'greek';
+}
+
+// ========== 导出工具函数 ==========
 
 export function containsHebrew(text: string): boolean {
   return HEBREW_REGEX.test(text);
 }
+
+export function containsGreek(text: string): boolean {
+  return GREEK_REGEX.test(text);
+}
+
+// ========== 组件 ==========
 
 interface HebrewTextProps {
   text: string;
   className?: string;
 }
 
-// 小喇叭图标
 function SpeakerIcon({ playing }: { playing: boolean }) {
   return (
     <svg
@@ -204,9 +163,8 @@ function SpeakerIcon({ playing }: { playing: boolean }) {
   );
 }
 
-// 单个希伯来文词组 + 音译 + 发音按钮
-function HebrewWord({ word }: { word: string }) {
-  const pronunciation = transliterateHebrew(word);
+function AncientWord({ word, lang }: { word: string; lang: LangType }) {
+  const pronunciation = lang === 'hebrew' ? transliterateHebrew(word) : transliterateGreek(word);
   const [playing, setPlaying] = useState(false);
   const [errorTip, setErrorTip] = useState<string | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -228,19 +186,28 @@ function HebrewWord({ word }: { word: string }) {
     synth.cancel();
 
     const voices = synth.getVoices();
-    // 优先使用希伯来语语音朗读原文
-    const hebrewVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
+
+    // 优先使用母语语音朗读原文
+    let nativeVoice: SpeechSynthesisVoice | undefined;
+    let langCode: string;
+    if (lang === 'hebrew') {
+      nativeVoice = voices.find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
+      langCode = 'he-IL';
+    } else {
+      nativeVoice = voices.find((v) => v.lang.startsWith('el'));
+      langCode = 'el-GR';
+    }
 
     const utterance = new SpeechSynthesisUtterance(
-      hebrewVoice ? word : pronunciation
+      nativeVoice ? word : pronunciation
     );
 
-    if (hebrewVoice) {
-      utterance.lang = 'he-IL';
-      utterance.voice = hebrewVoice;
+    if (nativeVoice) {
+      utterance.lang = langCode;
+      utterance.voice = nativeVoice;
       utterance.rate = 0.85;
     } else {
-      // 无希伯来语语音：朗读音译，用英语语音
+      // 无母语语音：朗读音译，用英语语音
       utterance.lang = 'en-US';
       utterance.rate = 0.8;
       const enVoice = voices.find((v) => v.lang.startsWith('en'));
@@ -256,9 +223,8 @@ function HebrewWord({ word }: { word: string }) {
     };
 
     synth.speak(utterance);
-  }, [word, pronunciation, clearErrorTip]);
+  }, [word, pronunciation, lang, clearErrorTip]);
 
-  // 组件卸载时停止播放
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -268,12 +234,12 @@ function HebrewWord({ word }: { word: string }) {
     };
   }, []);
 
+  const isRtl = lang === 'hebrew';
+  const label = lang === 'hebrew' ? '希伯来语' : '希腊语';
+
   return (
-    <span className="inline-flex items-center gap-0.5 align-bottom mx-0.5 relative" dir="rtl">
-      <ruby
-        className="hebrew-ruby inline-flex flex-col items-center"
-        title={`发音：${pronunciation}`}
-      >
+    <span className="inline-flex items-center gap-0.5 align-bottom mx-0.5 relative" dir={isRtl ? 'rtl' : 'ltr'}>
+      <ruby className="inline-flex flex-col items-center" title={`发音：${pronunciation}`}>
         <span className="text-lg">{word}</span>
         <rt className="text-[0.65em] leading-tight text-amber-700 italic font-medium">
           {pronunciation}
@@ -283,8 +249,8 @@ function HebrewWord({ word }: { word: string }) {
         type="button"
         onClick={speak}
         className="p-0.5 rounded hover:bg-bible-warm/50 transition-colors focus:outline-none focus:ring-1 focus:ring-bible-gold relative"
-        title="播放希伯来语发音"
-        aria-label={`播放 ${word} 的希伯来语发音`}
+        title={`播放${label}发音`}
+        aria-label={`播放 ${word} 的${label}发音`}
       >
         <SpeakerIcon playing={playing} />
         {errorTip && (
@@ -300,17 +266,18 @@ function HebrewWord({ word }: { word: string }) {
 export default function HebrewText({ text, className }: HebrewTextProps) {
   if (!text) return null;
 
-  const parts = text.split(HEBREW_REGEX);
-  const matches = text.match(HEBREW_REGEX) || [];
+  const parts = text.split(ANCIENT_REGEX);
+  const matches = text.match(ANCIENT_REGEX) || [];
   const nodes: React.ReactNode[] = [];
 
   parts.forEach((part, index) => {
     if (part) {
       nodes.push(<span key={`t-${index}`}>{part}</span>);
     }
-    const hebrew = matches[index];
-    if (hebrew) {
-      nodes.push(<HebrewWord key={`h-${index}`} word={hebrew} />);
+    const word = matches[index];
+    if (word) {
+      const lang = detectLang(word);
+      nodes.push(<AncientWord key={`w-${index}`} word={word} lang={lang} />);
     }
   });
 
