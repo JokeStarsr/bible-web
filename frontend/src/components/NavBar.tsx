@@ -10,6 +10,7 @@ export default function NavBar() {
   const { t, lang, swapLang } = useI18n();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -25,11 +26,21 @@ export default function NavBar() {
         const userInfo = JSON.parse(userInfoStr);
         setIsLoggedIn(true);
         setUsername(userInfo.username || userInfo.email || t('nav.user'));
+        checkAdminRole();
       } catch {
         setIsLoggedIn(false);
       }
     } else if (token) {
       fetchUserProfile();
+    }
+  };
+
+  const checkAdminRole = async () => {
+    try {
+      const res = await api.get('/qt/admin/check');
+      setIsAdmin(res.data.data === true);
+    } catch {
+      setIsAdmin(false);
     }
   };
 
@@ -40,6 +51,7 @@ export default function NavBar() {
       localStorage.setItem('userInfo', JSON.stringify(data));
       setIsLoggedIn(true);
       setUsername(data.username || data.email || t('nav.user'));
+      checkAdminRole();
     } catch {
       setIsLoggedIn(false);
     }
@@ -103,6 +115,15 @@ export default function NavBar() {
                     >
 {t('nav.profile')}
                     </a>
+                    {isAdmin && (
+                      <a
+                        href="/qt-admin"
+                        className="block w-full text-left px-4 py-2 text-sm text-amber-700 font-medium hover:bg-amber-50 transition-colors"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        QT 管理
+                      </a>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
@@ -167,6 +188,15 @@ export default function NavBar() {
               >
                 {t('nav.profile')}
               </a>
+              {isAdmin && (
+                <a
+                  href="/qt-admin"
+                  className="block text-amber-700 font-medium hover:text-amber-900"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  QT 管理
+                </a>
+              )}
               <button
                 onClick={handleLogout}
                 className="block text-bible-dark hover:text-bible-gold"

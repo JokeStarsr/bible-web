@@ -68,6 +68,7 @@ public class QtService {
                 existing.setScriptureReference(item.getScriptureReference());
                 existing.setScriptureText(item.getScriptureText());
                 existing.setCommentary(item.getCommentary());
+                existing.setHymn(item.getHymn());
                 contentMapper.update(existing);
             } else {
                 QtDailyContent c = new QtDailyContent();
@@ -77,6 +78,7 @@ public class QtService {
                 c.setScriptureReference(item.getScriptureReference());
                 c.setScriptureText(item.getScriptureText());
                 c.setCommentary(item.getCommentary());
+                c.setHymn(item.getHymn());
                 contentMapper.insert(c);
             }
         }

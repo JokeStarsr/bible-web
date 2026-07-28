@@ -20,5 +20,6 @@ public class QtImportRequest {
         @NotEmpty
         private String scriptureText;
         private String commentary;
+        private String hymn;
     }
 }
