@@ -4,6 +4,37 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reflectionApi, annotationApi, bookmarkApi } from '@/services/api';
 import { useI18n } from '@/i18n/I18nContext';
+
+type TabKey = 'reflections' | 'annotations' | 'bookmarks';
+
+interface ReflectionItem {
+  id: string;
+  referenceText: string;
+  title?: string;
+  content: string;
+  createdAt: string;
+}
+
+interface AnnotationItem {
+  id: string;
+  selectedText?: string;
+  noteContent?: string;
+  visibility: 'private' | 'public';
+  chapterNumber: number;
+  startVerse: number;
+  endVerse: number;
+  createdAt: string;
+}
+
+interface BookmarkItem {
+  id: string;
+  chapterNumber: number;
+  verseNumber: number;
+  createdAt: string;
+}
+
+type GroupedRecords = Record<string, ReflectionItem[]>;
+
 export default function ProfilePage() {
   const router = useRouter();
   const { t } = useI18n();
