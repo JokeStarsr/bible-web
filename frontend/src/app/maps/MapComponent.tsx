@@ -350,17 +350,6 @@ export function MapControls({
     ).slice(0, 8);
   };
 
-  const getMatchedLocations = (value: string) => {
-    const q = value.toLowerCase().trim();
-    if (!q) return [];
-    return SEARCHABLE_LOCATIONS.filter(
-      (loc) =>
-        loc.name.toLowerCase().includes(q) ||
-        loc.id.toLowerCase().includes(q) ||
-        (loc.nameEn && loc.nameEn.toLowerCase().includes(q))
-    ).slice(0, 8);
-  };
-
   const handleInputChange = (value: string) => {
     setQuery(value);
     if (!value.trim()) {
