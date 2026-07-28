@@ -4,6 +4,8 @@ import com.bible.module.annotation.dto.BookmarkRequest;
 import com.bible.module.annotation.dto.BookmarkResponse;
 import com.bible.module.annotation.entity.VerseBookmark;
 import com.bible.module.annotation.mapper.VerseBookmarkMapper;
+import com.bible.module.scripture.entity.BibleBook;
+import com.bible.module.scripture.mapper.BibleBookMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class VerseBookmarkService {
 
     private final VerseBookmarkMapper bookmarkMapper;
+    private final BibleBookMapper bookMapper;
 
     @Transactional
     public BookmarkResponse toggle(UUID userId, BookmarkRequest req) {
@@ -59,6 +62,7 @@ public class VerseBookmarkService {
         return BookmarkResponse.builder()
                 .versionId(versionId)
                 .bookId(bookId)
+                .bookName(resolveBookName(bookId))
                 .chapterNumber(chapterNumber)
                 .verseNumber(verseNumber)
                 .bookmarked(false)
@@ -70,10 +74,18 @@ public class VerseBookmarkService {
                 .id(b.getId())
                 .versionId(b.getVersionId())
                 .bookId(b.getBookId())
+                .bookName(resolveBookName(b.getBookId()))
                 .chapterNumber(b.getChapterNumber())
                 .verseNumber(b.getVerseNumber())
                 .createdAt(b.getCreatedAt())
                 .bookmarked(bookmarked)
                 .build();
+    }
+
+    /** 查询书卷中文名（韩文由前端 localizeScriptureReference 转换） */
+    private String resolveBookName(UUID bookId) {
+        if (bookId == null) return null;
+        BibleBook book = bookMapper.findById(bookId);
+        return book != null ? book.getBookNameZh() : null;
     }
 }
