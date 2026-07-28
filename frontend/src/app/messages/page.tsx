@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { messageApi } from '@/services/api';
+import { useI18n } from '@/i18n/I18nContext';
 
 interface UserInfo {
   id: string;
@@ -28,6 +29,7 @@ interface MessageItem {
 }
 
 export default function MessagesPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
@@ -66,7 +68,7 @@ export default function MessagesPage() {
       const res = await messageApi.listSessions(1, 50);
       setSessions(res.data.data || []);
     } catch (err: any) {
-      setError(err.response?.data?.message || '加载私信列表失败');
+      setError(err.response?.data?.message || t('messages.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -113,7 +115,7 @@ export default function MessagesPage() {
       setMessages((prev) => [...prev, res.data.data]);
       setInput('');
     } catch (err: any) {
-      setError(err.response?.data?.message || '发送失败');
+      setError(err.response?.data?.message || t('messages.sendFail'));
     } finally {
       setSending(false);
     }
@@ -165,7 +167,7 @@ export default function MessagesPage() {
 
       {loading ? (
         <div className="text-center text-bible-muted py-8">
-          <div className="animate-pulse">正在加载私信列表...</div>
+          <div className="animate-pulse">{t("messages.checkingAuth")}</div>
         </div>
       ) : error ? (
         <div className="text-center text-red-500 bg-red-50 rounded-lg py-3 px-4">{error}</div>

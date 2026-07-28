@@ -77,6 +77,7 @@ export const contactApi = {
     phone?: string;
     email: string;
     location: string;
+    question?: string;
   }) => api.post('/contact/pastor', data),
 };
 

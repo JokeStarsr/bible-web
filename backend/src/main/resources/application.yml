@@ -58,6 +58,8 @@ app:
     pastor-to: ${MAIL_PASTOR_TO:852341467@qq.com}
   private-message:
     unlock-rounds: 20
+  qt:
+    upload-dir: /opt/bible-web/uploads/qt-photos
   llm:
     provider: ${LLM_PROVIDER:deepseek}
     api-key: ${LLM_API_KEY:}

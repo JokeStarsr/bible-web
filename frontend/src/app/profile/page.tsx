@@ -3,53 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reflectionApi, annotationApi, bookmarkApi } from '@/services/api';
-
-interface ReflectionItem {
-  id: string;
-  title?: string;
-  referenceText: string;
-  content: string;
-  visibility: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface AnnotationItem {
-  id: string;
-  userId: string;
-  versionId: string;
-  bookId: string;
-  chapterNumber: number;
-  startVerse: number;
-  endVerse: number;
-  selectedText?: string;
-  noteContent?: string;
-  visibility: string;
-  createdAt: string;
-}
-
-interface BookmarkItem {
-  id: string;
-  bookId: string;
-  chapterNumber: number;
-  verseNumber: number;
-  createdAt: string;
-}
-
-interface GroupedRecords {
-  [date: string]: ReflectionItem[];
-}
-
-type TabKey = 'reflections' | 'annotations' | 'bookmarks';
-
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'reflections', label: '灵修感悟' },
-  { key: 'annotations', label: '划线/默想' },
-  { key: 'bookmarks', label: '收藏经文' },
-];
-
+import { useI18n } from '@/i18n/I18nContext';
 export default function ProfilePage() {
   const router = useRouter();
+  const { t } = useI18n();
+
+  const TABS: { key: TabKey; label: string }[] = [
+    { key: 'reflections', label: t('profile.tabs.reflections') },
+    { key: 'annotations', label: t('profile.tabs.annotations') },
+    { key: 'bookmarks', label: t('profile.tabs.bookmarks') },
+  ];
+
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('reflections');
 
@@ -106,7 +70,7 @@ export default function ProfilePage() {
       setGroupedRecords(grouped);
       setDateOrder(order);
     } catch (err: any) {
-      setError(err.response?.data?.message || '获取灵修记录失败');
+      setError(err.response?.data?.message || t('profile.reflections.fetchError'));
     } finally {
       setLoading(false);
     }
@@ -119,7 +83,7 @@ export default function ProfilePage() {
       const res = await annotationApi.listMy(1, 200);
       setAnnotations(res.data.data || []);
     } catch (err: any) {
-      setAnnoError(err.response?.data?.message || '获取标注失败');
+      setAnnoError(err.response?.data?.message || t('profile.annotations.fetchError'));
     } finally {
       setAnnoLoading(false);
     }
@@ -132,7 +96,7 @@ export default function ProfilePage() {
       const res = await bookmarkApi.list(1, 200);
       setBookmarks(res.data.data || []);
     } catch (err: any) {
-      setBmError(err.response?.data?.message || '获取收藏失败');
+setBmError(err.response?.data?.message || t('profile.bookmarks.fetchError'));
     } finally {
       setBmLoading(false);
     }
@@ -187,7 +151,7 @@ export default function ProfilePage() {
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-bible-gold text-lg animate-pulse">正在确认登录状态...</div>
+        <div className="text-bible-gold text-lg animate-pulse">{t('profile.auth.checking')}</div>
       </div>
     );
   }
@@ -202,13 +166,13 @@ export default function ProfilePage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          返回首页
+          {t('profile.back')}
         </button>
       </div>
 
       <div className="text-center py-6">
-        <h1 className="text-3xl font-bold text-bible-dark mb-3">个人中心</h1>
-        <p className="text-bible-muted">查看你的灵修记录、划线默想与收藏</p>
+<h1 className="text-3xl font-bold text-bible-dark mb-3">{t('profile.title')}</h1>
+        <p className="text-bible-muted">{t('profile.subtitle')}</p>
       </div>
 
       {/* Tab 切换 */}
@@ -233,7 +197,7 @@ export default function ProfilePage() {
         <>
           {loading && (
             <div className="text-center text-bible-muted py-8">
-              <div className="animate-pulse">正在加载灵修记录...</div>
+<div className="animate-pulse">{t('profile.reflections.loading')}</div>
             </div>
           )}
 
@@ -243,7 +207,7 @@ export default function ProfilePage() {
 
           {!loading && !error && dateOrder.length === 0 && (
             <div className="text-center text-bible-muted py-12">
-              暂无灵修记录，先去首页生成经文并写下感悟吧
+{t('profile.reflections.empty')}
             </div>
           )}
 
@@ -258,7 +222,7 @@ export default function ProfilePage() {
                     className="w-full flex items-center justify-between px-4 py-3 bg-bible-warm/30 hover:bg-bible-warm/50 transition-colors text-left"
                   >
                     <span className="font-bold text-bible-dark">{date}</span>
-                    <span className="text-sm text-bible-muted">{items.length} 条感悟</span>
+<span className="text-sm text-bible-muted">{items.length} {t('profile.reflections.count')}</span>
                     <svg
                       className={`w-5 h-5 text-bible-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                       fill="none"
@@ -322,7 +286,7 @@ export default function ProfilePage() {
         <>
           {annoLoading && (
             <div className="text-center text-bible-muted py-8">
-              <div className="animate-pulse">正在加载划线默想...</div>
+<div className="animate-pulse">{t('profile.annotations.loading')}</div>
             </div>
           )}
 
@@ -332,7 +296,7 @@ export default function ProfilePage() {
 
           {!annoLoading && !annoError && annotations.length === 0 && (
             <div className="text-center text-bible-muted py-12">
-              暂无划线默想，去首页生成经文后划选经文写下你的默想吧
+{t('profile.annotations.empty')}
             </div>
           )}
 
@@ -348,7 +312,7 @@ export default function ProfilePage() {
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-500'
                   }`}>
-                    {a.visibility === 'public' ? '公开' : '仅自己可见'}
+{a.visibility === 'public' ? t('profile.visibility.public') : t('profile.visibility.private')}
                   </span>
                 </div>
                 {a.noteContent && (
@@ -367,7 +331,7 @@ export default function ProfilePage() {
         <>
           {bmLoading && (
             <div className="text-center text-bible-muted py-8">
-              <div className="animate-pulse">正在加载收藏...</div>
+<div className="animate-pulse">{t('profile.bookmarks.loading')}</div>
             </div>
           )}
 
@@ -377,7 +341,7 @@ export default function ProfilePage() {
 
           {!bmLoading && !bmError && bookmarks.length === 0 && (
             <div className="text-center text-bible-muted py-12">
-              暂无收藏经文，去首页生成经文后点击收藏吧
+{t('profile.bookmarks.empty')}
             </div>
           )}
 
@@ -389,7 +353,7 @@ export default function ProfilePage() {
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                   </svg>
                   <p className="text-bible-dark font-semibold text-sm">
-                    第{b.chapterNumber}章 第{b.verseNumber}节
+{t('profile.bookmarks.chapterVerse').replace(/\{(\w+)\}/g, (_: string, k: string) => String(k === 'chapter' ? b.chapterNumber : b.verseNumber))}
                   </p>
                 </div>
                 <span className="text-xs text-bible-muted">{formatDate(b.createdAt)}</span>

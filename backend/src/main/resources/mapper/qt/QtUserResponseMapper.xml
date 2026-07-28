@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.qt.mapper.QtUserResponseMapper">
+
+    <resultMap id="QtUserResponseMap" type="com.bible.module.qt.entity.QtUserResponse">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="qt_content_id" property="qtContentId"/>
+        <result column="meditation" property="meditation"/>
+        <result column="application" property="application"/>
+        <result column="prayer" property="prayer"/>
+        <result column="photos" property="photos"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+
+    <select id="findById" resultMap="QtUserResponseMap">
+        SELECT * FROM qt_user_responses WHERE id = #{id}
+    </select>
+
+    <select id="findByUserAndContent" resultMap="QtUserResponseMap">
+        SELECT * FROM qt_user_responses WHERE user_id = #{userId} AND qt_content_id = #{qtContentId}
+    </select>
+
+    <select id="findByContentId" resultMap="QtUserResponseMap">
+        SELECT r.* FROM qt_user_responses r
+        WHERE r.qt_content_id = #{qtContentId}
+        ORDER BY r.created_at ASC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO qt_user_responses(id, user_id, qt_content_id, meditation, application, prayer, photos)
+        VALUES(#{id}, #{userId}, #{qtContentId}, #{meditation}, #{application}, #{prayer}, #{photos})
+    </insert>
+
+    <update id="update">
+        UPDATE qt_user_responses
+        SET meditation = #{meditation}, application = #{application}, prayer = #{prayer}, photos = #{photos}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="findUserHistory" resultMap="QtUserResponseMap">
+        SELECT r.* FROM qt_user_responses r
+        WHERE r.user_id = #{userId}
+        ORDER BY r.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countUserHistory" resultType="int">
+        SELECT COUNT(*) FROM qt_user_responses WHERE user_id = #{userId}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM qt_user_responses WHERE id = #{id}
+    </delete>
+
+</mapper>

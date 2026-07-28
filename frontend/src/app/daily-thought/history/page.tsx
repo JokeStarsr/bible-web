@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { dailyThoughtApi } from '@/services/api';
 import HebrewText from '@/components/HebrewText';
+import { useI18n } from '@/i18n/I18nContext';
 
 interface ScriptureMatch {
   reference: string;
@@ -27,6 +28,7 @@ interface GroupedRecords {
 
 export default function DailyThoughtHistoryPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [groupedRecords, setGroupedRecords] = useState<GroupedRecords>({});
   const [dateOrder, setDateOrder] = useState<string[]>([]);
@@ -70,7 +72,7 @@ export default function DailyThoughtHistoryPage() {
       setGroupedRecords(grouped);
       setDateOrder(order);
     } catch (err: any) {
-      setError(err.response?.data?.message || '获取历史记录失败');
+      setError(err.response?.data?.message || t('thoughtHistory.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -113,7 +115,7 @@ export default function DailyThoughtHistoryPage() {
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-bible-gold text-lg animate-pulse">正在确认登录状态...</div>
+        <div className="text-bible-gold text-lg animate-pulse">{t('thoughtHistory.checkingAuth')}</div>
       </div>
     );
   }
@@ -128,24 +130,24 @@ export default function DailyThoughtHistoryPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          返回今日随想
+          {t('thoughtHistory.back')}
         </button>
         <button
           onClick={() => router.push('/')}
           className="text-sm text-bible-muted hover:text-bible-gold transition-colors"
         >
-          回首页
+          {t('thoughtHistory.home')}
         </button>
       </div>
 
       <div className="text-center py-6">
-        <h1 className="text-3xl font-bold text-bible-dark mb-3">历史记录</h1>
-        <p className="text-bible-muted">回顾神曾经借着随想对你说的话</p>
+        <h1 className="text-3xl font-bold text-bible-dark mb-3">{t('thoughtHistory.title')}</h1>
+        <p className="text-bible-muted">{t('thoughtHistory.subtitle')}</p>
       </div>
 
       {loading && (
         <div className="text-center text-bible-muted py-8">
-          <div className="animate-pulse">正在加载历史记录...</div>
+          <div className="animate-pulse">{t('thoughtHistory.loading')}</div>
         </div>
       )}
 
@@ -157,7 +159,7 @@ export default function DailyThoughtHistoryPage() {
 
       {!loading && !error && dateOrder.length === 0 && (
         <div className="text-center text-bible-muted py-12">
-          暂无历史记录，先去写一篇今日随想吧
+          {t('thoughtHistory.empty')}
         </div>
       )}
 
@@ -171,7 +173,7 @@ export default function DailyThoughtHistoryPage() {
               className="w-full flex items-center justify-between px-4 py-3 bg-bible-warm/30 hover:bg-bible-warm/50 transition-colors text-left"
             >
               <span className="font-bold text-bible-dark">{date}</span>
-              <span className="text-sm text-bible-muted">{items.length} 条随想</span>
+              <span className="text-sm text-bible-muted">{items.length}{' '}{t('thoughtHistory.title')}</span>
               <svg
                 className={`w-5 h-5 text-bible-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                 fill="none"
@@ -209,14 +211,14 @@ export default function DailyThoughtHistoryPage() {
                       {itemExpanded && (
                         <div className="mt-4 space-y-4">
                           <div className="scripture-card">
-                            <h2 className="text-lg font-bold text-bible-dark mb-2">我的随想</h2>
+                            <h2 className="text-lg font-bold text-bible-dark mb-2">{t('thoughtHistory.title')}</h2>
                             <div className="text-bible-text leading-relaxed whitespace-pre-wrap bg-bible-warm/20 rounded-lg p-4">
                               <HebrewText text={record.content} />
                             </div>
                           </div>
 
                           <div className="scripture-card bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200">
-                            <h2 className="text-xl font-bold text-bible-dark mb-4">牧养回应</h2>
+                            <h2 className="text-xl font-bold text-bible-dark mb-4">{t('thoughtHistory.pastoralResponse')}</h2>
                             <div className="text-bible-text leading-relaxed whitespace-pre-wrap">
                               <HebrewText text={record.pastoralResponse} />
                             </div>
@@ -224,7 +226,7 @@ export default function DailyThoughtHistoryPage() {
 
                           {record.scriptures && record.scriptures.length > 0 && (
                             <div className="space-y-4">
-                              <h2 className="text-xl font-bold text-bible-dark text-center">相关经文</h2>
+                              <h2 className="text-xl font-bold text-bible-dark text-center">{t('thoughtHistory.scriptures')}</h2>
                               {record.scriptures.map((item, index) => (
                                 <div key={index} className="scripture-card">
                                   <div className="text-bible-gold text-sm font-semibold mb-2 tracking-wider">
@@ -232,7 +234,7 @@ export default function DailyThoughtHistoryPage() {
                                   </div>
                                   <p className="text-bible-text leading-relaxed mb-3">{item.text}</p>
                                   <div className="text-sm text-bible-muted bg-bible-warm/20 rounded-lg p-3">
-                                    <span className="font-semibold text-bible-dark">关联：</span>
+                                    <span className="font-semibold text-bible-dark">{t('thoughtHistory.relevance')}</span>
                                     {item.relevance}
                                   </div>
                                 </div>
@@ -242,7 +244,7 @@ export default function DailyThoughtHistoryPage() {
 
                           {record.divineWord && (
                             <div className="scripture-card bg-gradient-to-br from-bible-gold/10 to-amber-100/50 border-bible-gold/30">
-                              <h2 className="text-xl font-bold text-bible-dark mb-4">✨ 神可能想对你说</h2>
+                              <h2 className="text-xl font-bold text-bible-dark mb-4">{t('thoughtHistory.divineWord')}</h2>
                               <div className="text-lg text-bible-dark leading-relaxed font-medium whitespace-pre-wrap">
                                 <HebrewText text={record.divineWord} />
                               </div>
@@ -251,7 +253,7 @@ export default function DailyThoughtHistoryPage() {
 
                           {record.hymn && (
                             <div className="scripture-card bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200">
-                              <h2 className="text-xl font-bold text-bible-dark mb-4">🎵 主题赞美诗歌</h2>
+                              <h2 className="text-xl font-bold text-bible-dark mb-4">{t('thoughtHistory.hymn')}</h2>
                               <div className="text-bible-text leading-relaxed whitespace-pre-wrap">
                                 <HebrewText text={record.hymn} />
                               </div>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.qt.mapper.QtDailyContentMapper">
+
+    <resultMap id="QtDailyContentMap" type="com.bible.module.qt.entity.QtDailyContent">
+        <id column="id" property="id"/>
+        <result column="qt_date" property="qtDate"/>
+        <result column="title" property="title"/>
+        <result column="scripture_reference" property="scriptureReference"/>
+        <result column="scripture_text" property="scriptureText"/>
+        <result column="commentary" property="commentary"/>
+        <result column="hymn" property="hymn"/>
+        <result column="scripture_text_ko" property="scriptureTextKo"/>
+        <result column="commentary_ko" property="commentaryKo"/>
+        <result column="hymn_ko" property="hymnKo"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findByDate" resultMap="QtDailyContentMap">
+        SELECT * FROM qt_daily_contents WHERE qt_date = #{qtDate}
+    </select>
+
+    <select id="findById" resultMap="QtDailyContentMap">
+        SELECT * FROM qt_daily_contents WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="QtDailyContentMap">
+        SELECT * FROM qt_daily_contents ORDER BY qt_date DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM qt_daily_contents
+    </select>
+
+    <insert id="insert">
+        INSERT INTO qt_daily_contents(id, qt_date, title, scripture_reference, scripture_text, commentary, hymn,
+            scripture_text_ko, commentary_ko, hymn_ko)
+        VALUES(#{id}, #{qtDate}, #{title}, #{scriptureReference}, #{scriptureText}, #{commentary}, #{hymn},
+            #{scriptureTextKo}, #{commentaryKo}, #{hymnKo})
+    </insert>
+
+    <update id="update">
+        UPDATE qt_daily_contents
+        SET title = #{title}, scripture_reference = #{scriptureReference},
+            scripture_text = #{scriptureText}, commentary = #{commentary}, hymn = #{hymn},
+            scripture_text_ko = #{scriptureTextKo}, commentary_ko = #{commentaryKo}, hymn_ko = #{hymnKo},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useState } from 'react';
 import { DEFAULT_ROUTE_ID } from '@/data/bibleMaps';
+import { useI18n } from '@/i18n/I18nContext';
 
 const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
@@ -19,6 +20,7 @@ const MapControls = dynamic(
 );
 
 export default function BibleMapsPage() {
+  const { t } = useI18n();
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
   const [searchTrigger, setSearchTrigger] = useState<{ locationId: string; ts: number } | null>(null);
 
@@ -40,7 +42,7 @@ export default function BibleMapsPage() {
       <MapComponent routeId={routeId} searchTrigger={searchTrigger} />
 
       <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-bible-warm px-3 py-2 text-xs text-bible-muted max-w-xs">
-        提示：坐标为近似值，仅用于辅助读经，不代表考古定论。
+        {t('maps.tip')}
       </div>
     </div>
   );

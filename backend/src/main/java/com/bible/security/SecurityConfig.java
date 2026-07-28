@@ -52,7 +52,10 @@ public class SecurityConfig {
                         "/api/v1/praise/random",
                         "/api/v1/praise/stream/**",
                         "/api/v1/annotations/public",
-                        "/api/v1/tts/speak"
+                        "/api/v1/tts/speak",
+                        "/api/v1/qt/today",
+                        "/api/v1/qt/date/**",
+                        "/api/v1/qt/responses/**"
                 ).permitAll()
                 // 管理后台仅管理员
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

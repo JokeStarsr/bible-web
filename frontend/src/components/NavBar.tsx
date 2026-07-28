@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { useI18n } from '@/i18n/I18nContext';
 
 export default function NavBar() {
   const router = useRouter();
+  const { t, lang, swapLang } = useI18n();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,7 +24,7 @@ export default function NavBar() {
       try {
         const userInfo = JSON.parse(userInfoStr);
         setIsLoggedIn(true);
-        setUsername(userInfo.username || userInfo.email || '用户');
+        setUsername(userInfo.username || userInfo.email || t('nav.user'));
       } catch {
         setIsLoggedIn(false);
       }
@@ -37,7 +39,7 @@ export default function NavBar() {
       const data = res.data.data;
       localStorage.setItem('userInfo', JSON.stringify(data));
       setIsLoggedIn(true);
-      setUsername(data.username || data.email || '用户');
+      setUsername(data.username || data.email || t('nav.user'));
     } catch {
       setIsLoggedIn(false);
     }
@@ -64,15 +66,23 @@ export default function NavBar() {
     <header className="border-b border-bible-warm bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <a href="/" className="text-xl font-bold text-bible-gold tracking-wide">
-          📖 圣经灵修
+          {t('nav.logo')}
         </a>
 
-        {/* 桌面导航：仅保留用户入口 */}
+        {/* 桌面导航 */}
         <nav className="hidden sm:flex items-center gap-4 text-sm">
+          {/* 语言切换 */}
+          <button
+            onClick={swapLang}
+            className="text-xs px-2 py-1 rounded border border-bible-warm text-bible-muted hover:text-bible-gold hover:border-bible-gold transition-colors"
+          >
+            {lang === 'zh' ? '한글' : '中文'}
+          </button>
+
           {isLoggedIn ? (
             <>
               <a href="/messages" className="text-bible-muted hover:text-bible-gold transition-colors">
-                私信
+{t('nav.messages')}
               </a>
               <div className="relative">
                 <button
@@ -91,13 +101,13 @@ export default function NavBar() {
                       className="block w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
                       onClick={() => setMenuOpen(false)}
                     >
-                      个人中心
+{t('nav.profile')}
                     </a>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
                     >
-                      退出登录
+{t('nav.logout')}
                     </button>
                   </div>
                 )}
@@ -106,10 +116,10 @@ export default function NavBar() {
           ) : (
             <>
               <a href="/login" className="text-bible-muted hover:text-bible-gold transition-colors">
-                登录
+                {t('nav.login')}
               </a>
               <a href="/register" className="btn-primary text-sm py-2 px-4">
-                注册
+                {t('nav.register')}
               </a>
             </>
           )}
@@ -119,7 +129,7 @@ export default function NavBar() {
         <button
           className="sm:hidden p-1.5 text-bible-dark hover:text-bible-gold"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="打开菜单"
+          aria-label={t('nav.openMenu')}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {mobileMenuOpen ? (
@@ -134,6 +144,13 @@ export default function NavBar() {
       {/* 移动端下拉菜单 */}
       {mobileMenuOpen && (
         <div className="sm:hidden border-t border-bible-warm bg-white/95 px-4 py-3 space-y-3">
+          {/* 移动端语言切换 */}
+          <button
+            onClick={swapLang}
+            className="text-xs px-2 py-1 rounded border border-bible-warm text-bible-muted hover:text-bible-gold hover:border-bible-gold transition-colors"
+          >
+            {lang === 'zh' ? '한글' : '中文'}
+          </button>
           {isLoggedIn ? (
             <>
               <a
@@ -141,20 +158,20 @@ export default function NavBar() {
                 className="block text-bible-dark hover:text-bible-gold"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                私信
+{t('nav.messages')}
               </a>
               <a
                 href="/profile"
                 className="block text-bible-dark hover:text-bible-gold"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                个人中心
+                {t('nav.profile')}
               </a>
               <button
                 onClick={handleLogout}
                 className="block text-bible-dark hover:text-bible-gold"
               >
-                退出登录
+                {t('nav.logout')}
               </button>
             </>
           ) : (
@@ -164,14 +181,14 @@ export default function NavBar() {
                 className="text-bible-muted hover:text-bible-gold"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                登录
+                {t('nav.login')}
               </a>
               <a
                 href="/register"
                 className="btn-primary text-sm py-2 px-4"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                注册
+                {t('nav.register')}
               </a>
             </div>
           )}

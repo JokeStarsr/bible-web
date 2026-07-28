@@ -31,4 +31,7 @@ public class PastorContactRequest {
     @NotBlank(message = "当前居住地不能为空")
     @Size(max = 200, message = "当前居住地不能超过200个字符")
     private String location;
+
+    @Size(max = 500, message = "问题描述不能超过500个字符")
+    private String question;
 }

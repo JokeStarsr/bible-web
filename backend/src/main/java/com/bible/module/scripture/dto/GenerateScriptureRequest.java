@@ -10,4 +10,6 @@ public class GenerateScriptureRequest {
     private String generationType;
 
     private String versionCode;
+
+    private String lang;
 }

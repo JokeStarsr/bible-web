@@ -48,12 +48,14 @@ public class PastorContactController {
                 手机号：%s
                 邮箱：%s
                 当前居住地：%s
+                当前寻求牧者帮助的问题：%s
                 """,
                 req.getName(),
                 req.getGender(),
                 req.getWechatName() == null || req.getWechatName().isBlank() ? "（未填写）" : req.getWechatName(),
                 req.getPhone() == null || req.getPhone().isBlank() ? "（未填写）" : req.getPhone(),
                 req.getEmail(),
-                req.getLocation());
+                req.getLocation(),
+                req.getQuestion() == null || req.getQuestion().isBlank() ? "（未填写）" : req.getQuestion());
     }
 }

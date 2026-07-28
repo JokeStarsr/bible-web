@@ -20,6 +20,7 @@ import {
   getRouteById,
   getRouteLocations,
 } from '@/data/bibleMaps';
+import { useI18n } from '@/i18n/I18nContext';
 
 // 带序号+中文名称的标记图标
 function labeledIcon(number: number, name: string, color: string) {
@@ -336,6 +337,18 @@ export function MapControls({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const route = getRouteById(routeId) || getRouteById(DEFAULT_ROUTE_ID)!;
+  const { t } = useI18n();
+
+  const getMatchedLocations = (value: string) => {
+    const q = value.toLowerCase().trim();
+    if (!q) return [];
+    return SEARCHABLE_LOCATIONS.filter(
+      (loc) =>
+        loc.name.toLowerCase().includes(q) ||
+        loc.id.toLowerCase().includes(q) ||
+        (loc.nameEn && loc.nameEn.toLowerCase().includes(q))
+    ).slice(0, 8);
+  };
 
   const getMatchedLocations = (value: string) => {
     const q = value.toLowerCase().trim();
@@ -388,7 +401,7 @@ export function MapControls({
     <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col sm:flex-row gap-3 pointer-events-none">
       <div className="pointer-events-auto bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-bible-warm p-3 sm:min-w-[260px]">
         <label className="block text-xs font-semibold text-bible-muted mb-1.5">
-          选择路线
+          {t('maps.routeLabel')}
         </label>
         <select
           value={routeId}
@@ -408,7 +421,7 @@ export function MapControls({
 
       <div className="pointer-events-auto bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-bible-warm p-3 sm:ml-auto sm:min-w-[240px] relative">
         <label className="block text-xs font-semibold text-bible-muted mb-1.5">
-          搜索地名
+          {t('maps.searchLabel')}
         </label>
         <div className="flex items-center gap-2">
           <input
@@ -418,7 +431,7 @@ export function MapControls({
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => query && suggestions.length > 0 && setShowSuggestions(true)}
-            placeholder="输入地名，如：耶路撒冷"
+placeholder={t('maps.searchPlaceholder')}
             className="flex-1 text-sm bg-transparent border border-bible-warm rounded px-2 py-1.5 text-bible-dark placeholder:text-bible-muted/60 focus:outline-none focus:border-bible-gold"
           />
           <button

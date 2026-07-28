@@ -1,6 +1,7 @@
 package com.bible.module.scripture.service;
 
 import com.bible.common.exception.BusinessException;
+import com.bible.config.LlmService;
 import com.bible.module.scripture.dto.GenerateScriptureRequest;
 import com.bible.module.scripture.dto.GenerateScriptureResponse;
 import com.bible.module.scripture.entity.BibleBook;
@@ -29,8 +30,12 @@ public class ScriptureService {
     private final BibleBookMapper bookMapper;
     private final BibleVerseMapper verseMapper;
     private final ScriptureGenerationRecordMapper generationRecordMapper;
+    private final LlmService llmService;
 
     private final Random random = new Random();
+
+    private final java.util.concurrent.ExecutorService translationExecutor =
+            java.util.concurrent.Executors.newFixedThreadPool(2);
 
     @Transactional
     public GenerateScriptureResponse generate(UUID userId, GenerateScriptureRequest req) {
@@ -41,22 +46,118 @@ public class ScriptureService {
         }
 
         String type = req.getGenerationType();
+        GenerateScriptureResponse response;
 
         if ("chapter_full".equals(type)) {
-            // 随机打乱书卷顺序，尝试找到有完整章经文的书卷
             List<BibleBook> shuffled = new ArrayList<>(books);
             Collections.shuffle(shuffled, random);
             for (BibleBook book : shuffled) {
                 int chapter = random.nextInt(book.getChapterCount()) + 1;
                 List<BibleVerse> verses = verseMapper.findByBookAndChapter(book.getId(), chapter);
                 if (!verses.isEmpty()) {
-                    return generateChapter(userId, version, book, chapter);
+                    response = generateChapter(userId, version, book, chapter);
+                    if ("ko".equals(req.getLang())) {
+                        response = translateAsync(response);
+                    }
+                    return response;
                 }
             }
             throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "无可用的完整章节数据");
         } else {
             int verseCount = getVerseCount(type);
-            return generateVerses(userId, version, verseCount, type);
+            response = generateVerses(userId, version, verseCount, type);
+            if ("ko".equals(req.getLang())) {
+                response = translateAsync(response);
+            }
+            return response;
+        }
+    }
+
+    private GenerateScriptureResponse translateAsync(GenerateScriptureResponse response) {
+        java.util.concurrent.Future<GenerateScriptureResponse> future =
+                translationExecutor.submit(() -> translateVersesToKorean(response));
+        try {
+            return future.get(8, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (java.util.concurrent.TimeoutException e) {
+            log.warn("Korean translation timed out after 8s, returning Chinese");
+            return response;
+        } catch (Exception e) {
+            log.error("Korean translation failed, returning Chinese", e);
+            return response;
+        }
+    }
+
+    private GenerateScriptureResponse translateVersesToKorean(GenerateScriptureResponse response) {
+        try {
+            List<GenerateScriptureResponse.VerseItem> items = response.getVerses();
+            if (items == null || items.isEmpty()) return response;
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < items.size(); i++) {
+                GenerateScriptureResponse.VerseItem v = items.get(i);
+                sb.append("[").append(i).append("] ").append(v.getBookName())
+                  .append(" ").append(v.getChapterNumber()).append(":").append(v.getVerseNumber())
+                  .append("\n").append(v.getText()).append("\n\n");
+            }
+
+            String systemPrompt = "你是圣经翻译专家，精通中文和韩文。请将以下圣经经文准确翻译成韩文（使用개역개정标准译法）。只返回翻译结果，不要任何解释。";
+            String userPrompt = "请将以下圣经经文翻译成韩文（개역개정）：\n\n" + sb.toString() +
+                "\n请按顺序返回，每节格式：[编号] 书卷名 章:节\\n韩文经文\\n";
+
+            String translated = llmService.chat(systemPrompt, userPrompt);
+            log.info("Korean translation generated, length={}", translated != null ? translated.length() : 0);
+
+            if (translated == null || translated.isBlank()) return response;
+
+            Map<Integer, String> translations = new HashMap<>();
+            String[] sections = translated.split("\\n(?=\\[\\d+\\])");
+            for (String section : sections) {
+                section = section.trim();
+                if (section.isEmpty()) continue;
+                int bracketStart = section.indexOf('[');
+                int bracketEnd = section.indexOf(']');
+                if (bracketStart < 0 || bracketEnd < 0) continue;
+                try {
+                    int idx = Integer.parseInt(section.substring(bracketStart + 1, bracketEnd));
+                    String text = section.substring(bracketEnd + 1).trim();
+                    int newlineIdx = text.indexOf('\n');
+                    if (newlineIdx > 0) {
+                        text = text.substring(newlineIdx + 1).trim();
+                    }
+                    translations.put(idx, text);
+                } catch (NumberFormatException e) {
+                    log.warn("Failed to parse translation index: {}", section.substring(0, Math.min(section.length(), 50)));
+                }
+            }
+
+            List<GenerateScriptureResponse.VerseItem> newItems = items.stream()
+                .map(item -> {
+                    int idx = items.indexOf(item);
+                    String koText = translations.get(idx);
+                    if (koText != null && !koText.isBlank()) {
+                        return GenerateScriptureResponse.VerseItem.builder()
+                            .versionId(item.getVersionId())
+                            .bookId(item.getBookId())
+                            .bookName(item.getBookName())
+                            .chapterNumber(item.getChapterNumber())
+                            .verseNumber(item.getVerseNumber())
+                            .text(koText)
+                            .build();
+                    }
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+            return GenerateScriptureResponse.builder()
+                .generationRecordId(response.getGenerationRecordId())
+                .referenceText(response.getReferenceText())
+                .generationType(response.getGenerationType())
+                .verses(newItems)
+                .build();
+
+        } catch (Exception e) {
+            log.error("Failed to translate verses to Korean, falling back to Chinese", e);
+            return response;
         }
     }
 
@@ -79,7 +180,6 @@ public class ScriptureService {
 
     private GenerateScriptureResponse generateVerses(UUID userId, BibleVersion version,
                                                       int count, String type) {
-        // 构建全局经文池：按圣经书卷顺序 -> 章节号 -> 节号 排序
         List<BibleBook> allBooks = bookMapper.findByVersionId(version.getId());
         allBooks.sort(Comparator.comparingInt(BibleBook::getBookOrder));
 
@@ -96,12 +196,10 @@ public class ScriptureService {
             throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "圣经数据未就绪");
         }
 
-        // 如果总经文数不足 count，返回全部可用经文
         if (globalPool.size() <= count) {
             return buildVersesResponse(userId, version, type, globalPool);
         }
 
-        // 随机选择一个起始位置，连续取 count 节（允许跨章节、跨书卷循环）
         int startIndex = random.nextInt(globalPool.size());
         List<BibleVerse> selected = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -131,7 +229,6 @@ public class ScriptureService {
 
         String referenceText;
         if (firstBook != null && lastBook != null && firstBook.getId().equals(lastBook.getId())) {
-            // 同一书卷
             if (first.getChapterNumber() == last.getChapterNumber()) {
                 referenceText = String.format("%s %d:%d-%d",
                         firstBook.getBookNameZh(), first.getChapterNumber(),
@@ -142,7 +239,6 @@ public class ScriptureService {
                         first.getVerseNumber(), last.getChapterNumber(), last.getVerseNumber());
             }
         } else if (firstBook != null && lastBook != null) {
-            // 跨书卷
             referenceText = String.format("%s %d:%d - %s %d:%d",
                     firstBook.getBookNameZh(), first.getChapterNumber(), first.getVerseNumber(),
                     lastBook.getBookNameZh(), last.getChapterNumber(), last.getVerseNumber());
@@ -162,7 +258,6 @@ public class ScriptureService {
                                                      Map<UUID, BibleBook> bookMap, int startChapter, int startVerse,
                                                      int endChapter, int endVerse, String type,
                                                      String referenceText, List<BibleVerse> verses) {
-        // 保存生成记录（以首卷书为准）
         BibleBook primaryBook = bookMap.get(verses.get(0).getBookId());
         ScriptureGenerationRecord record = new ScriptureGenerationRecord();
         record.setId(UUID.randomUUID());
