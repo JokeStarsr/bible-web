@@ -56,7 +56,7 @@ export default function ScriptureReader({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const modalOpenRef = useRef(false); // 追踪弹窗是否打开，防止 selectionchange 误清除 selectedRange
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const [userAnnotations, setUserAnnotations] = useState<Annotation[]>([]);
   const [publicAnnotations, setPublicAnnotations] = useState<Annotation[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkMap>({});
@@ -120,7 +120,7 @@ export default function ScriptureReader({
       setUserAnnotations(userResults);
       setPublicAnnotations(publicResults);
     } catch (err: any) {
-      setError(err.response?.data?.message || '加载标注失败');
+      setError(err.response?.data?.message || t('reader.loadAnnotationFail'));
     } finally {
       setLoading(false);
     }
@@ -275,7 +275,7 @@ export default function ScriptureReader({
       setSelectedRange(null);
       window.getSelection()?.removeAllRanges();
     } catch (err: any) {
-      setError(err.response?.data?.message || '收藏失败');
+      setError(err.response?.data?.message || t('reader.bookmarkFail'));
     }
   };
 
@@ -311,7 +311,7 @@ export default function ScriptureReader({
       window.getSelection()?.removeAllRanges();
       await loadAnnotations();
     } catch (err: any) {
-      setError(err.response?.data?.message || '保存标注失败');
+      setError(err.response?.data?.message || t('reader.saveAnnotationFail'));
     } finally {
       setSavingAnnotation(false);
     }
@@ -359,7 +359,7 @@ export default function ScriptureReader({
         </div>
 
         {loading && (
-          <div className="text-center text-bible-muted py-2 text-sm">正在加载标注...</div>
+          <div className="text-center text-bible-muted py-2 text-sm">{t('reader.loadingAnnotations')}</div>
         )}
 
         <div className="verse-text space-y-3 select-text">
@@ -401,7 +401,7 @@ export default function ScriptureReader({
                         <button
                           key={a.author.id}
                           onClick={() => setChatTarget(a.author!)}
-                          title={`${a.author.displayName} 的默想：${a.noteContent || ''}`}
+                          title={t('reader.meditationOf', { name: a.author.displayName }) + (a.noteContent || '')}
                           className="w-6 h-6 rounded-full bg-bible-gold/10 border border-bible-gold/30 flex items-center justify-center overflow-hidden hover:ring-2 ring-bible-gold/50"
                         >
                           {a.author.avatarUrl ? (
@@ -418,7 +418,7 @@ export default function ScriptureReader({
                         </button>
                       ) : null
                     )}
-                    <span className="text-[10px] text-bible-muted">公开默想</span>
+                    <span className="text-[10px] text-bible-muted">{t('reader.publicMeditation')}</span>
                   </div>
                 )}
               </div>
@@ -453,7 +453,7 @@ export default function ScriptureReader({
                   d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                 />
               </svg>
-              划线/默想
+              {t('reader.annotate')}
             </button>
             <div className="w-px h-4 bg-bible-warm" />
             <button
@@ -477,7 +477,7 @@ export default function ScriptureReader({
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                 />
               </svg>
-              收藏
+              {t('reader.bookmark')}
             </button>
           </div>
         )}
@@ -495,7 +495,7 @@ export default function ScriptureReader({
           }}
         >
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-bold text-bible-dark">添加默想</h3>
+            <h3 className="text-lg font-bold text-bible-dark">{t('reader.addMeditation')}</h3>
             <p className="text-xs text-bible-muted">
               {scripture.verses[selectedRange.start]?.bookName}{' '}
               {scripture.verses[selectedRange.start]?.chapterNumber}:
@@ -506,7 +506,7 @@ export default function ScriptureReader({
             <textarea
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
-              placeholder="写下你对这段经文的默想..."
+              placeholder={t('reader.meditationPlaceholder')}
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-bible-gold resize-none"
             />
@@ -518,7 +518,7 @@ export default function ScriptureReader({
                   checked={visibility === 'private'}
                   onChange={() => setVisibility('private')}
                 />
-                仅自己可见
+                {t('reader.visibilityPrivate')}
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -527,7 +527,7 @@ export default function ScriptureReader({
                   checked={visibility === 'public'}
                   onChange={() => setVisibility('public')}
                 />
-                公开给他人
+                {t('reader.visibilityPublic')}
               </label>
             </div>
             <div className="flex justify-end gap-2">
@@ -535,14 +535,14 @@ export default function ScriptureReader({
                 onClick={() => setShowAnnotationModal(false)}
                 className="px-4 py-2 text-sm text-bible-muted hover:bg-gray-100 rounded-lg"
               >
-                取消
+                {t('reader.cancel')}
               </button>
               <button
                 onClick={saveAnnotation}
                 disabled={savingAnnotation}
                 className="px-4 py-2 text-sm bg-bible-gold text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
               >
-                {savingAnnotation ? '保存中...' : '保存'}
+                {savingAnnotation ? t('reader.saving') : t('reader.save')}
               </button>
             </div>
           </div>

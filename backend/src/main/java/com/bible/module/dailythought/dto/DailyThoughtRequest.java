@@ -10,4 +10,7 @@ public class DailyThoughtRequest {
     @NotBlank(message = "请写下你的今日随想")
     @Size(max = 2000, message = "随想内容不能超过2000字")
     private String content;
+
+    /** 语言：zh 或 ko，默认 zh */
+    private String lang = "zh";
 }

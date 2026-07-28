@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/i18n/I18nContext';
 
 // 希伯来文 Unicode 范围：基本希伯来文 + 字母呈现形式-A
 const HEBREW_REGEX = /[\u0590-\u05FF\uFB1D-\uFB4F]+/g;
@@ -164,6 +165,7 @@ function SpeakerIcon({ playing }: { playing: boolean }) {
 }
 
 function AncientWord({ word, lang }: { word: string; lang: LangType }) {
+  const { t } = useI18n();
   const pronunciation = lang === 'hebrew' ? transliterateHebrew(word) : transliterateGreek(word);
   const [playing, setPlaying] = useState(false);
   const [errorTip, setErrorTip] = useState<string | null>(null);
@@ -194,7 +196,7 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
 
     audio.oncanplay = () => {
       audio.play().catch(() => {
-        setErrorTip('播放失败，请重试');
+        setErrorTip(t('hebrew.playFail'));
         setPlaying(false);
         clearErrorTip();
       });
@@ -202,7 +204,7 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
     audio.onended = onEnd;
     audio.onerror = () => {
       setPlaying(false);
-      setErrorTip('语音服务暂不可用');
+      setErrorTip(t('hebrew.voiceUnavailable'));
       clearErrorTip();
       audioRef.current = null;
     };
@@ -211,7 +213,7 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
     const loadTimeout = setTimeout(() => {
       if (audio.readyState < 2) {
         setPlaying(false);
-        setErrorTip('语音加载超时');
+        setErrorTip(t('hebrew.voiceTimeout'));
         clearErrorTip();
       }
     }, 5000);
@@ -221,7 +223,7 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
 
     audioRef.current = audio;
     audio.load();
-  }, [word, lang, clearErrorTip]);
+  }, [word, lang, clearErrorTip, t]);
 
   useEffect(() => {
     return () => {
@@ -234,11 +236,11 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
   }, []);
 
   const isRtl = lang === 'hebrew';
-  const label = lang === 'hebrew' ? '希伯来语' : '希腊语';
+  const label = lang === 'hebrew' ? t('hebrew.hebrew') : t('hebrew.greek');
 
   return (
     <span className="inline-flex items-center gap-0.5 align-bottom mx-0.5 relative" dir={isRtl ? 'rtl' : 'ltr'}>
-      <ruby className="inline-flex flex-col items-center" title={`发音：${pronunciation}`}>
+      <ruby className="inline-flex flex-col items-center" title={`${t('hebrew.pronunciation')}${pronunciation}`}>
         <span className="text-lg">{word}</span>
         <rt className="text-[0.65em] leading-tight text-amber-700 italic font-medium">
           {pronunciation}
@@ -248,8 +250,8 @@ function AncientWord({ word, lang }: { word: string; lang: LangType }) {
         type="button"
         onClick={speak}
         className="p-0.5 rounded hover:bg-bible-warm/50 transition-colors focus:outline-none focus:ring-1 focus:ring-bible-gold relative"
-        title={`播放${label}发音`}
-        aria-label={`播放 ${word} 的${label}发音`}
+        title={t('hebrew.playPronunciation', { label })}
+        aria-label={`${t('hebrew.playPronunciation', { label })} ${word}`}
       >
         <SpeakerIcon playing={playing} />
         {errorTip && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { messageApi } from '@/services/api';
+import { useI18n } from '@/i18n/I18nContext';
 
 interface AuthorInfo {
   id: string;
@@ -27,6 +28,7 @@ export default function ChatModal({
   currentUserId?: string;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [canMessage, setCanMessage] = useState(false);
   const [commonCount, setCommonCount] = useState(0);
@@ -64,7 +66,7 @@ export default function ChatModal({
         const messagesRes = await messageApi.listMessages(sid, 1, 100);
         setMessages(messagesRes.data.data || []);
       } catch (err: any) {
-        setError(err.response?.data?.message || '初始化私信失败');
+        setError(err.response?.data?.message || t('chat.initFail'));
       } finally {
         setLoading(false);
       }
@@ -104,7 +106,7 @@ export default function ChatModal({
       setMessages((prev) => [...prev, res.data.data]);
       setInput('');
     } catch (err: any) {
-      setError(err.response?.data?.message || '发送失败');
+      setError(err.response?.data?.message || t('chat.sendFail'));
     } finally {
       setSending(false);
     }
@@ -144,14 +146,14 @@ export default function ChatModal({
             <div>
               <p className="text-sm font-semibold text-bible-dark">{targetUser.displayName}</p>
               <p className="text-[10px] text-bible-muted">
-                共同感动经文 {commonCount}/{requiredCount}
+                {t('chat.commonScripture')} {commonCount}/{requiredCount}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="text-bible-muted hover:text-bible-dark p-1"
-            aria-label="关闭"
+            aria-label={t('chat.close')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -162,7 +164,7 @@ export default function ChatModal({
         {/* 内容区 */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
           {loading ? (
-            <div className="text-center text-bible-muted py-8 text-sm">正在检查私信权限...</div>
+            <div className="text-center text-bible-muted py-8 text-sm">{t('chat.checkingPermission')}</div>
           ) : !canMessage ? (
             <div className="text-center py-10 px-4 space-y-3">
               <div className="w-14 h-14 mx-auto bg-bible-warm/50 rounded-full flex items-center justify-center">
@@ -175,15 +177,14 @@ export default function ChatModal({
                   />
                 </svg>
               </div>
-              <p className="text-bible-dark font-medium">暂不能发送私信</p>
+              <p className="text-bible-dark font-medium">{t('chat.cannotChat')}</p>
               <p className="text-sm text-bible-muted">
-                你们共同划线有感动的经文还需 <span className="text-bible-gold font-bold">{requiredCount - commonCount}</span> 条，
-                达到 {requiredCount} 条后即可交流。
+                {t('chat.needMoreCommon', { need: requiredCount - commonCount, required: requiredCount })}
               </p>
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center text-bible-muted py-8 text-sm">
-              可以开始说话了，愿你们在主里彼此鼓励。
+              {t('chat.canStart')}
             </div>
           ) : (
             messages.map((msg) => {
@@ -216,7 +217,7 @@ export default function ChatModal({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="输入消息..."
+                placeholder={t('chat.inputPlaceholder')}
                 disabled={sending}
                 className="flex-1 px-3 py-2 text-sm border border-bible-warm rounded-full focus:outline-none focus:border-bible-gold"
               />
@@ -224,7 +225,7 @@ export default function ChatModal({
                 onClick={sendMessage}
                 disabled={sending || !input.trim()}
                 className="w-9 h-9 rounded-full bg-bible-gold text-white flex items-center justify-center disabled:opacity-50 hover:bg-amber-600 transition-colors"
-                aria-label="发送"
+                aria-label={t('chat.send')}
               >
                 {sending ? (
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

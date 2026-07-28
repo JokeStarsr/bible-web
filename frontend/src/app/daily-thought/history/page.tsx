@@ -28,7 +28,7 @@ interface GroupedRecords {
 
 export default function DailyThoughtHistoryPage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [groupedRecords, setGroupedRecords] = useState<GroupedRecords>({});
   const [dateOrder, setDateOrder] = useState<string[]>([]);
@@ -57,7 +57,7 @@ export default function DailyThoughtHistoryPage() {
       const order: string[] = [];
 
       records.forEach((record) => {
-        const date = new Date(record.createdAt).toLocaleDateString('zh-CN', {
+        const date = new Date(record.createdAt).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'zh-CN', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -104,7 +104,7 @@ export default function DailyThoughtHistoryPage() {
 
   const formatTime = (iso: string) => {
     const date = new Date(iso);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(lang === 'ko' ? 'ko-KR' : 'zh-CN', {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',

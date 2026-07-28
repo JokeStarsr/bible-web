@@ -86,7 +86,7 @@ export default function QtAdminPage() {
       });
       setOcrResult(res.data.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || '识别失败，请重试');
+      setError(err.response?.data?.message || t('qtAdmin.recognizeFail'));
     } finally {
       setLoading(false);
     }
@@ -105,10 +105,10 @@ export default function QtAdminPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 180000,
       });
-      setSuccess(res.data.message || '导入成功');
+      setSuccess(res.data.message || t('qtAdmin.importSuccess'));
       setSaved(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || '导入失败，请重试');
+      setError(err.response?.data?.message || t('qtAdmin.importFail'));
     } finally {
       setLoading(false);
     }
@@ -120,10 +120,10 @@ export default function QtAdminPage() {
     setError('');
     try {
       await api.post('/qt/admin/import', ocrResult);
-      setSuccess('已保存到数据库');
+      setSuccess(t('qtAdmin.savedToDb'));
       setSaved(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || '保存失败');
+      setError(err.response?.data?.message || t('qtAdmin.saveFail'));
     } finally {
       setLoading(false);
     }
@@ -198,7 +198,7 @@ export default function QtAdminPage() {
               <div className="space-y-3">
                 <img
                   src={preview}
-                  alt="预览"
+                  alt={t('qtAdmin.previewAlt')}
                   className="max-h-80 mx-auto rounded-lg shadow-sm"
                 />
                 <p className="text-sm text-gray-500">{file?.name}</p>
@@ -208,8 +208,8 @@ export default function QtAdminPage() {
                 <svg className="w-12 h-12 mx-auto text-amber-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p className="text-amber-700 font-medium">点击选择图片</p>
-                <p className="text-xs text-gray-400 mt-1">支持 JPG / PNG / WebP</p>
+                <p className="text-amber-700 font-medium">{t('qtAdmin.clickToSelect')}</p>
+                <p className="text-xs text-gray-400 mt-1">{t('qtAdmin.supportedFormats')}</p>
               </div>
             )}
             <input
@@ -260,7 +260,7 @@ export default function QtAdminPage() {
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
                 <p className="text-sm text-amber-700">
-                  正在识别图片内容，OCR + AI 解析可能需要 10-30 秒，请耐心等待...
+                  {t('qtAdmin.recognizingHint')}
                 </p>
               </div>
             </div>

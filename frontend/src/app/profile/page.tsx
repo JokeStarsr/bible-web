@@ -37,7 +37,7 @@ type GroupedRecords = Record<string, ReflectionItem[]>;
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const TABS: { key: TabKey; label: string }[] = [
     { key: 'reflections', label: t('profile.tabs.reflections') },
@@ -86,7 +86,7 @@ export default function ProfilePage() {
       const order: string[] = [];
 
       records.forEach((record) => {
-        const date = new Date(record.createdAt).toLocaleDateString('zh-CN', {
+        const date = new Date(record.createdAt).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'zh-CN', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -163,7 +163,7 @@ setBmError(err.response?.data?.message || t('profile.bookmarks.fetchError'));
 
   const formatTime = (iso: string) => {
     const date = new Date(iso);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(lang === 'ko' ? 'ko-KR' : 'zh-CN', {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -172,7 +172,7 @@ setBmError(err.response?.data?.message || t('profile.bookmarks.fetchError'));
   };
 
   const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleDateString('zh-CN', {
+    return new Date(iso).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'zh-CN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

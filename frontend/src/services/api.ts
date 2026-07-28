@@ -83,9 +83,9 @@ export const contactApi = {
 
 // ==================== 今日随想 API ====================
 export const dailyThoughtApi = {
-  /** 生成今日随想回应 */
-  generate: (content: string) =>
-    api.post('/daily-thought/generate', { content: content.trim() }),
+  /** 生成今日随想回应（lang: 'zh' | 'ko'，决定 LLM 回应语言） */
+  generate: (content: string, lang: 'zh' | 'ko' = 'zh') =>
+    api.post('/daily-thought/generate', { content: content.trim(), lang }),
 
   /** 保存今日随想到历史记录 */
   save: (data: {

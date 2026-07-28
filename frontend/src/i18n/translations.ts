@@ -194,11 +194,80 @@ export interface Translations {
   'messages.loading': string;
   'messages.loadFail': string;
   'messages.noSessions': string;
+  'messages.noSessionsHint': string;
+  'messages.goGenerate': string;
+  'messages.canStartChat': string;
+  'messages.close': string;
   'messages.inputPlaceholder': string;
   'messages.send': string;
   'messages.sending': string;
   'messages.sendFail': string;
   'messages.you': string;
+
+  // ========== Chat Modal ==========
+  'chat.initFail': string;
+  'chat.sendFail': string;
+  'chat.commonScripture': string;
+  'chat.close': string;
+  'chat.checkingPermission': string;
+  'chat.cannotChat': string;
+  'chat.needMoreCommon': string;
+  'chat.canStart': string;
+  'chat.inputPlaceholder': string;
+  'chat.send': string;
+
+  // ========== Scripture Reader ==========
+  'reader.loadAnnotationFail': string;
+  'reader.bookmarkFail': string;
+  'reader.saveAnnotationFail': string;
+  'reader.loadingAnnotations': string;
+  'reader.meditationOf': string;
+  'reader.publicMeditation': string;
+  'reader.annotate': string;
+  'reader.bookmark': string;
+  'reader.addMeditation': string;
+  'reader.meditationPlaceholder': string;
+  'reader.visibilityPrivate': string;
+  'reader.visibilityPublic': string;
+  'reader.cancel': string;
+  'reader.saving': string;
+  'reader.save': string;
+
+  // ========== Hebrew Text ==========
+  'hebrew.playFail': string;
+  'hebrew.voiceUnavailable': string;
+  'hebrew.voiceTimeout': string;
+  'hebrew.hebrew': string;
+  'hebrew.greek': string;
+  'hebrew.pronunciation': string;
+  'hebrew.playPronunciation': string;
+
+  // ========== Maps (extra) ==========
+  'maps.scripture': string;
+  'maps.meaning': string;
+
+  // ========== QT Admin (extra) ==========
+  'qtAdmin.recognizeFail': string;
+  'qtAdmin.importSuccess': string;
+  'qtAdmin.importFail': string;
+  'qtAdmin.savedToDb': string;
+  'qtAdmin.saveFail': string;
+  'qtAdmin.previewAlt': string;
+  'qtAdmin.clickToSelect': string;
+  'qtAdmin.supportedFormats': string;
+  'qtAdmin.recognizingHint': string;
+
+  // ========== QT Share (extra) ==========
+  'qt.yearUnit': string;
+  'qt.monthUnit': string;
+  'qt.dayUnit': string;
+  'qt.sunday': string;
+  'qt.monday': string;
+  'qt.tuesday': string;
+  'qt.wednesday': string;
+  'qt.thursday': string;
+  'qt.friday': string;
+  'qt.saturday': string;
 
   // ========== Maps ==========
   'maps.loading': string;
@@ -348,6 +417,9 @@ export interface Translations {
   'qt.saveFail': string;
   'qt.deleteFail': string;
   'qt.brotherSister': string;
+  'qt.selectDate': string;
+  'qt.confirm': string;
+  'qt.goToday': string;
 
   // ========== QT History ==========
   'qtHistory.title': string;
@@ -615,11 +687,80 @@ export const zh: Translations = {
   'messages.loading': '加载中...',
   'messages.loadFail': '加载私信列表失败',
   'messages.noSessions': '暂无私信会话',
+  'messages.noSessionsHint': '在首页生成经文后，划选经文写下公开默想，即可与有相同感动的肢体建立私信连接。',
+  'messages.goGenerate': '去生成经文',
+  'messages.canStartChat': '可以开始说话了，愿你们在主里彼此鼓励。',
+  'messages.close': '关闭',
   'messages.inputPlaceholder': '输入消息...',
   'messages.send': '发送',
   'messages.sending': '发送中...',
   'messages.sendFail': '发送失败',
   'messages.you': '你',
+
+  // Chat Modal
+  'chat.initFail': '初始化私信失败',
+  'chat.sendFail': '发送失败',
+  'chat.commonScripture': '共同感动经文',
+  'chat.close': '关闭',
+  'chat.checkingPermission': '正在检查私信权限...',
+  'chat.cannotChat': '暂不能发送私信',
+  'chat.needMoreCommon': '你们共同划线有感动的经文还需 {need} 条，达到 {required} 条后即可交流。',
+  'chat.canStart': '可以开始说话了，愿你们在主里彼此鼓励。',
+  'chat.inputPlaceholder': '输入消息...',
+  'chat.send': '发送',
+
+  // Scripture Reader
+  'reader.loadAnnotationFail': '加载标注失败',
+  'reader.bookmarkFail': '收藏失败',
+  'reader.saveAnnotationFail': '保存标注失败',
+  'reader.loadingAnnotations': '正在加载标注...',
+  'reader.meditationOf': '{name} 的默想：',
+  'reader.publicMeditation': '公开默想',
+  'reader.annotate': '划线/默想',
+  'reader.bookmark': '收藏',
+  'reader.addMeditation': '添加默想',
+  'reader.meditationPlaceholder': '写下你对这段经文的默想...',
+  'reader.visibilityPrivate': '仅自己可见',
+  'reader.visibilityPublic': '公开给他人',
+  'reader.cancel': '取消',
+  'reader.saving': '保存中...',
+  'reader.save': '保存',
+
+  // Hebrew Text
+  'hebrew.playFail': '播放失败，请重试',
+  'hebrew.voiceUnavailable': '语音服务暂不可用',
+  'hebrew.voiceTimeout': '语音加载超时',
+  'hebrew.hebrew': '希伯来语',
+  'hebrew.greek': '希腊语',
+  'hebrew.pronunciation': '发音：',
+  'hebrew.playPronunciation': '播放{label}发音',
+
+  // Maps (extra)
+  'maps.scripture': '经文',
+  'maps.meaning': '意义',
+
+  // QT Admin (extra)
+  'qtAdmin.recognizeFail': '识别失败，请重试',
+  'qtAdmin.importSuccess': '导入成功',
+  'qtAdmin.importFail': '导入失败，请重试',
+  'qtAdmin.savedToDb': '已保存到数据库',
+  'qtAdmin.saveFail': '保存失败',
+  'qtAdmin.previewAlt': '预览',
+  'qtAdmin.clickToSelect': '点击选择图片',
+  'qtAdmin.supportedFormats': '支持 JPG / PNG / WebP',
+  'qtAdmin.recognizingHint': '正在识别图片内容，OCR + AI 解析可能需要 10-30 秒，请耐心等待...',
+
+  // QT Share (extra)
+  'qt.yearUnit': '年',
+  'qt.monthUnit': '月',
+  'qt.dayUnit': '日',
+  'qt.sunday': '主日',
+  'qt.monday': '礼拜一',
+  'qt.tuesday': '礼拜二',
+  'qt.wednesday': '礼拜三',
+  'qt.thursday': '礼拜四',
+  'qt.friday': '礼拜五',
+  'qt.saturday': '礼拜六',
 
   // Maps
   'maps.loading': '地图加载中...',
@@ -769,6 +910,9 @@ export const zh: Translations = {
   'qt.saveFail': '保存失败，请稍后再试',
   'qt.deleteFail': '删除失败，请稍后再试',
   'qt.brotherSister': '弟兄/姊妹',
+  'qt.selectDate': '选择日期',
+  'qt.confirm': '确定',
+  'qt.goToday': '今天',
 
   // QT History
   'qtHistory.title': 'QT 历史记录',
@@ -1036,11 +1180,80 @@ export const ko: Translations = {
   'messages.loading': '로딩 중...',
   'messages.loadFail': '메시지 목록을 불러오지 못했습니다',
   'messages.noSessions': '메시지가 없습니다',
+  'messages.noSessionsHint': '홈에서 말씀을 생성한 후, 말씀을 드래그하여 공개 묵상을 남기면 같은 감동을 받은 성도와 메시지를 주고받을 수 있습니다.',
+  'messages.goGenerate': '말씀 생성하러 가기',
+  'messages.canStartChat': '이제 대화를 시작할 수 있습니다. 주 안에서 서로 격려하세요.',
+  'messages.close': '닫기',
   'messages.inputPlaceholder': '메시지를 입력하세요...',
   'messages.send': '보내기',
   'messages.sending': '보내는 중...',
   'messages.sendFail': '전송 실패',
   'messages.you': '나',
+
+  // Chat Modal
+  'chat.initFail': '메시지 초기화 실패',
+  'chat.sendFail': '전송 실패',
+  'chat.commonScripture': '공통 감동 말씀',
+  'chat.close': '닫기',
+  'chat.checkingPermission': '메시지 권한 확인 중...',
+  'chat.cannotChat': '아직 메시지를 보낼 수 없습니다',
+  'chat.needMoreCommon': '두 분이 함께 밑줄 그은 감동 말씀이 {need}개 더 필요합니다. {required}개에 도달하면 대화할 수 있습니다.',
+  'chat.canStart': '이제 대화를 시작할 수 있습니다. 주 안에서 서로 격려하세요.',
+  'chat.inputPlaceholder': '메시지를 입력하세요...',
+  'chat.send': '보내기',
+
+  // Scripture Reader
+  'reader.loadAnnotationFail': '주석을 불러오지 못했습니다',
+  'reader.bookmarkFail': '북마크 실패',
+  'reader.saveAnnotationFail': '주석 저장 실패',
+  'reader.loadingAnnotations': '주석을 불러오는 중...',
+  'reader.meditationOf': '{name}님의 묵상:',
+  'reader.publicMeditation': '공개 묵상',
+  'reader.annotate': '밑줄/묵상',
+  'reader.bookmark': '북마크',
+  'reader.addMeditation': '묵상 추가',
+  'reader.meditationPlaceholder': '이 말씀에 대한 묵상을 적어주세요...',
+  'reader.visibilityPrivate': '나만 보기',
+  'reader.visibilityPublic': '공개',
+  'reader.cancel': '취소',
+  'reader.saving': '저장 중...',
+  'reader.save': '저장',
+
+  // Hebrew Text
+  'hebrew.playFail': '재생 실패, 다시 시도해 주세요',
+  'hebrew.voiceUnavailable': '음성 서비스를 사용할 수 없습니다',
+  'hebrew.voiceTimeout': '음성 로딩 시간 초과',
+  'hebrew.hebrew': '히브리어',
+  'hebrew.greek': '헬라어',
+  'hebrew.pronunciation': '발음:',
+  'hebrew.playPronunciation': '{label} 발음 재생',
+
+  // Maps (extra)
+  'maps.scripture': '성경',
+  'maps.meaning': '의미',
+
+  // QT Admin (extra)
+  'qtAdmin.recognizeFail': '인식 실패, 다시 시도해 주세요',
+  'qtAdmin.importSuccess': '가져오기 성공',
+  'qtAdmin.importFail': '가져오기 실패, 다시 시도해 주세요',
+  'qtAdmin.savedToDb': '데이터베이스에 저장되었습니다',
+  'qtAdmin.saveFail': '저장 실패',
+  'qtAdmin.previewAlt': '미리보기',
+  'qtAdmin.clickToSelect': '이미지를 선택하려면 클릭하세요',
+  'qtAdmin.supportedFormats': 'JPG / PNG / WebP 지원',
+  'qtAdmin.recognizingHint': '이미지 내용을 인식하는 중입니다. OCR + AI 분석에 10-30초가 소요될 수 있으니 잠시만 기다려 주세요...',
+
+  // QT Share (extra)
+  'qt.yearUnit': '년',
+  'qt.monthUnit': '월',
+  'qt.dayUnit': '일',
+  'qt.sunday': '주일',
+  'qt.monday': '월요일',
+  'qt.tuesday': '화요일',
+  'qt.wednesday': '수요일',
+  'qt.thursday': '목요일',
+  'qt.friday': '금요일',
+  'qt.saturday': '토요일',
 
   // Maps
   'maps.loading': '지도 로딩 중...',
@@ -1190,6 +1403,9 @@ export const ko: Translations = {
   'qt.saveFail': '저장에 실패했습니다. 다시 시도해 주세요',
   'qt.deleteFail': '삭제에 실패했습니다. 다시 시도해 주세요',
   'qt.brotherSister': '형제/자매',
+  'qt.selectDate': '날짜 선택',
+  'qt.confirm': '확인',
+  'qt.goToday': '오늘',
 
   // QT History
   'qtHistory.title': 'QT 기록',

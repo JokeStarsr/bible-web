@@ -155,7 +155,7 @@ function MapContent({
   routeId: string;
   searchTrigger: { locationId: string; ts: number } | null;
 }) {
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const route = useMemo(
     () => getRouteById(routeId) || getRouteById(DEFAULT_ROUTE_ID)!,
     [routeId]
@@ -303,11 +303,11 @@ function MapContent({
               </h3>
               <p className="text-xs text-bible-muted mb-2">{getLocDesc(loc)}</p>
               <div className="text-xs mb-1">
-                <span className="font-semibold text-bible-gold">{lang === 'ko' ? '성경' : '经文'}：</span>
+                <span className="font-semibold text-bible-gold">{t('maps.scripture')}：</span>
                 <span className="text-bible-text">{localizeScriptureReference(loc.scripture, lang)}</span>
               </div>
               <div className="text-xs leading-relaxed text-bible-text">
-                <span className="font-semibold text-bible-gold">{lang === 'ko' ? '의미' : '意义'}：</span>
+                <span className="font-semibold text-bible-gold">{t('maps.meaning')}：</span>
                 {getLocSig(loc)}
               </div>
             </div>

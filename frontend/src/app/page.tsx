@@ -226,10 +226,10 @@ export default function HomePage() {
         location: contactForm.location.trim(),
         question: contactForm.question.trim() || undefined,
       });
-      setContactSuccess(res.data?.message || '您的信息已提交至刘牧师处，晚些时候会跟您联系，请保持以上通讯方式畅通。');
-      setContactForm({ name: '', gender: '男', wechatName: '', phone: '', email: '', location: '', question: '' });
+      setContactSuccess(res.data?.message || t('home.contact.success'));
+      setContactForm({ name: '', gender: t('home.contact.genderMale'), wechatName: '', phone: '', email: '', location: '', question: '' });
     } catch (err: any) {
-      setError(err.response?.data?.message || '提交失败，请稍后再试');
+      setError(err.response?.data?.message || t('home.contact.submitFail'));
     } finally {
       setContactSubmitting(false);
     }

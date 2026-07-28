@@ -21,7 +21,7 @@ interface DailyThoughtResult {
 
 export default function DailyThoughtPage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,7 +56,7 @@ export default function DailyThoughtPage() {
     setResult(null);
     setSaved(false);
     try {
-      const res = await dailyThoughtApi.generate(content);
+      const res = await dailyThoughtApi.generate(content, lang);
       setResult(res.data.data);
     } catch (err: any) {
       setError(err.response?.data?.message || t('thought.generateFail'));

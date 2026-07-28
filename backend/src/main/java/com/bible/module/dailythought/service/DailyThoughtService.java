@@ -44,40 +44,77 @@ public class DailyThoughtService {
             throw new BusinessException("LLM_NOT_CONFIGURED", "大模型未配置 API Key，无法生成今日随想回应。请联系管理员配置 LLM_API_KEY 环境变量。");
         }
 
+        boolean isKorean = "ko".equalsIgnoreCase(req.getLang());
+
         // 1. 用 LLM 分析用户随想，推荐经文引用
         List<BibleVerse> matchedVerses = findMatchedVerses(req.getContent());
         String scriptureContext = buildScriptureContext(matchedVerses);
 
         // 2. 用 LLM 生成牧养性回应
-        String systemPrompt = """
-                你是一位满有牧养心肠、熟悉圣经的属灵导师。
-                用户会写下自己今天的随想、感悟、挣扎或日记。
-                请你基于圣经真理，温柔地回应用户，并提供 1-3 段与用户心境最相关的圣经经文。
-                回应应当有温度、贴近人心，同时忠于圣经。
-                请使用简体中文，并按指定 JSON 格式返回，不要包含 JSON 之外的任何文字。
-                """;
+        String systemPrompt;
+        String userPrompt;
 
-        String userPrompt = String.format("""
-                用户的今日随想：
-                %s
+        if (isKorean) {
+            systemPrompt = """
+                    당신은 목양의 마음을 지니고 성경에 능통한 영적 지도자입니다.
+                    사용자가 오늘의 묵상, 감상, 고민, 일기를 적으면,
+                    성경의 진리에 기반하여 따뜻하게 응답하고, 사용자의 마음 상태와 가장 관련 있는 성경 구절 1-3가지를 제공하세요.
+                    응답은 따뜻하고 사람의 마음에 가까이 다가가야 하며, 동시에 성경에 충실해야 합니다.
+                    반드시 한국어로 작성하고, 지정된 JSON 형식으로만 반환하며 JSON 외의 다른 텍스트는 포함하지 마세요.
+                    """;
 
-                我已从圣经数据库中为用户初步匹配到以下经文（可能为空）：
-                %s
+            userPrompt = String.format("""
+                    사용자의 오늘 묵상:
+                    %s
 
-                请根据用户随想的内容，生成以下 JSON：
-                {
-                  "pastoralResponse": "一段温柔、有牧养性的回应，理解用户的感受，并给予鼓励和引导。200字左右。",
-                  "scriptures": [
+                    성경 데이터베이스에서 사용자와 일치하는 구절을 우선 찾았습니다(비어 있을 수 있음):
+                    %s
+
+                    사용자 묵상 내용에 기반하여 다음 JSON을 생성하세요:
                     {
-                      "reference": "经文引用，如 诗篇 23:1-3",
-                      "text": "经文的中文内容（和合本风格）",
-                      "relevance": "说明这段经文与今日随想的关联，以及它如何回应用户的心境。"
+                      "pastoralResponse": "따뜻하고 목양적인 응답. 사용자의 감정을 이해하고 격려와 인도를 제공. 약 200자.",
+                      "scriptures": [
+                        {
+                          "reference": "성경 구절 인용, 예: 시편 23:1-3",
+                          "text": "성경 구절의 한국어 내용(개역개정 스타일)",
+                          "relevance": "이 구절이 오늘 묵상과 어떻게 연관되며, 사용자의 마음 상태에 어떻게 응답하는지 설명."
+                        }
+                      ],
+                      "divineWord": "1인칭 \\"하나님께서 당신에게 하실 말씀:\\" 형식으로, 짧은 하나님의 말씀을 요약하여 사용자에게 힘과 소망을 줌. 약 100자.",
+                      "hymn": "사용자 주제와 관련된 기독교 찬송가 추천. 형식: 찬송가 제목 - 주제와 가장 잘 맞는 가사 한두 줄, 또는 간단한 추천 이유."
                     }
-                  ],
-                  "divineWord": "用第一人称\"神可能想对你说：\"的格式，总结一段简短的神的话语，给用户力量和盼望。100字左右。",
-                  "hymn": "推荐一首与用户主题相关的基督教赞美诗歌，格式为：歌名 - 一两句与主题最契合的歌词，或简短推荐理由。"
-                }
-                """, req.getContent(), scriptureContext);
+                    """, req.getContent(), scriptureContext);
+        } else {
+            systemPrompt = """
+                    你是一位满有牧养心肠、熟悉圣经的属灵导师。
+                    用户会写下自己今天的随想、感悟、挣扎或日记。
+                    请你基于圣经真理，温柔地回应用户，并提供 1-3 段与用户心境最相关的圣经经文。
+                    回应应当有温度、贴近人心，同时忠于圣经。
+                    请使用简体中文，并按指定 JSON 格式返回，不要包含 JSON 之外的任何文字。
+                    """;
+
+            userPrompt = String.format("""
+                    用户的今日随想：
+                    %s
+
+                    我已从圣经数据库中为用户初步匹配到以下经文（可能为空）：
+                    %s
+
+                    请根据用户随想的内容，生成以下 JSON：
+                    {
+                      "pastoralResponse": "一段温柔、有牧养性的回应，理解用户的感受，并给予鼓励和引导。200字左右。",
+                      "scriptures": [
+                        {
+                          "reference": "经文引用，如 诗篇 23:1-3",
+                          "text": "经文的中文内容（和合本风格）",
+                          "relevance": "说明这段经文与今日随想的关联，以及它如何回应用户的心境。"
+                        }
+                      ],
+                      "divineWord": "用第一人称\\"神可能想对你说：\\"的格式，总结一段简短的神的话语，给用户力量和盼望。100字左右。",
+                      "hymn": "推荐一首与用户主题相关的基督教赞美诗歌，格式为：歌名 - 一两句与主题最契合的歌词，或简短推荐理由。"
+                    }
+                    """, req.getContent(), scriptureContext);
+        }
 
         String llmResult;
         try {

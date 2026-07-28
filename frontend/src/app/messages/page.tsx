@@ -29,7 +29,7 @@ interface MessageItem {
 }
 
 export default function MessagesPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
@@ -132,16 +132,17 @@ export default function MessagesPage() {
     const d = new Date(iso);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
+    const locale = lang === 'ko' ? 'ko-KR' : 'zh-CN';
     if (isToday) {
-      return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
     }
-    return d.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+    return d.toLocaleDateString(locale, { month: '2-digit', day: '2-digit' });
   };
 
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-bible-gold text-lg animate-pulse">正在确认登录状态...</div>
+        <div className="text-bible-gold text-lg animate-pulse">{t('messages.checkingAuth')}</div>
       </div>
     );
   }
@@ -156,18 +157,18 @@ export default function MessagesPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          返回首页
+          {t('messages.back')}
         </button>
       </div>
 
       <div className="text-center py-6">
-        <h1 className="text-3xl font-bold text-bible-dark mb-3">私信</h1>
-        <p className="text-bible-muted">与主内肢体彼此劝勉、互相鼓励</p>
+        <h1 className="text-3xl font-bold text-bible-dark mb-3">{t('messages.title')}</h1>
+        <p className="text-bible-muted">{t('messages.subtitle')}</p>
       </div>
 
       {loading ? (
         <div className="text-center text-bible-muted py-8">
-          <div className="animate-pulse">{t("messages.checkingAuth")}</div>
+          <div className="animate-pulse">{t('messages.loading')}</div>
         </div>
       ) : error ? (
         <div className="text-center text-red-500 bg-red-50 rounded-lg py-3 px-4">{error}</div>
@@ -178,15 +179,13 @@ export default function MessagesPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
-          <p>暂无私信会话</p>
-          <p className="text-sm">
-            在首页生成经文后，划选经文写下公开默想，即可与有相同感动的肢体建立私信连接。
-          </p>
+          <p>{t('messages.noSessions')}</p>
+          <p className="text-sm">{t('messages.noSessionsHint')}</p>
           <button
             onClick={() => router.push('/')}
             className="btn-primary inline-block"
           >
-            去生成经文
+            {t('messages.goGenerate')}
           </button>
         </div>
       ) : (
@@ -260,7 +259,7 @@ export default function MessagesPage() {
               <button
                 onClick={closeChat}
                 className="text-bible-muted hover:text-bible-dark p-1"
-                aria-label="关闭"
+                aria-label={t('messages.close')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -272,7 +271,7 @@ export default function MessagesPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
               {messages.length === 0 ? (
                 <div className="text-center text-bible-muted py-8 text-sm">
-                  可以开始说话了，愿你们在主里彼此鼓励。
+                  {t('messages.canStartChat')}
                 </div>
               ) : (
                 messages.map((msg) => {
@@ -304,7 +303,7 @@ export default function MessagesPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="输入消息..."
+                  placeholder={t('messages.inputPlaceholder')}
                   disabled={sending}
                   className="flex-1 px-3 py-2 text-sm border border-bible-warm rounded-full focus:outline-none focus:border-bible-gold"
                 />
@@ -312,7 +311,7 @@ export default function MessagesPage() {
                   onClick={sendMessage}
                   disabled={sending || !input.trim()}
                   className="w-9 h-9 rounded-full bg-bible-gold text-white flex items-center justify-center disabled:opacity-50 hover:bg-amber-600 transition-colors"
-                  aria-label="发送"
+                  aria-label={t('messages.send')}
                 >
                   {sending ? (
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
