@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -70,6 +71,80 @@ public class LlmService {
                     llmConfig.getProvider(), llmConfig.getModel(), e.getMessage(), e);
             throw new RuntimeException("调用大模型失败：" + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 调用视觉大模型：发送图片 + 文字提示，返回模型文本响应。
+     * 兼容 OpenAI 风格的 chat/completions 接口（content 为数组含 image_url）。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt   用户文字提示
+     * @param imageBase64  图片的 Base64 字符串（不含 data:image 前缀）
+     * @param mimeType     图片 MIME 类型，如 "image/png" / "image/jpeg"
+     * @return 模型返回的文本内容
+     */
+    public String chatWithImage(String systemPrompt, String userPrompt, String imageBase64, String mimeType) {
+        if (!llmConfig.isEnabled()) {
+            throw new IllegalStateException("大模型未配置 API Key，无法调用");
+        }
+
+        // 视觉模型配置：优先用 vision 专用配置，缺省回退到主配置
+        String apiKey = llmConfig.getVisionApiKey() != null && !llmConfig.getVisionApiKey().isBlank()
+                ? llmConfig.getVisionApiKey() : llmConfig.getApiKey();
+        String baseUrl = llmConfig.getVisionBaseUrl() != null && !llmConfig.getVisionBaseUrl().isBlank()
+                ? llmConfig.getVisionBaseUrl() : llmConfig.getBaseUrl();
+        String model = llmConfig.getVisionModel() != null && !llmConfig.getVisionModel().isBlank()
+                ? llmConfig.getVisionModel() : llmConfig.getModel();
+
+        String url = baseUrl.replaceAll("/$", "") + "/v1/chat/completions";
+
+        // OpenAI 风格的多模态 content
+        String dataUrl = "data:" + mimeType + ";base64," + imageBase64;
+        List<Object> userContent = new ArrayList<>();
+        userContent.add(Map.of("type", "text", "text", userPrompt));
+        userContent.add(Map.of("type", "image_url",
+                Map.of("image_url", Map.of("url", dataUrl))));
+
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userContent)
+                ),
+                "temperature", 0.3,
+                "max_tokens", 4096
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url, HttpMethod.POST, entity, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+            JsonNode choices = root.path("choices");
+            if (choices.isArray() && choices.size() > 0) {
+                return choices.get(0).path("message").path("content").asText().trim();
+            }
+            throw new RuntimeException("视觉大模型返回格式异常：" + response.getBody());
+        } catch (Exception e) {
+            log.error("调用视觉大模型失败: model={}, error={}", model, e.getMessage(), e);
+            throw new RuntimeException("调用视觉大模型失败：" + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 视觉模型是否可用：配置了非空的 visionModel 即视为可用
+     */
+    public boolean isVisionAvailable() {
+        if (!llmConfig.isEnabled()) {
+            return false;
+        }
+        String vm = llmConfig.getVisionModel();
+        return vm != null && !vm.isBlank();
     }
 
     /**

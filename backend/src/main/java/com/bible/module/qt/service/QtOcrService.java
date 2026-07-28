@@ -13,20 +13,21 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * QT 图片 OCR 识别服务
- * 1. 用 Tesseract OCR 从图片中提取原始文字（中英文）
- * 2. 用 DeepSeek LLM 将原始文字解析为结构化 QT 内容
+ *
+ * 识别策略（按优先级）：
+ * 1. LLM 视觉模型直接识别图片（准确率最高，速度最快）
+ * 2. Tesseract OCR + LLM 文本解析（降级方案）
  */
 @Slf4j
 @Service
@@ -36,119 +37,99 @@ public class QtOcrService {
     private final LlmService llmService;
     private final ObjectMapper objectMapper;
 
-    private static final String ADMIN_EMAIL = "852341467@qq.com";
-
     /**
      * 从上传的图片中识别 QT 灵修内容
-     *
-     * @param file 图片文件
-     * @return 解析后的 QT 导入请求
      */
     public QtImportRequest recognizeFromImage(MultipartFile file) throws Exception {
-        // 1. 预处理图片：放大 + 灰度化，提升 OCR 精度
-        Path processedPath = preprocessImage(file);
+        byte[] imageBytes = file.getBytes();
+        String mimeType = file.getContentType();
+        if (mimeType == null || !mimeType.startsWith("image/")) {
+            mimeType = "image/jpeg";
+        }
 
-        // 2. 调用 Tesseract OCR 提取文字
+        // 1. 优先用 LLM 视觉模型直接识别图片
+        if (llmService.isVisionAvailable()) {
+            try {
+                log.info("尝试用 LLM 视觉模型识别图片, size={}KB", imageBytes.length / 1024);
+                QtImportRequest result = recognizeWithVision(imageBytes, mimeType);
+                if (result != null && result.getItems() != null && !result.getItems().isEmpty()) {
+                    log.info("LLM 视觉模型识别成功, items={}", result.getItems().size());
+                    return result;
+                }
+                log.warn("LLM 视觉模型未返回有效内容，降级到 Tesseract");
+            } catch (Exception e) {
+                log.warn("LLM 视觉模型识别失败，降级到 Tesseract: {}", e.getMessage());
+            }
+        }
+
+        // 2. 降级：Tesseract OCR + LLM 文本解析
+        log.info("使用 Tesseract OCR + LLM 文本解析");
+        Path processedPath = preprocessImage(imageBytes);
         String rawText = runTesseract(processedPath);
         log.info("OCR raw text length={}, first 200 chars: {}", rawText.length(),
                 rawText.length() > 200 ? rawText.substring(0, 200) : rawText);
 
-        if (rawText == null || rawText.isBlank()) {
+        if (rawText.isBlank()) {
             throw new RuntimeException("图片中未识别到任何文字，请确保图片清晰");
         }
 
-        // 3. 用 LLM 解析为结构化数据
         QtImportRequest result = parseWithLlm(rawText);
         if (result == null || result.getItems() == null || result.getItems().isEmpty()) {
-            throw new RuntimeException("无法从识别文字中解析出 QT 内容，请检查图片格式");
+            throw new RuntimeException("无法从识别文字中解析出 QT 内容，请检查图片是否清晰、内容是否完整");
         }
-
         return result;
     }
 
-    /**
-     * 预处理图片：放大 2 倍 + 灰度化，提升 OCR 精度
-     */
-    private Path preprocessImage(MultipartFile file) throws Exception {
-        BufferedImage original = ImageIO.read(file.getInputStream());
-        if (original == null) {
-            throw new RuntimeException("无法读取图片文件，请检查图片格式");
-        }
+    // ==================== 方案一：LLM 视觉模型直接识别 ====================
 
-        // 放大 2 倍
-        int newWidth = original.getWidth() * 2;
-        int newHeight = original.getHeight() * 2;
-        BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = scaled.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g.drawImage(original, 0, 0, newWidth, newHeight, null);
-        g.dispose();
+    private QtImportRequest recognizeWithVision(byte[] imageBytes, String mimeType) throws Exception {
+        String systemPrompt = """
+                你是一个专业的 QT（Quiet Time）灵修内容识别助手。
+                用户会上传每日灵修的图片，请你仔细识别图片中的全部文字内容，并提取结构化信息。
 
-        // 灰度化
-        BufferedImage gray = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
-        Graphics2D g2 = gray.createGraphics();
-        g2.drawImage(scaled, 0, 0, null);
-        g2.dispose();
+                需要提取的字段：
+                1. date: 日期，格式 yyyy-MM-dd（如 2026-07-27）。如果只有月日没有年份，默认年份为 2026。
+                2. title: 灵修内容的主题标题。
+                3. scriptureReference: 经文出处，如 "罗马书 1:1-7"、"创世记 12:1-3"。
+                4. scriptureText: 经文正文内容（完整的经文文字）。
+                5. commentary: 注释/默想/亮光等解释性内容。
+                6. hymn: 诗歌内容（如有）。
 
-        // 保存为临时文件
-        Path tempFile = Files.createTempFile("qt-ocr-", ".png");
-        ImageIO.write(gray, "png", tempFile.toFile());
-        return tempFile;
+                要求：
+                - 仔细识别图片中的每一个字，尽量完整准确地还原文字。
+                - 如果图片中包含多天的内容，请分别提取为多个 item。
+                - 如果某个字段确实无法识别，设为空字符串 ""。
+                - 但 date 和 scriptureText 不能都为空，否则视为无效。
+                - 返回纯 JSON，不要 markdown 标记，不要多余解释。
+
+                返回格式：
+                {
+                  "items": [
+                    {
+                      "date": "2026-07-27",
+                      "title": "标题",
+                      "scriptureReference": "经文出处",
+                      "scriptureText": "经文正文",
+                      "commentary": "注释内容",
+                      "hymn": "诗歌内容"
+                    }
+                  ]
+                }
+                """;
+
+        String userPrompt = "请识别这张灵修图片中的内容并提取结构化信息。";
+
+        String imageBase64 = Base64.getEncoder().encodeToString(imageBytes);
+        String response = llmService.chatWithImage(systemPrompt, userPrompt, imageBase64, mimeType);
+        String json = llmService.extractJson(response);
+        log.info("LLM vision parsed QT JSON (first 300): {}",
+                json != null && json.length() > 300 ? json.substring(0, 300) : json);
+
+        return parseItemsFromJson(json);
     }
 
-    /**
-     * 调用 Tesseract OCR 命令行工具识别图片文字
-     */
-    private String runTesseract(Path imagePath) throws Exception {
-        List<String> command = new ArrayList<>();
-        command.add("tesseract");
-        command.add(imagePath.toString());
-        command.add("stdout");
-        command.add("-l");
-        command.add("chi_sim+eng");
-        command.add("--psm");
-        command.add("6"); // Assume a uniform block of text
+    // ==================== 方案二：Tesseract OCR + LLM 文本解析（降级） ====================
 
-        log.info("Running Tesseract: {}", String.join(" ", command));
-
-        ProcessBuilder pb = new ProcessBuilder(command);
-        pb.redirectErrorStream(false);
-        Process process = pb.start();
-
-        StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-        }
-
-        StringBuilder error = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                error.append(line).append("\n");
-            }
-        }
-
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            log.error("Tesseract failed with exit code {}: {}", exitCode, error);
-            throw new RuntimeException("OCR 识别失败: " + error);
-        }
-
-        // 清理临时文件
-        try {
-            Files.deleteIfExists(imagePath);
-        } catch (Exception ignored) {
-        }
-
-        return output.toString().trim();
-    }
-
-    /**
-     * 用 DeepSeek LLM 将 OCR 原始文字解析为结构化 QT 内容
-     */
     private QtImportRequest parseWithLlm(String rawText) {
         String systemPrompt = """
                 你是一个专业的 QT（Quiet Time）灵修内容解析助手。
@@ -186,42 +167,48 @@ public class QtOcrService {
         try {
             String response = llmService.chat(systemPrompt, userPrompt);
             String json = llmService.extractJson(response);
-            log.info("LLM parsed QT JSON: {}", json);
-
-            JsonNode root = objectMapper.readTree(json);
-            JsonNode itemsNode = root.path("items");
-
-            if (!itemsNode.isArray() || itemsNode.isEmpty()) {
-                return null;
-            }
-
-            QtImportRequest request = new QtImportRequest();
-            List<QtImportRequest.QtImportItem> items = new ArrayList<>();
-
-            for (JsonNode itemNode : itemsNode) {
-                QtImportRequest.QtImportItem item = new QtImportRequest.QtImportItem();
-                item.setDate(getTextValue(itemNode, "date"));
-                item.setTitle(getTextValue(itemNode, "title"));
-                item.setScriptureReference(getTextValue(itemNode, "scriptureReference"));
-                item.setScriptureText(getTextValue(itemNode, "scriptureText"));
-                item.setCommentary(getTextValue(itemNode, "commentary"));
-                item.setHymn(getTextValue(itemNode, "hymn"));
-
-                // 跳过无效条目
-                if (item.getDate().isEmpty() || item.getScriptureText().isEmpty()) {
-                    continue;
-                }
-
-                items.add(item);
-            }
-
-            request.setItems(items);
-            return request;
+            log.info("LLM parsed QT JSON (first 300): {}",
+                    json != null && json.length() > 300 ? json.substring(0, 300) : json);
+            return parseItemsFromJson(json);
         } catch (Exception e) {
             log.error("LLM parsing failed", e);
-            // 降级：尝试用正则解析
             return fallbackParse(rawText);
         }
+    }
+
+    // ==================== 公共解析逻辑 ====================
+
+    private QtImportRequest parseItemsFromJson(String json) throws Exception {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        JsonNode root = objectMapper.readTree(json);
+        JsonNode itemsNode = root.path("items");
+        if (!itemsNode.isArray() || itemsNode.isEmpty()) {
+            return null;
+        }
+
+        QtImportRequest request = new QtImportRequest();
+        List<QtImportRequest.QtImportItem> items = new ArrayList<>();
+
+        for (JsonNode itemNode : itemsNode) {
+            QtImportRequest.QtImportItem item = new QtImportRequest.QtImportItem();
+            item.setDate(getTextValue(itemNode, "date"));
+            item.setTitle(getTextValue(itemNode, "title"));
+            item.setScriptureReference(getTextValue(itemNode, "scriptureReference"));
+            item.setScriptureText(getTextValue(itemNode, "scriptureText"));
+            item.setCommentary(getTextValue(itemNode, "commentary"));
+            item.setHymn(getTextValue(itemNode, "hymn"));
+
+            // 至少要有日期或经文内容才算有效
+            if (item.getDate().isEmpty() && item.getScriptureText().isEmpty()) {
+                continue;
+            }
+            items.add(item);
+        }
+
+        request.setItems(items);
+        return request;
     }
 
     /**
@@ -231,18 +218,16 @@ public class QtOcrService {
         log.info("Using fallback regex parsing");
         List<QtImportRequest.QtImportItem> items = new ArrayList<>();
 
-        // 尝试提取日期
-        Pattern datePattern = Pattern.compile("(\\d{1,2})月(\\d{1,2})日");
-        Matcher dateMatcher = datePattern.matcher(rawText);
-
         QtImportRequest.QtImportItem item = new QtImportRequest.QtImportItem();
-        item.setDate("2026-07-27"); // 默认值
+        item.setDate("2026-07-27");
         item.setTitle("每日灵修");
         item.setScriptureReference("");
         item.setScriptureText(rawText);
         item.setCommentary("");
         item.setHymn("");
 
+        Pattern datePattern = Pattern.compile("(\\d{1,2})月(\\d{1,2})日");
+        Matcher dateMatcher = datePattern.matcher(rawText);
         if (dateMatcher.find()) {
             String month = String.format("%02d", Integer.parseInt(dateMatcher.group(1)));
             String day = String.format("%02d", Integer.parseInt(dateMatcher.group(2)));
@@ -253,6 +238,70 @@ public class QtOcrService {
         QtImportRequest request = new QtImportRequest();
         request.setItems(items);
         return request;
+    }
+
+    // ==================== 图片预处理 + Tesseract（降级用） ====================
+
+    private Path preprocessImage(byte[] imageBytes) throws Exception {
+        BufferedImage original = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+        if (original == null) {
+            throw new RuntimeException("无法读取图片文件，请检查图片格式");
+        }
+        int newWidth = original.getWidth() * 2;
+        int newHeight = original.getHeight() * 2;
+        BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = scaled.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(original, 0, 0, newWidth, newHeight, null);
+        g.dispose();
+        BufferedImage gray = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D g2 = gray.createGraphics();
+        g2.drawImage(scaled, 0, 0, null);
+        g2.dispose();
+        Path tempFile = Files.createTempFile("qt-ocr-", ".png");
+        ImageIO.write(gray, "png", tempFile.toFile());
+        return tempFile;
+    }
+
+    private String runTesseract(Path imagePath) throws Exception {
+        List<String> command = new ArrayList<>();
+        command.add("tesseract");
+        command.add(imagePath.toString());
+        command.add("stdout");
+        command.add("-l");
+        command.add("chi_sim+eng");
+        command.add("--psm");
+        command.add("6");
+
+        log.info("Running Tesseract: {}", String.join(" ", command));
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(false);
+        Process process = pb.start();
+
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+        }
+        StringBuilder error = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                error.append(line).append("\n");
+            }
+        }
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            log.error("Tesseract failed with exit code {}: {}", exitCode, error);
+            throw new RuntimeException("OCR 识别失败: " + error);
+        }
+        try {
+            Files.deleteIfExists(imagePath);
+        } catch (Exception ignored) {
+        }
+        return output.toString().trim();
     }
 
     private String getTextValue(JsonNode node, String field) {

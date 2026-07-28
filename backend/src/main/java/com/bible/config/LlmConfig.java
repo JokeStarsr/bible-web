@@ -25,9 +25,26 @@ public class LlmConfig {
     private String baseUrl = "https://api.deepseek.com";
 
     /**
-     * 模型名称
+     * 模型名称（文本对话）
      */
     private String model = "deepseek-chat";
+
+    /**
+     * 视觉模型名称（图片识别），DeepSeek 当前暂无 vision，
+     * 默认指向 doubao-vision，可通过环境变量 LLM_VISION_MODEL 覆盖。
+     * 若与 model 相同则视为不支持视觉，回退到 Tesseract。
+     */
+    private String visionModel = "deepseek-chat";
+
+    /**
+     * 视觉模型 API Key（若与主 API Key 不同可单独配置，否则复用 apiKey）
+     */
+    private String visionApiKey;
+
+    /**
+     * 视觉模型 API 地址（若与主地址不同可单独配置，否则复用 baseUrl）
+     */
+    private String visionBaseUrl;
 
     /**
      * 请求超时（秒）

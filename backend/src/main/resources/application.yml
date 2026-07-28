@@ -73,6 +73,13 @@ app:
     api-key: ${LLM_API_KEY:}
     base-url: ${LLM_BASE_URL:https://api.deepseek.com}
     model: ${LLM_MODEL:deepseek-chat}
+    # 视觉模型（用于 QT 图片识别）。支持 OpenAI 兼容接口的多模态模型。
+    # 豆包视觉：model=doubao-1.5-vision-pro, base-url=https://ark.cn-beijing.volces.com
+    # 通义千问视觉：model=qwen-vl-plus, base-url=https://dashscope.aliyuncs.com
+    # 留空或不配置 LLM_VISION_MODEL 时，自动降级为 Tesseract OCR
+    vision-model: ${LLM_VISION_MODEL:}
+    vision-api-key: ${LLM_VISION_API_KEY:}
+    vision-base-url: ${LLM_VISION_BASE_URL:}
     timeout-seconds: ${LLM_TIMEOUT_SECONDS:60}
 
 server:
