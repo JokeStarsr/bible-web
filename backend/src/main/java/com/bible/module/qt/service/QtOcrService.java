@@ -247,23 +247,24 @@ public class QtOcrService {
         if (original == null) {
             throw new RuntimeException("无法读取图片文件，请检查图片格式");
         }
-        int newWidth = original.getWidth() * 2;
-        int newHeight = original.getHeight() * 2;
+        // 放大 3 倍提升小字识别率
+        int newWidth = original.getWidth() * 3;
+        int newHeight = original.getHeight() * 3;
         BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = scaled.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.drawImage(original, 0, 0, newWidth, newHeight, null);
         g.dispose();
-        BufferedImage gray = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
-        Graphics2D g2 = gray.createGraphics();
-        g2.drawImage(scaled, 0, 0, null);
-        g2.dispose();
+        // 保留 RGB（不做灰度化，彩色信息有助于 Tesseract 区分文字与背景）
         Path tempFile = Files.createTempFile("qt-ocr-", ".png");
-        ImageIO.write(gray, "png", tempFile.toFile());
+        ImageIO.write(scaled, "png", tempFile.toFile());
         return tempFile;
     }
 
     private String runTesseract(Path imagePath) throws Exception {
+        // --psm 3: 全自动版面分析，适合灵修图片的复杂排版（标题+经文+注释多区块）
         List<String> command = new ArrayList<>();
         command.add("tesseract");
         command.add(imagePath.toString());
@@ -271,7 +272,7 @@ public class QtOcrService {
         command.add("-l");
         command.add("chi_sim+eng");
         command.add("--psm");
-        command.add("6");
+        command.add("3");
 
         log.info("Running Tesseract: {}", String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);

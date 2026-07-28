@@ -80,6 +80,7 @@ export default function QtAdminPage() {
       formData.append('file', file);
       const res = await api.post('/qt/admin/ocr-preview', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 180000,
       });
       setOcrResult(res.data.data);
     } catch (err: any) {
@@ -100,6 +101,7 @@ export default function QtAdminPage() {
       formData.append('file', file);
       const res = await api.post('/qt/admin/ocr-import', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 180000,
       });
       setSuccess(res.data.message || '导入成功');
       setSaved(true);

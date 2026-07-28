@@ -98,22 +98,28 @@ public class LlmService {
 
         String url = baseUrl.replaceAll("/$", "") + "/v1/chat/completions";
 
-        // OpenAI 风格的多模态 content
+        // OpenAI 风格的多模态 content（value 类型混合，需用 Map<String,Object> 显式构造）
         String dataUrl = "data:" + mimeType + ";base64," + imageBase64;
-        List<Object> userContent = new ArrayList<>();
-        userContent.add(Map.of("type", "text", "text", userPrompt));
-        userContent.add(Map.of("type", "image_url",
-                Map.of("image_url", Map.of("url", dataUrl))));
+        Map<String, Object> textPart = new java.util.HashMap<>();
+        textPart.put("type", "text");
+        textPart.put("text", userPrompt);
+        Map<String, Object> imageUrlPart = new java.util.HashMap<>();
+        imageUrlPart.put("type", "image_url");
+        imageUrlPart.put("image_url", Map.of("url", dataUrl));
+        List<Object> userContent = List.of(textPart, imageUrlPart);
 
-        Map<String, Object> requestBody = Map.of(
-                "model", model,
-                "messages", List.of(
-                        Map.of("role", "system", "content", systemPrompt),
-                        Map.of("role", "user", "content", userContent)
-                ),
-                "temperature", 0.3,
-                "max_tokens", 4096
-        );
+        Map<String, Object> systemMsg = new java.util.HashMap<>();
+        systemMsg.put("role", "system");
+        systemMsg.put("content", systemPrompt);
+        Map<String, Object> userMsg = new java.util.HashMap<>();
+        userMsg.put("role", "user");
+        userMsg.put("content", userContent);
+
+        Map<String, Object> requestBody = new java.util.HashMap<>();
+        requestBody.put("model", model);
+        requestBody.put("messages", List.of(systemMsg, userMsg));
+        requestBody.put("temperature", 0.3);
+        requestBody.put("max_tokens", 4096);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
