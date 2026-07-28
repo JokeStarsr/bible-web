@@ -1,5 +1,6 @@
 package com.bible.module.qt.mapper;
 
+import com.bible.module.qt.dto.QtAllResponseDTO;
 import com.bible.module.qt.entity.QtUserResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -17,4 +18,7 @@ public interface QtUserResponseMapper {
     List<QtUserResponse> findUserHistory(@Param("userId") UUID userId, @Param("offset") int offset, @Param("size") int size);
     int countUserHistory(@Param("userId") UUID userId);
     void deleteById(@Param("id") UUID id);
+
+    /** 查询所有用户的回应（JOIN users + qt_daily_contents），按创建时间倒序 */
+    List<QtAllResponseDTO> findAllResponses();
 }

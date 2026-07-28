@@ -55,4 +55,41 @@
         DELETE FROM qt_user_responses WHERE id = #{id}
     </delete>
 
+    <!-- 查询所有用户的回应，JOIN users + qt_daily_contents 一次性返回完整数据 -->
+    <resultMap id="AllResponseMap" type="com.bible.module.qt.dto.QtAllResponseDTO">
+        <id column="response_id" property="responseId"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="display_name" property="displayName"/>
+        <result column="qt_content_id" property="qtContentId"/>
+        <result column="qt_date" property="qtDate"/>
+        <result column="title" property="title"/>
+        <result column="scripture_reference" property="scriptureReference"/>
+        <result column="meditation" property="meditation"/>
+        <result column="application" property="application"/>
+        <result column="prayer" property="prayer"/>
+        <result column="photos" property="photosRaw"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="findAllResponses" resultMap="AllResponseMap">
+        SELECT r.id AS response_id,
+               r.user_id,
+               r.qt_content_id,
+               r.meditation,
+               r.application,
+               r.prayer,
+               r.photos,
+               r.created_at,
+               u.username,
+               u.display_name,
+               c.qt_date,
+               c.title,
+               c.scripture_reference
+        FROM qt_user_responses r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN qt_daily_contents c ON r.qt_content_id = c.id
+        ORDER BY r.created_at DESC
+    </select>
+
 </mapper>

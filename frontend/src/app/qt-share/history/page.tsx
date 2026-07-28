@@ -1,37 +1,53 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { useI18n } from '@/i18n/I18nContext';
 
-interface HistoryItem {
+interface ResponseItem {
+  responseId: string;
+  userId: string;
+  username: string;
+  displayName: string;
   qtContentId: string;
-  responseId: string | null;
   qtDate: string;
   title: string;
   scriptureReference: string;
-  responded: boolean;
-  meditation: string | null;
-  application: string | null;
-  prayer: string | null;
+  meditation: string;
+  application: string;
+  prayer: string;
+  photos: string[];
+  createdAt: string;
 }
 
-interface PageData {
-  items: HistoryItem[];
-  total: number;
-  page: number;
-  totalPages: number;
+interface UserGroup {
+  userId: string;
+  username: string;
+  displayName: string;
+  responses: ResponseItem[];
 }
 
 export default function QtHistoryPage() {
   const router = useRouter();
   const { t } = useI18n();
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [data, setData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [responses, setResponses] = useState<ResponseItem[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [error, setError] = useState('');
+
+  // 展开状态：第一层用户分组，第二层具体回应
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [expandedResponse, setExpandedResponse] = useState<string | null>(null);
+
+  // 编辑状态（仅自己的回应可编辑）
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editMeditation, setEditMeditation] = useState('');
+  const [editApplication, setEditApplication] = useState('');
+  const [editPrayer, setEditPrayer] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -41,21 +57,108 @@ export default function QtHistoryPage() {
       window.location.href = '/login';
       return;
     }
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+      setCurrentUserId(userInfo.id || '');
+    } catch {
+      // ignore
+    }
     setCheckingAuth(false);
-    loadHistory(1);
+    loadAllResponses();
   }, []);
 
-  const loadHistory = async (p: number) => {
+  const loadAllResponses = async () => {
     setLoading(true);
+    setError('');
     try {
-      const res = await api.get(`/qt/history?page=${p}&size=10`);
-      setData(res.data.data);
-      setPage(p);
-    } catch {
-      setData(null);
+      const res = await api.get('/qt/all-responses');
+      setResponses(res.data.data || []);
+    } catch (err: any) {
+      setError(err.response?.data?.message || '加载失败');
     } finally {
       setLoading(false);
     }
+  };
+
+  // 按用户名分组
+  const userGroups: UserGroup[] = useMemo(() => {
+    const map = new Map<string, UserGroup>();
+    for (const r of responses) {
+      if (!map.has(r.userId)) {
+        map.set(r.userId, {
+          userId: r.userId,
+          username: r.username || '用户',
+          displayName: r.displayName || r.username || '用户',
+          responses: [],
+        });
+      }
+      map.get(r.userId)!.responses.push(r);
+    }
+    // 每个用户组内按日期倒序（API 已按 created_at 倒序，这里保持）
+    return Array.from(map.values());
+  }, [responses]);
+
+  const toggleUser = (userId: string) => {
+    setExpandedUser(expandedUser === userId ? null : userId);
+    setExpandedResponse(null);
+    setEditingId(null);
+  };
+
+  const toggleResponse = (responseId: string) => {
+    setExpandedResponse(expandedResponse === responseId ? null : responseId);
+    setEditingId(null);
+  };
+
+  const startEdit = (item: ResponseItem) => {
+    setEditingId(item.responseId);
+    setEditMeditation(item.meditation || '');
+    setEditApplication(item.application || '');
+    setEditPrayer(item.prayer || '');
+    setExpandedResponse(item.responseId);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const handleSaveEdit = async (item: ResponseItem) => {
+    setSaving(true);
+    try {
+      await api.post('/qt/response', {
+        qtContentId: item.qtContentId,
+        meditation: editMeditation,
+        application: editApplication,
+        prayer: editPrayer,
+        photos: item.photos || [],
+      });
+      setEditingId(null);
+      await loadAllResponses();
+    } catch (err: any) {
+      setError(err.response?.data?.message || '保存失败');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (item: ResponseItem) => {
+    if (!window.confirm(`确定删除 ${item.qtDate} 的回应吗？此操作不可撤销。`)) return;
+    setDeletingId(item.responseId);
+    try {
+      await api.delete(`/qt/response/by-id/${item.responseId}`);
+      await loadAllResponses();
+    } catch (err: any) {
+      setError(err.response?.data?.message || '删除失败');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const formatDate = (iso: string) => {
+    return new Date(iso).toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
   };
 
   if (checkingAuth) {
@@ -82,8 +185,12 @@ export default function QtHistoryPage() {
 
       <div className="text-center py-4">
         <h1 className="text-3xl font-bold text-bible-dark mb-2">{t('qtHistory.title')}</h1>
-        <p className="text-bible-muted">{t('qtHistory.subtitle')}</p>
+        <p className="text-bible-muted">点击用户名查看其默想内容，可管理自己的回应</p>
       </div>
+
+      {error && (
+        <div className="text-center text-red-500 bg-red-50 rounded-lg py-3 px-4">{error}</div>
+      )}
 
       {loading && (
         <div className="text-center py-12">
@@ -91,110 +198,185 @@ export default function QtHistoryPage() {
         </div>
       )}
 
-      {!loading && data && (
-        <>
-          {data.items.length === 0 ? (
-            <div className="scripture-card text-center py-12">
-              <p className="text-bible-muted">{t('qtHistory.noRecords')}</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {data.items.map((item) => (
-                <div key={item.qtContentId} className="scripture-card">
-                  <button
-                    onClick={() => setExpanded(expanded === item.qtContentId ? null : item.qtContentId)}
-                    className="w-full text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm text-bible-muted">{item.qtDate}</span>
-                        <h3 className="text-lg font-semibold text-bible-dark mt-1">{item.title}</h3>
-                        {item.scriptureReference && (
-                          <p className="text-sm text-bible-gold mt-1">{item.scriptureReference}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {item.responded ? (
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">{t('qtHistory.responded')}</span>
-                        ) : (
-                          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">{t('qtHistory.notResponded')}</span>
-                        )}
-                        <svg
-                          className={`w-4 h-4 text-bible-muted transition-transform ${expanded === item.qtContentId ? 'rotate-180' : ''}`}
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
+      {!loading && userGroups.length === 0 && (
+        <div className="scripture-card text-center py-12">
+          <p className="text-bible-muted">{t('qtHistory.noRecords')}</p>
+        </div>
+      )}
 
-                  {expanded === item.qtContentId && (
-                    <div className="mt-4 pt-4 border-t border-bible-warm/50 space-y-3">
-                      {item.responded ? (
-                        <>
-                          {item.meditation && (
-                            <div>
-                              <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.meditation')}</p>
-                              <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.meditation}</p>
-                            </div>
-                          )}
-                          {item.application && (
-                            <div>
-                              <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.application')}</p>
-                              <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.application}</p>
-                            </div>
-                          )}
-                          {item.prayer && (
-                            <div>
-                              <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.prayer')}</p>
-                              <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.prayer}</p>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <p className="text-sm text-bible-muted">{t('qtHistory.notResponded')}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 分页 */}
-          {data.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-4">
-              <button
-                onClick={() => loadHistory(page - 1)}
-                disabled={page <= 1}
-                className="px-3 py-1.5 text-sm rounded border border-bible-warm text-bible-dark hover:bg-bible-warm/20 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                上一页
-              </button>
-              {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((p) => (
+      {!loading && userGroups.length > 0 && (
+        <div className="space-y-4">
+          {/* 第一层：按用户名分类 */}
+          {userGroups.map((group) => {
+            const isExpanded = expandedUser === group.userId;
+            const isMe = group.userId === currentUserId;
+            return (
+              <div key={group.userId} className="scripture-card overflow-hidden">
                 <button
-                  key={p}
-                  onClick={() => loadHistory(p)}
-                  className={`px-3 py-1.5 text-sm rounded border ${
-                    p === page
-                      ? 'bg-bible-gold text-white border-bible-gold'
-                      : 'border-bible-warm text-bible-dark hover:bg-bible-warm/20'
-                  }`}
+                  onClick={() => toggleUser(group.userId)}
+                  className="w-full flex items-center justify-between px-4 py-4 bg-bible-warm/30 hover:bg-bible-warm/50 transition-colors text-left"
                 >
-                  {p}
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isMe ? 'bg-bible-gold' : 'bg-bible-muted'}`}>
+                      {group.displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-bible-dark">{group.displayName}</span>
+                        {isMe && (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">我</span>
+                        )}
+                      </div>
+                      <span className="text-sm text-bible-muted">{group.responses.length} 条回应</span>
+                    </div>
+                  </div>
+                  <svg
+                    className={`w-5 h-5 text-bible-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
-              ))}
-              <button
-                onClick={() => loadHistory(page + 1)}
-                disabled={page >= data.totalPages}
-                className="px-3 py-1.5 text-sm rounded border border-bible-warm text-bible-dark hover:bg-bible-warm/20 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                下一页
-              </button>
-            </div>
-          )}
-        </>
+
+                {/* 第二层：该用户的回应列表 */}
+                {isExpanded && (
+                  <div className="divide-y divide-bible-warm/50">
+                    {group.responses.map((item) => {
+                      const respExpanded = expandedResponse === item.responseId;
+                      const isEditing = editingId === item.responseId;
+                      const canManage = item.userId === currentUserId;
+                      return (
+                        <div key={item.responseId} className="p-4">
+                          <button
+                            onClick={() => toggleResponse(item.responseId)}
+                            className="w-full text-left"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="text-sm text-bible-muted">{formatDate(item.qtDate)}</span>
+                                <h3 className="text-base font-semibold text-bible-dark mt-1">{item.title}</h3>
+                                {item.scriptureReference && (
+                                  <p className="text-sm text-bible-gold mt-0.5">{item.scriptureReference}</p>
+                                )}
+                              </div>
+                              <svg
+                                className={`w-4 h-4 text-bible-muted transition-transform ${respExpanded ? 'rotate-180' : ''}`}
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </button>
+
+                          {/* 第三层：具体回应内容 */}
+                          {respExpanded && !isEditing && (
+                            <div className="mt-4 pt-4 border-t border-bible-warm/50 space-y-3">
+                              {item.meditation && (
+                                <div>
+                                  <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.meditation')}</p>
+                                  <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.meditation}</p>
+                                </div>
+                              )}
+                              {item.application && (
+                                <div>
+                                  <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.application')}</p>
+                                  <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.application}</p>
+                                </div>
+                              )}
+                              {item.prayer && (
+                                <div>
+                                  <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.prayer')}</p>
+                                  <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.prayer}</p>
+                                </div>
+                              )}
+                              {item.photos && item.photos.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-bible-gold mb-1">照片</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {item.photos.map((p, i) => (
+                                      <img key={i} src={p} alt={`照片${i + 1}`} className="w-20 h-20 object-cover rounded" />
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* 仅自己的回应显示修改/删除按钮 */}
+                              {canManage && (
+                                <div className="flex gap-2 pt-2">
+                                  <button
+                                    onClick={() => startEdit(item)}
+                                    className="px-3 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors"
+                                  >
+                                    修改
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(item)}
+                                    disabled={deletingId === item.responseId}
+                                    className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                                  >
+                                    {deletingId === item.responseId ? '删除中...' : '删除'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 编辑模式 */}
+                          {respExpanded && isEditing && (
+                            <div className="mt-4 pt-4 border-t border-bible-warm/50 space-y-3">
+                              <div>
+                                <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.meditation')}</label>
+                                <textarea
+                                  value={editMeditation}
+                                  onChange={(e) => setEditMeditation(e.target.value)}
+                                  rows={3}
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.application')}</label>
+                                <textarea
+                                  value={editApplication}
+                                  onChange={(e) => setEditApplication(e.target.value)}
+                                  rows={3}
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.prayer')}</label>
+                                <textarea
+                                  value={editPrayer}
+                                  onChange={(e) => setEditPrayer(e.target.value)}
+                                  rows={3}
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleSaveEdit(item)}
+                                  disabled={saving}
+                                  className="px-4 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors disabled:opacity-50"
+                                >
+                                  {saving ? '保存中...' : '保存'}
+                                </button>
+                                <button
+                                  onClick={cancelEdit}
+                                  className="px-4 py-1.5 text-sm border border-bible-warm text-bible-dark rounded hover:bg-bible-warm/30 transition-colors"
+                                >
+                                  取消
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

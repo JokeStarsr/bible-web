@@ -167,8 +167,10 @@ public class QtService {
 
     public PageResult<QtHistoryResponse> getHistory(UUID userId, int page, int size) {
         int offset = (page - 1) * size;
-        List<QtDailyContent> allContents = contentMapper.findAll(0, contentMapper.countAll());
-        List<QtUserResponse> userResponses = responseMapper.findUserHistory(userId, 0, responseMapper.countUserHistory(userId));
+        int totalContent = contentMapper.countAll();
+        List<QtDailyContent> allContents = contentMapper.findAll(0, totalContent);
+        int totalResp = responseMapper.countUserHistory(userId);
+        List<QtUserResponse> userResponses = responseMapper.findUserHistory(userId, 0, totalResp);
 
         Map<UUID, QtUserResponse> responseMap = userResponses.stream()
                 .collect(Collectors.toMap(QtUserResponse::getQtContentId, r -> r, (a, b) -> a));
@@ -213,6 +215,13 @@ public class QtService {
         log.info("User {} deleted qt response for date {}", userId, date);
     }
 
+    /**
+     * 获取所有用户的 QT 回应（用于历史记录按用户名分类展示）
+     */
+    public List<QtAllResponseDTO> getAllResponses() {
+        return responseMapper.findAllResponses();
+    }
+
     @Transactional
     public void deleteResponse(UUID userId, UUID responseId) {
         QtUserResponse response = responseMapper.findById(responseId);
@@ -242,7 +251,10 @@ public class QtService {
     }
 
     private QtUserResponseDTO toResponseDTO(QtUserResponse r) {
-        String username = lookupUsername(r.getUserId());
+        User user = lookupUser(r.getUserId());
+        String username = user != null ? user.getUsername() : "用户";
+        String displayName = user != null && user.getDisplayName() != null && !user.getDisplayName().isBlank()
+                ? user.getDisplayName() : username;
         List<String> photoList = r.getPhotos() != null && !r.getPhotos().isEmpty()
                 ? Arrays.asList(r.getPhotos().split(","))
                 : Collections.emptyList();
@@ -250,7 +262,7 @@ public class QtService {
                 .id(r.getId())
                 .userId(r.getUserId())
                 .username(username)
-                .displayName(username)
+                .displayName(displayName)
                 .meditation(r.getMeditation())
                 .application(r.getApplication())
                 .prayer(r.getPrayer())
@@ -259,12 +271,11 @@ public class QtService {
                 .build();
     }
 
-    private String lookupUsername(UUID userId) {
+    private User lookupUser(UUID userId) {
         try {
-            User u = userMapper.findById(userId);
-            return u != null ? u.getUsername() : "用户";
+            return userMapper.findById(userId);
         } catch (Exception e) {
-            return "用户";
+            return null;
         }
     }
 

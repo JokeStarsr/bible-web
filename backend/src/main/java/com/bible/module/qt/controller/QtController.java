@@ -110,6 +110,31 @@ public class QtController {
         return ApiResponse.ok(qtService.getHistory(userId, page, size));
     }
 
+    /**
+     * 获取所有用户的 QT 回应（用于历史记录按用户名分类展示）
+     * 一次 JOIN 查询返回所有回应，前端按用户名分组
+     */
+    @GetMapping("/all-responses")
+    public ApiResponse<List<QtAllResponseDTO>> allResponses(Authentication auth) {
+        if (auth == null) {
+            throw new BusinessException("UNAUTHORIZED", "请先登录");
+        }
+        return ApiResponse.ok(qtService.getAllResponses());
+    }
+
+    /**
+     * 按 responseId 删除自己的回应（历史记录页使用）
+     * 含越权校验：只能删除自己的回应
+     */
+    @DeleteMapping("/response/by-id/{responseId}")
+    public ApiResponse<Void> deleteResponseById(
+            @PathVariable UUID responseId,
+            Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        qtService.deleteResponse(userId, responseId);
+        return ApiResponse.ok("删除成功", null);
+    }
+
     @PostMapping("/admin/import")
     public ApiResponse<Void> importContents(@Valid @RequestBody QtImportRequest request) {
         qtService.importContents(request);
