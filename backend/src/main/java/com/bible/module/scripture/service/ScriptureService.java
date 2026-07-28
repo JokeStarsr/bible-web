@@ -77,9 +77,9 @@ public class ScriptureService {
         java.util.concurrent.Future<GenerateScriptureResponse> future =
                 translationExecutor.submit(() -> translateVersesToKorean(response));
         try {
-            return future.get(8, java.util.concurrent.TimeUnit.SECONDS);
+            return future.get(30, java.util.concurrent.TimeUnit.SECONDS);
         } catch (java.util.concurrent.TimeoutException e) {
-            log.warn("Korean translation timed out after 8s, returning Chinese");
+            log.warn("Korean translation timed out after 30s, returning Chinese");
             return response;
         } catch (Exception e) {
             log.error("Korean translation failed, returning Chinese", e);
