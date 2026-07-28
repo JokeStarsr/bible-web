@@ -52,6 +52,7 @@ frontend/out/
 frontend/dist/
 frontend/node_modules/
 frontend/.env.local
+frontend/tsconfig.tsbuildinfo
 
 # 小程序构建产物
 miniprogram/node_modules/
