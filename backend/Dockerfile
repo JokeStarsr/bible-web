@@ -30,7 +30,8 @@ RUN sed -i "s/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g" /etc/apk/re
 WORKDIR /app
 
 RUN apk add --no-cache curl tzdata python3 py3-pip \
-    tesseract-ocr tesseract-ocr-data-chi_sim tesseract-ocr-data-eng && \
+    tesseract-ocr tesseract-ocr-data-chi_sim tesseract-ocr-data-eng \
+    postgresql-client && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
@@ -38,6 +39,9 @@ COPY bible-tts.py /usr/local/bin/bible-tts.py
 
 COPY --from=builder /build/target/*.jar app.jar
 
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]
