@@ -49,6 +49,12 @@ export default function QtHistoryPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // 视图模式：按用户名分类 / 按时间排序
+  const [viewMode, setViewMode] = useState<'user' | 'time'>('user');
+  // 按时间视图的分页（默认5条/页）
+  const PAGE_SIZE = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -97,6 +103,30 @@ export default function QtHistoryPage() {
     // 每个用户组内按日期倒序（API 已按 created_at 倒序，这里保持）
     return Array.from(map.values());
   }, [responses]);
+
+  // 按时间排序：当天优先（API 已按 created_at 倒序，当天自然在前）
+  const timeSortedResponses: ResponseItem[] = useMemo(() => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    // 当天（qtDate = 今天）的排前，其余按原序（created_at 倒序）
+    const todayList = responses.filter((r) => r.qtDate === todayStr);
+    const otherList = responses.filter((r) => r.qtDate !== todayStr);
+    return [...todayList, ...otherList];
+  }, [responses]);
+
+  // 分页计算
+  const totalPages = Math.max(1, Math.ceil(timeSortedResponses.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedResponses = timeSortedResponses.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    setExpandedResponse(null);
+    setEditingId(null);
+  };
 
   const toggleUser = (userId: string) => {
     setExpandedUser(expandedUser === userId ? null : userId);
@@ -185,8 +215,34 @@ export default function QtHistoryPage() {
 
       <div className="text-center py-4">
         <h1 className="text-3xl font-bold text-bible-dark mb-2">{t('qtHistory.title')}</h1>
-        <p className="text-bible-muted">点击用户名查看其默想内容，可管理自己的回应</p>
+        <p className="text-bible-muted">切换查看方式，点开条目查看默想内容，可管理自己的回应</p>
       </div>
+
+      {/* 视图切换 Tab */}
+      {!loading && responses.length > 0 && (
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={() => setViewMode('user')}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+              viewMode === 'user'
+                ? 'bg-bible-gold text-white'
+                : 'bg-bible-warm/40 text-bible-dark hover:bg-bible-warm/60'
+            }`}
+          >
+            按用户名
+          </button>
+          <button
+            onClick={() => { setViewMode('time'); setCurrentPage(1); setExpandedResponse(null); setEditingId(null); }}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+              viewMode === 'time'
+                ? 'bg-bible-gold text-white'
+                : 'bg-bible-warm/40 text-bible-dark hover:bg-bible-warm/60'
+            }`}
+          >
+            按时间
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="text-center text-red-500 bg-red-50 rounded-lg py-3 px-4">{error}</div>
@@ -198,13 +254,14 @@ export default function QtHistoryPage() {
         </div>
       )}
 
-      {!loading && userGroups.length === 0 && (
+      {!loading && responses.length === 0 && (
         <div className="scripture-card text-center py-12">
           <p className="text-bible-muted">{t('qtHistory.noRecords')}</p>
         </div>
       )}
 
-      {!loading && userGroups.length > 0 && (
+      {/* 按用户名分类视图 */}
+      {!loading && responses.length > 0 && viewMode === 'user' && (
         <div className="space-y-4">
           {/* 第一层：按用户名分类 */}
           {userGroups.map((group) => {
@@ -376,6 +433,194 @@ export default function QtHistoryPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* 按时间排序视图（当天优先，分页5条/页） */}
+      {!loading && responses.length > 0 && viewMode === 'time' && (
+        <div className="space-y-4">
+          {/* 当天提示 */}
+          {timeSortedResponses.length > 0 && timeSortedResponses[0].qtDate === (() => {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          })() && (
+            <div className="flex justify-center">
+              <span className="text-xs text-bible-gold bg-amber-50 rounded-full py-1.5 px-3">
+                以下为今日最新回应（优先展示）
+              </span>
+            </div>
+          )}
+
+          {pagedResponses.map((item) => {
+            const respExpanded = expandedResponse === item.responseId;
+            const isEditing = editingId === item.responseId;
+            const canManage = item.userId === currentUserId;
+            const isMe = item.userId === currentUserId;
+            const isToday = (() => {
+              const d = new Date();
+              const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              return item.qtDate === todayStr;
+            })();
+            return (
+              <div key={item.responseId} className={`scripture-card overflow-hidden ${isToday ? 'ring-1 ring-bible-gold/40' : ''}`}>
+                <button
+                  onClick={() => toggleResponse(item.responseId)}
+                  className="w-full text-left px-4 py-4 bg-bible-warm/30 hover:bg-bible-warm/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm text-bible-muted">{formatDate(item.qtDate)}</span>
+                        {isToday && (
+                          <span className="text-xs bg-bible-gold text-white px-2 py-0.5 rounded-full">今日</span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${isMe ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
+                          {item.displayName || item.username || '用户'}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-semibold text-bible-dark mt-1">{item.title}</h3>
+                      {item.scriptureReference && (
+                        <p className="text-sm text-bible-gold mt-0.5">{item.scriptureReference}</p>
+                      )}
+                    </div>
+                    <svg
+                      className={`w-4 h-4 text-bible-muted transition-transform flex-shrink-0 ${respExpanded ? 'rotate-180' : ''}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+
+                {/* 展开后的具体内容 */}
+                {respExpanded && !isEditing && (
+                  <div className="px-4 pb-4 pt-3 border-t border-bible-warm/50 space-y-3">
+                    {item.meditation && (
+                      <div>
+                        <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.meditation')}</p>
+                        <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.meditation}</p>
+                      </div>
+                    )}
+                    {item.application && (
+                      <div>
+                        <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.application')}</p>
+                        <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.application}</p>
+                      </div>
+                    )}
+                    {item.prayer && (
+                      <div>
+                        <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.prayer')}</p>
+                        <p className="text-sm text-bible-dark whitespace-pre-wrap">{item.prayer}</p>
+                      </div>
+                    )}
+                    {item.photos && item.photos.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-bible-gold mb-1">照片</p>
+                        <div className="flex flex-wrap gap-2">
+                          {item.photos.map((p, i) => (
+                            <img key={i} src={p} alt={`照片${i + 1}`} className="w-20 h-20 object-cover rounded" />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 仅自己的回应显示修改/删除按钮 */}
+                    {canManage && (
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={() => startEdit(item)}
+                          className="px-3 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors"
+                        >
+                          修改
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item)}
+                          disabled={deletingId === item.responseId}
+                          className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                          {deletingId === item.responseId ? '删除中...' : '删除'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 编辑模式 */}
+                {respExpanded && isEditing && (
+                  <div className="px-4 pb-4 pt-3 border-t border-bible-warm/50 space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.meditation')}</label>
+                      <textarea
+                        value={editMeditation}
+                        onChange={(e) => setEditMeditation(e.target.value)}
+                        rows={3}
+                        className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.application')}</label>
+                      <textarea
+                        value={editApplication}
+                        onChange={(e) => setEditApplication(e.target.value)}
+                        rows={3}
+                        className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.prayer')}</label>
+                      <textarea
+                        value={editPrayer}
+                        onChange={(e) => setEditPrayer(e.target.value)}
+                        rows={3}
+                        className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveEdit(item)}
+                        disabled={saving}
+                        className="px-4 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors disabled:opacity-50"
+                      >
+                        {saving ? '保存中...' : '保存'}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="px-4 py-1.5 text-sm border border-bible-warm text-bible-dark rounded hover:bg-bible-warm/30 transition-colors"
+                      >
+                        取消
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* 分页控件 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => goToPage(safePage - 1)}
+                disabled={safePage <= 1}
+                className="px-3 py-1.5 text-sm rounded-lg border border-bible-warm text-bible-dark hover:bg-bible-warm/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                上一页
+              </button>
+              <span className="text-sm text-bible-muted px-2">
+                第 {safePage} / {totalPages} 页（共 {timeSortedResponses.length} 条）
+              </span>
+              <button
+                onClick={() => goToPage(safePage + 1)}
+                disabled={safePage >= totalPages}
+                className="px-3 py-1.5 text-sm rounded-lg border border-bible-warm text-bible-dark hover:bg-bible-warm/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                下一页
+              </button>
+            </div>
+          )}
+          {totalPages === 1 && timeSortedResponses.length > 0 && (
+            <div className="text-center text-xs text-bible-muted">共 {timeSortedResponses.length} 条</div>
+          )}
         </div>
       )}
     </div>
