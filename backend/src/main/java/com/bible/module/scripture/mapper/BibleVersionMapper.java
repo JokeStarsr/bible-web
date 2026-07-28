@@ -13,6 +13,8 @@ public interface BibleVersionMapper {
 
     BibleVersion findByCode(String code);
 
+    BibleVersion findByLanguage(String language);
+
     BibleVersion findDefault();
 
     List<BibleVersion> findAll();

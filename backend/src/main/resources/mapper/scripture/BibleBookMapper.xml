@@ -6,9 +6,12 @@
         <id column="id" property="id"/>
         <result column="version_id" property="versionId"/>
         <result column="book_code" property="bookCode"/>
-        <result column="book_name" property="bookName"/>
+        <result column="book_name_zh" property="bookNameZh"/>
+        <result column="book_name_en" property="bookNameEn"/>
+        <result column="book_name_ko" property="bookNameKo"/>
         <result column="book_order" property="bookOrder"/>
-        <result column="chapters" property="chapters"/>
+        <result column="testament" property="testament"/>
+        <result column="chapter_count" property="chapterCount"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>

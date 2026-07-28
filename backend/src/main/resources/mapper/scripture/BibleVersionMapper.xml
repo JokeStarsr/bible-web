@@ -22,6 +22,10 @@
         SELECT * FROM bible_versions WHERE code = #{code}
     </select>
 
+    <select id="findByLanguage" resultMap="BibleVersionResultMap">
+        SELECT * FROM bible_versions WHERE language = #{language} AND status = 'active' ORDER BY is_default DESC LIMIT 1
+    </select>
+
     <select id="findDefault" resultMap="BibleVersionResultMap">
         SELECT * FROM bible_versions WHERE is_default = true
     </select>

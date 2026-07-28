@@ -39,7 +39,21 @@ public class ScriptureService {
 
     @Transactional
     public GenerateScriptureResponse generate(UUID userId, GenerateScriptureRequest req) {
-        BibleVersion version = getVersion(req.getVersionCode());
+        // 韩文模式：优先使用本地韩文版圣经（개역한글판），不走LLM翻译
+        boolean useKorean = "ko".equals(req.getLang());
+        BibleVersion version;
+        if (useKorean) {
+            BibleVersion koVersion = versionMapper.findByLanguage("ko");
+            if (koVersion != null) {
+                version = koVersion;
+            } else {
+                version = getVersion(req.getVersionCode());
+                useKorean = false; // 没有韩文版数据，降级为中文+LLM翻译
+            }
+        } else {
+            version = getVersion(req.getVersionCode());
+        }
+
         List<BibleBook> books = bookMapper.findByVersionId(version.getId());
         if (books.isEmpty()) {
             throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "圣经数据未就绪");
@@ -56,8 +70,8 @@ public class ScriptureService {
                 List<BibleVerse> verses = verseMapper.findByBookAndChapter(book.getId(), chapter);
                 if (!verses.isEmpty()) {
                     response = generateChapter(userId, version, book, chapter);
-                    if ("ko".equals(req.getLang())) {
-                        response = translateAsync(response);
+                    if (useKorean) {
+                        response = localizeKoreanResponse(response);
                     }
                     return response;
                 }
@@ -66,10 +80,68 @@ public class ScriptureService {
         } else {
             int verseCount = getVerseCount(type);
             response = generateVerses(userId, version, verseCount, type);
-            if ("ko".equals(req.getLang())) {
-                response = translateAsync(response);
+            if (useKorean) {
+                response = localizeKoreanResponse(response);
             }
             return response;
+        }
+    }
+
+    /**
+     * 将响应中的书名和索引替换为韩文（数据库原生韩文数据，无需LLM翻译）
+     */
+    private GenerateScriptureResponse localizeKoreanResponse(GenerateScriptureResponse response) {
+        if (response == null || response.getVerses() == null) return response;
+
+        // 经文文本已经是韩文（来自韩文版数据库），只需把书名替换为韩文
+        List<GenerateScriptureResponse.VerseItem> newItems = response.getVerses().stream()
+            .map(item -> {
+                BibleBook book = bookMapper.findById(item.getBookId());
+                String koName = book != null ? book.getBookNameKo() : null;
+                return GenerateScriptureResponse.VerseItem.builder()
+                    .versionId(item.getVersionId())
+                    .bookId(item.getBookId())
+                    .bookName(koName != null && !koName.isBlank() ? koName : item.getBookName())
+                    .chapterNumber(item.getChapterNumber())
+                    .verseNumber(item.getVerseNumber())
+                    .text(item.getText())
+                    .build();
+            })
+            .collect(Collectors.toList());
+
+        // 重新生成韩文索引文本
+        String koReference = buildKoreanReferenceText(newItems);
+
+        return GenerateScriptureResponse.builder()
+            .generationRecordId(response.getGenerationRecordId())
+            .referenceText(koReference != null ? koReference : response.getReferenceText())
+            .generationType(response.getGenerationType())
+            .verses(newItems)
+            .build();
+    }
+
+    /**
+     * 用韩文书名重新组装索引文本
+     */
+    private String buildKoreanReferenceText(List<GenerateScriptureResponse.VerseItem> items) {
+        if (items == null || items.isEmpty()) return null;
+        GenerateScriptureResponse.VerseItem first = items.get(0);
+        GenerateScriptureResponse.VerseItem last = items.get(items.size() - 1);
+
+        if (first.getBookId().equals(last.getBookId())) {
+            if (first.getChapterNumber() == last.getChapterNumber()) {
+                return String.format("%s %d:%d-%d",
+                    first.getBookName(), first.getChapterNumber(),
+                    first.getVerseNumber(), last.getVerseNumber());
+            } else {
+                return String.format("%s %d:%d-%d:%d",
+                    first.getBookName(), first.getChapterNumber(),
+                    first.getVerseNumber(), last.getChapterNumber(), last.getVerseNumber());
+            }
+        } else {
+            return String.format("%s %d:%d - %s %d:%d",
+                first.getBookName(), first.getChapterNumber(), first.getVerseNumber(),
+                last.getBookName(), last.getChapterNumber(), last.getVerseNumber());
         }
     }
 
@@ -181,30 +253,34 @@ public class ScriptureService {
     private GenerateScriptureResponse generateVerses(UUID userId, BibleVersion version,
                                                       int count, String type) {
         List<BibleBook> allBooks = bookMapper.findByVersionId(version.getId());
-        allBooks.sort(Comparator.comparingInt(BibleBook::getBookOrder));
-
-        List<BibleVerse> globalPool = new ArrayList<>();
-        for (BibleBook b : allBooks) {
-            List<Integer> chapters = verseMapper.findChaptersByBookId(b.getId());
-            for (int ch : chapters) {
-                List<BibleVerse> verses = verseMapper.findByBookAndChapter(b.getId(), ch);
-                globalPool.addAll(verses);
-            }
-        }
-
-        if (globalPool.isEmpty()) {
+        if (allBooks.isEmpty()) {
             throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "圣经数据未就绪");
         }
 
-        if (globalPool.size() <= count) {
-            return buildVersesResponse(userId, version, type, globalPool);
+        // 优化：随机选书卷和章节，避免遍历全部经文（韩文版3万+节）
+        // 最多尝试20次找到足够节数的章节
+        List<BibleVerse> selected = new ArrayList<>();
+        for (int attempt = 0; attempt < 20 && selected.size() < count; attempt++) {
+            BibleBook book = allBooks.get(random.nextInt(allBooks.size()));
+            List<Integer> chapters = verseMapper.findChaptersByBookId(book.getId());
+            if (chapters.isEmpty()) continue;
+            int chapter = chapters.get(random.nextInt(chapters.size()));
+            List<BibleVerse> verses = verseMapper.findByBookAndChapter(book.getId(), chapter);
+            if (verses.isEmpty()) continue;
+
+            if (verses.size() >= count) {
+                // 该章节经文足够，随机选连续的 count 节
+                int startIdx = random.nextInt(verses.size() - count + 1);
+                selected = new ArrayList<>(verses.subList(startIdx, startIdx + count));
+                break;
+            } else if (selected.isEmpty()) {
+                // 该章节经文不够但尚未选到任何经文，用整章
+                selected.addAll(verses);
+            }
         }
 
-        int startIndex = random.nextInt(globalPool.size());
-        List<BibleVerse> selected = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            int idx = (startIndex + i) % globalPool.size();
-            selected.add(globalPool.get(idx));
+        if (selected.isEmpty()) {
+            throw new BusinessException("SCRIPTURE_GENERATION_FAILED", "未选到任何经文");
         }
 
         return buildVersesResponse(userId, version, type, selected);

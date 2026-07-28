@@ -18,6 +18,7 @@ public class BibleBook {
     private String bookCode;
     private String bookNameZh;
     private String bookNameEn;
+    private String bookNameKo;
     private String testament;
     private int chapterCount;
     private LocalDateTime createdAt;
