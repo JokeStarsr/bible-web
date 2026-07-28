@@ -394,4 +394,28 @@ public class ScriptureService {
             default -> throw new BusinessException("VALIDATION_ERROR", "不支持的生成类型: " + type);
         };
     }
+
+    /**
+     * 按书卷和章节查询经文（用于收藏经文展开查看）
+     */
+    public List<GenerateScriptureResponse.VerseItem> findChapterVerses(UUID versionId, UUID bookId, int chapterNumber) {
+        BibleBook book = bookMapper.findById(bookId);
+        if (book == null) {
+            throw new BusinessException("SCRIPTURE_NOT_FOUND", "未找到该书卷");
+        }
+        List<BibleVerse> verses = verseMapper.findByBookAndChapter(bookId, chapterNumber);
+        if (verses.isEmpty()) {
+            throw new BusinessException("SCRIPTURE_NOT_FOUND", "该章节无经文数据");
+        }
+        return verses.stream()
+                .map(v -> GenerateScriptureResponse.VerseItem.builder()
+                        .versionId(v.getVersionId())
+                        .bookId(v.getBookId())
+                        .bookName(book.getBookNameZh())
+                        .chapterNumber(v.getChapterNumber())
+                        .verseNumber(v.getVerseNumber())
+                        .text(v.getVerseText())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

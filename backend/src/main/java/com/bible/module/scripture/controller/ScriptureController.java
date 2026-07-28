@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,5 +24,16 @@ public class ScriptureController {
                                                             Authentication auth) {
         UUID userId = (UUID) auth.getPrincipal();
         return ApiResponse.ok("生成成功", scriptureService.generate(userId, req));
+    }
+
+    /**
+     * 按书卷和章节查询经文（用于收藏经文展开查看）
+     */
+    @GetMapping("/chapter")
+    public ApiResponse<List<GenerateScriptureResponse.VerseItem>> getChapter(
+            @RequestParam UUID versionId,
+            @RequestParam UUID bookId,
+            @RequestParam int chapterNumber) {
+        return ApiResponse.ok(scriptureService.findChapterVerses(versionId, bookId, chapterNumber));
     }
 }

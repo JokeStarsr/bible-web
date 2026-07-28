@@ -39,6 +39,13 @@ api.interceptors.response.use(
   }
 );
 
+// ==================== 经文查询 API ====================
+export const scriptureApi = {
+  /** 按书卷和章节查询经文（用于收藏经文展开查看） */
+  getChapter: (versionId: string, bookId: string, chapterNumber: number) =>
+    api.get('/scriptures/chapter', { params: { versionId, bookId, chapterNumber } }),
+};
+
 // ==================== 灵修记录 API ====================
 export const reflectionApi = {
   /** 创建灵修记录 */

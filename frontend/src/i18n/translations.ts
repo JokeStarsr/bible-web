@@ -185,6 +185,12 @@ export interface Translations {
   'profile.bookmarks.empty': string;
   'profile.bookmarks.chapterVerse': string;
   'profile.back': string;
+  'profile.prevPage': string;
+  'profile.nextPage': string;
+  'profile.pageLabel': string;
+  'profile.bookmarks.loadingVerses': string;
+  'profile.bookmarks.loadVersesFail': string;
+  'profile.bookmarks.clickToView': string;
 
   // ========== Messages ==========
   'messages.title': string;
@@ -678,6 +684,12 @@ export const zh: Translations = {
   'profile.bookmarks.empty': '暂无收藏经文，去首页生成经文后点击收藏吧',
   'profile.bookmarks.chapterVerse': '第{chapter}章 第{verse}节',
   'profile.back': '返回首页',
+  'profile.prevPage': '上一页',
+  'profile.nextPage': '下一页',
+  'profile.pageLabel': '第{page}页',
+  'profile.bookmarks.loadingVerses': '正在加载经文...',
+  'profile.bookmarks.loadVersesFail': '加载经文失败',
+  'profile.bookmarks.clickToView': '点击查看整章经文',
 
   // Messages
   'messages.title': '私信',
@@ -1171,6 +1183,12 @@ export const ko: Translations = {
   'profile.bookmarks.empty': '즐겨찾기 말씀이 없습니다. 말씀을 생성한 후 북마크해 보세요',
   'profile.bookmarks.chapterVerse': '제{chapter}장 제{verse}절',
   'profile.back': '홈으로',
+  'profile.prevPage': '이전',
+  'profile.nextPage': '다음',
+  'profile.pageLabel': '{page}페이지',
+  'profile.bookmarks.loadingVerses': '말씀을 불러오는 중...',
+  'profile.bookmarks.loadVersesFail': '말씀을 불러오지 못했습니다',
+  'profile.bookmarks.clickToView': '클릭하여 전체 장 말씀 보기',
 
   // Messages
   'messages.title': '메시지',
