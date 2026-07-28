@@ -30,6 +30,8 @@ public class QtAllResponseDTO {
     private LocalDate qtDate;
     private String title;
     private String scriptureReference;
+    private String titleKo;
+    private String scriptureReferenceKo;
     private String meditation;
     private String application;
     private String prayer;

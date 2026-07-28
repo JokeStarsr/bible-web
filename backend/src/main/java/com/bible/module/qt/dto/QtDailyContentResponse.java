@@ -16,6 +16,8 @@ public class QtDailyContentResponse {
     private String scriptureText;
     private String commentary;
     private String hymn;
+    private String titleKo;
+    private String scriptureReferenceKo;
     private String scriptureTextKo;
     private String commentaryKo;
     private String hymnKo;

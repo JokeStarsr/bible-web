@@ -15,6 +15,8 @@ interface ResponseItem {
   qtDate: string;
   title: string;
   scriptureReference: string;
+  titleKo?: string;
+  scriptureReferenceKo?: string;
   meditation: string;
   application: string;
   prayer: string;
@@ -111,6 +113,8 @@ export default function QtHistoryPage() {
     qtDate: string;
     title: string;
     scriptureReference: string;
+    titleKo?: string;
+    scriptureReferenceKo?: string;
     responses: ResponseItem[];
   }
   const dateGroups: DateGroup[] = useMemo(() => {
@@ -121,6 +125,8 @@ export default function QtHistoryPage() {
           qtDate: r.qtDate,
           title: r.title || '',
           scriptureReference: r.scriptureReference || '',
+          titleKo: r.titleKo,
+          scriptureReferenceKo: r.scriptureReferenceKo,
           responses: [],
         });
       }
@@ -347,9 +353,9 @@ export default function QtHistoryPage() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <span className="text-sm text-bible-muted">{formatDate(item.qtDate)}</span>
-                                <h3 className="text-base font-semibold text-bible-dark mt-1">{localizeBibleBookNames(item.title, lang)}</h3>
+                                <h3 className="text-base font-semibold text-bible-dark mt-1">{lang === 'ko' && item.titleKo ? item.titleKo : localizeBibleBookNames(item.title, lang)}</h3>
                                 {item.scriptureReference && (
-                                  <p className="text-sm text-bible-gold mt-0.5">{localizeScriptureReference(item.scriptureReference, lang)}</p>
+                                  <p className="text-sm text-bible-gold mt-0.5">{lang === 'ko' && item.scriptureReferenceKo ? item.scriptureReferenceKo : localizeScriptureReference(item.scriptureReference, lang)}</p>
                                 )}
                               </div>
                               <svg
@@ -497,9 +503,9 @@ export default function QtHistoryPage() {
                         {group.responses.length} {t('qtHistory.peopleCount')}
                       </span>
                     </div>
-                    <h3 className="text-base font-semibold text-bible-dark mt-1">{localizeBibleBookNames(group.title, lang)}</h3>
+                    <h3 className="text-base font-semibold text-bible-dark mt-1">{lang === 'ko' && group.titleKo ? group.titleKo : localizeBibleBookNames(group.title, lang)}</h3>
                     {group.scriptureReference && (
-                      <p className="text-sm text-bible-gold mt-0.5">{localizeScriptureReference(group.scriptureReference, lang)}</p>
+                      <p className="text-sm text-bible-gold mt-0.5">{lang === 'ko' && group.scriptureReferenceKo ? group.scriptureReferenceKo : localizeScriptureReference(group.scriptureReference, lang)}</p>
                     )}
                   </div>
                   <svg

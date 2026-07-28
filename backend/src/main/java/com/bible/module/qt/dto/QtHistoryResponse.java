@@ -14,6 +14,8 @@ public class QtHistoryResponse {
     private LocalDate qtDate;
     private String title;
     private String scriptureReference;
+    private String titleKo;
+    private String scriptureReferenceKo;
     private boolean responded;
     private String meditation;
     private String application;

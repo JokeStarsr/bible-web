@@ -15,6 +15,8 @@ interface QtContent {
   scriptureText: string;
   commentary: string;
   hymn?: string;
+  titleKo?: string;
+  scriptureReferenceKo?: string;
   scriptureTextKo?: string;
   commentaryKo?: string;
   hymnKo?: string;
@@ -585,8 +587,8 @@ export default function QtSharePage() {
                 <span className="text-3xl font-bold text-amber-800">{getDayNumber(content.qtDate)}</span>
                 <span className="text-xs text-amber-400">{getMonthDay(content.qtDate)}</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mt-2">{localizeBibleBookNames(content.title, lang)}</h1>
-              {content.scriptureReference && <p className="text-amber-700 font-medium text-sm mt-1">{localizeScriptureReference(content.scriptureReference, lang)}</p>}
+              <h1 className="text-2xl font-bold text-gray-900 mt-2">{lang === 'ko' && content.titleKo ? content.titleKo : localizeBibleBookNames(content.title, lang)}</h1>
+              {content.scriptureReference && <p className="text-amber-700 font-medium text-sm mt-1">{lang === 'ko' && content.scriptureReferenceKo ? content.scriptureReferenceKo : localizeScriptureReference(content.scriptureReference, lang)}</p>}
             </div>
 
             <div className="border-t border-amber-100"></div>

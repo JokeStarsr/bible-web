@@ -65,6 +65,8 @@
         <result column="qt_date" property="qtDate"/>
         <result column="title" property="title"/>
         <result column="scripture_reference" property="scriptureReference"/>
+        <result column="title_ko" property="titleKo"/>
+        <result column="scripture_reference_ko" property="scriptureReferenceKo"/>
         <result column="meditation" property="meditation"/>
         <result column="application" property="application"/>
         <result column="prayer" property="prayer"/>
@@ -85,7 +87,9 @@
                u.display_name,
                c.qt_date,
                c.title,
-               c.scripture_reference
+               c.scripture_reference,
+               c.title_ko,
+               c.scripture_reference_ko
         FROM qt_user_responses r
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN qt_daily_contents c ON r.qt_content_id = c.id

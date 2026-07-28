@@ -10,6 +10,8 @@
         <result column="scripture_text" property="scriptureText"/>
         <result column="commentary" property="commentary"/>
         <result column="hymn" property="hymn"/>
+        <result column="title_ko" property="titleKo"/>
+        <result column="scripture_reference_ko" property="scriptureReferenceKo"/>
         <result column="scripture_text_ko" property="scriptureTextKo"/>
         <result column="commentary_ko" property="commentaryKo"/>
         <result column="hymn_ko" property="hymnKo"/>
@@ -35,15 +37,16 @@
 
     <insert id="insert">
         INSERT INTO qt_daily_contents(id, qt_date, title, scripture_reference, scripture_text, commentary, hymn,
-            scripture_text_ko, commentary_ko, hymn_ko)
+            title_ko, scripture_reference_ko, scripture_text_ko, commentary_ko, hymn_ko)
         VALUES(#{id}, #{qtDate}, #{title}, #{scriptureReference}, #{scriptureText}, #{commentary}, #{hymn},
-            #{scriptureTextKo}, #{commentaryKo}, #{hymnKo})
+            #{titleKo}, #{scriptureReferenceKo}, #{scriptureTextKo}, #{commentaryKo}, #{hymnKo})
     </insert>
 
     <update id="update">
         UPDATE qt_daily_contents
         SET title = #{title}, scripture_reference = #{scriptureReference},
             scripture_text = #{scriptureText}, commentary = #{commentary}, hymn = #{hymn},
+            title_ko = #{titleKo}, scripture_reference_ko = #{scriptureReferenceKo},
             scripture_text_ko = #{scriptureTextKo}, commentary_ko = #{commentaryKo}, hymn_ko = #{hymnKo},
             updated_at = NOW()
         WHERE id = #{id}
