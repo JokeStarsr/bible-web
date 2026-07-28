@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { dailyThoughtApi } from '@/services/api';
 import HebrewText from '@/components/HebrewText';
@@ -30,12 +30,26 @@ export default function DailyThoughtHistoryPage() {
   const router = useRouter();
   const { t, lang } = useI18n();
   const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // 响应式分页：手机端 5 条/页，PC 端 10 条/页
+  const [pageSize, setPageSize] = useState(10);
+  useEffect(() => {
+    const detectPageSize = () => {
+      setPageSize(window.innerWidth < 768 ? 5 : 10);
+    };
+    detectPageSize();
+    window.addEventListener('resize', detectPageSize);
+    return () => window.removeEventListener('resize', detectPageSize);
+  }, []);
+
   const [groupedRecords, setGroupedRecords] = useState<GroupedRecords>({});
   const [dateOrder, setDateOrder] = useState<string[]>([]);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -45,13 +59,23 @@ export default function DailyThoughtHistoryPage() {
       window.location.href = '/login';
     } else {
       setCheckingAuth(false);
-      fetchHistory();
+      fetchHistory(1, pageSize);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchHistory = async () => {
+  // 页码大小变化时重新加载第一页
+  useEffect(() => {
+    if (checkingAuth) return;
+    fetchHistory(1, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize]);
+
+  const fetchHistory = useCallback(async (p: number, size: number) => {
+    setLoading(true);
+    setError('');
     try {
-      const res = await dailyThoughtApi.history(1, 200);
+      const res = await dailyThoughtApi.history(p, size);
       const records: HistoryItem[] = res.data.data || [];
       const grouped: GroupedRecords = {};
       const order: string[] = [];
@@ -71,12 +95,14 @@ export default function DailyThoughtHistoryPage() {
 
       setGroupedRecords(grouped);
       setDateOrder(order);
+      setPage(p);
+      setHasMore(records.length >= size);
     } catch (err: any) {
       setError(err.response?.data?.message || t('thoughtHistory.loadFail'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [lang, t]);
 
   const toggleDate = (date: string) => {
     setExpandedDates((prev) => {
@@ -269,6 +295,26 @@ export default function DailyThoughtHistoryPage() {
           </div>
         );
       })}
+
+      {!loading && !error && dateOrder.length > 0 && (
+        <div className="flex items-center justify-center gap-4 py-4">
+          <button
+            onClick={() => fetchHistory(page - 1, pageSize)}
+            disabled={page <= 1}
+            className="px-4 py-2 text-sm font-medium text-bible-dark bg-bible-warm/30 rounded-lg hover:bg-bible-warm/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {t('profile.prevPage')}
+          </button>
+          <span className="text-sm text-bible-muted">{t('profile.pageLabel', { page })}</span>
+          <button
+            onClick={() => fetchHistory(page + 1, pageSize)}
+            disabled={!hasMore}
+            className="px-4 py-2 text-sm font-medium text-bible-dark bg-bible-warm/30 rounded-lg hover:bg-bible-warm/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {t('profile.nextPage')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
