@@ -9,7 +9,7 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full flex items-center justify-center bg-bible-cream">
-      <div className="text-bible-gold text-lg animate-pulse">地图加载中...</div>
+      <div className="text-bible-gold text-lg animate-pulse">...</div>
     </div>
   ),
 });

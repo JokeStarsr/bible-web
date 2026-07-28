@@ -21,6 +21,8 @@ import {
   getRouteLocations,
 } from '@/data/bibleMaps';
 import { useI18n } from '@/i18n/I18nContext';
+import { KO_LOCATIONS, KO_ROUTES } from '@/data/bibleMaps.ko';
+import { localizeScriptureReference } from '@/utils/bibleBookNames';
 
 // 带序号+中文名称的标记图标
 function labeledIcon(number: number, name: string, color: string) {
@@ -153,6 +155,7 @@ function MapContent({
   routeId: string;
   searchTrigger: { locationId: string; ts: number } | null;
 }) {
+  const { lang } = useI18n();
   const route = useMemo(
     () => getRouteById(routeId) || getRouteById(DEFAULT_ROUTE_ID)!,
     [routeId]
@@ -166,6 +169,29 @@ function MapContent({
         .map((loc) => [loc.lat, loc.lng] as [number, number]),
     [route]
   );
+
+  // 韩文模式下获取本地化地名
+  const getLocName = (loc: BibleLocation) => {
+    if (lang === 'ko') {
+      const ko = KO_LOCATIONS[loc.id];
+      if (ko?.name) return ko.name;
+    }
+    return loc.name;
+  };
+  const getLocDesc = (loc: BibleLocation) => {
+    if (lang === 'ko') {
+      const ko = KO_LOCATIONS[loc.id];
+      if (ko?.description) return ko.description;
+    }
+    return loc.description;
+  };
+  const getLocSig = (loc: BibleLocation) => {
+    if (lang === 'ko') {
+      const ko = KO_LOCATIONS[loc.id];
+      if (ko?.significance) return ko.significance;
+    }
+    return loc.significance;
+  };
   // 用字符串 key 代替数组引用，避免 useEffect 因引用变化而重复触发
   const positionsKey = useMemo(
     () => orderedPositions.map((p) => `${p[0].toFixed(4)},${p[1].toFixed(4)}`).join('|'),
@@ -260,7 +286,7 @@ function MapContent({
         <Marker
           key={loc.id}
           position={[loc.lat, loc.lng]}
-          icon={labeledIcon(index + 1, loc.name, route.color)}
+          icon={labeledIcon(index + 1, getLocName(loc), route.color)}
           ref={(ref) => {
             markerRefs.current[loc.id] = ref;
           }}
@@ -268,21 +294,21 @@ function MapContent({
           <Popup>
             <div className="min-w-[200px] max-w-[260px]">
               <h3 className="text-base font-bold text-bible-dark mb-1">
-                {index + 1}. {loc.name}
+                {index + 1}. {getLocName(loc)}
                 {loc.nameEn && (
                   <span className="text-xs font-normal text-bible-muted ml-1">
                     {loc.nameEn}
                   </span>
                 )}
               </h3>
-              <p className="text-xs text-bible-muted mb-2">{loc.description}</p>
+              <p className="text-xs text-bible-muted mb-2">{getLocDesc(loc)}</p>
               <div className="text-xs mb-1">
-                <span className="font-semibold text-bible-gold">经文：</span>
-                <span className="text-bible-text">{loc.scripture}</span>
+                <span className="font-semibold text-bible-gold">{lang === 'ko' ? '성경' : '经文'}：</span>
+                <span className="text-bible-text">{localizeScriptureReference(loc.scripture, lang)}</span>
               </div>
               <div className="text-xs leading-relaxed text-bible-text">
-                <span className="font-semibold text-bible-gold">意义：</span>
-                {loc.significance}
+                <span className="font-semibold text-bible-gold">{lang === 'ko' ? '의미' : '意义'}：</span>
+                {getLocSig(loc)}
               </div>
             </div>
           </Popup>
@@ -337,7 +363,32 @@ export function MapControls({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const route = getRouteById(routeId) || getRouteById(DEFAULT_ROUTE_ID)!;
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+
+  // 韩文模式下获取路线名称和描述
+  const getRouteName = (r: { id: string; name: string }) => {
+    if (lang === 'ko') {
+      const ko = KO_ROUTES[r.id];
+      if (ko?.name) return ko.name;
+    }
+    return r.name;
+  };
+  const getRouteDesc = (r: { id: string; description: string }) => {
+    if (lang === 'ko') {
+      const ko = KO_ROUTES[r.id];
+      if (ko?.description) return ko.description;
+    }
+    return r.description;
+  };
+
+  // 韩文模式下获取地名
+  const getLocName = (loc: BibleLocation) => {
+    if (lang === 'ko') {
+      const ko = KO_LOCATIONS[loc.id];
+      if (ko?.name) return ko.name;
+    }
+    return loc.name;
+  };
 
   const getMatchedLocations = (value: string) => {
     const q = value.toLowerCase().trim();
@@ -346,6 +397,7 @@ export function MapControls({
       (loc) =>
         loc.name.toLowerCase().includes(q) ||
         loc.id.toLowerCase().includes(q) ||
+        (lang === 'ko' && KO_LOCATIONS[loc.id]?.name?.toLowerCase().includes(q)) ||
         (loc.nameEn && loc.nameEn.toLowerCase().includes(q))
     ).slice(0, 8);
   };
@@ -364,7 +416,7 @@ export function MapControls({
   };
 
   const selectLocation = (loc: BibleLocation) => {
-    setQuery(loc.name);
+    setQuery(getLocName(loc));
     setSuggestions([]);
     setShowSuggestions(false);
     onSearch(loc.id);
@@ -375,7 +427,9 @@ export function MapControls({
     const matched = getMatchedLocations(query);
     if (matched.length === 0) return;
     // 优先精确匹配名称（忽略大小写）；否则取第一个建议
-    const exact = matched.find((loc) => loc.name.toLowerCase() === query.trim().toLowerCase());
+    const exact = matched.find((loc) =>
+      getLocName(loc).toLowerCase() === query.trim().toLowerCase()
+    );
     selectLocation(exact || matched[0]);
   };
 
@@ -399,12 +453,12 @@ export function MapControls({
         >
           {BIBLE_ROUTES.map((r) => (
             <option key={r.id} value={r.id}>
-              {r.name}
+              {getRouteName(r)}
             </option>
           ))}
         </select>
         <p className="mt-2 text-xs text-bible-muted leading-relaxed">
-          {route.description}
+          {getRouteDesc(route)}
         </p>
       </div>
 
@@ -420,7 +474,7 @@ export function MapControls({
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => query && suggestions.length > 0 && setShowSuggestions(true)}
-placeholder={t('maps.searchPlaceholder')}
+            placeholder={t('maps.searchPlaceholder')}
             className="flex-1 text-sm bg-transparent border border-bible-warm rounded px-2 py-1.5 text-bible-dark placeholder:text-bible-muted/60 focus:outline-none focus:border-bible-gold"
           />
           <button
@@ -428,7 +482,7 @@ placeholder={t('maps.searchPlaceholder')}
             onClick={executeSearch}
             className="px-3 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors"
           >
-            搜索
+            {t('maps.search')}
           </button>
         </div>
         {showSuggestions && suggestions.length > 0 && (
@@ -439,7 +493,7 @@ placeholder={t('maps.searchPlaceholder')}
                 onClick={() => selectLocation(loc)}
                 className="px-3 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 cursor-pointer border-b border-bible-warm/50 last:border-0"
               >
-                {loc.name}
+                {getLocName(loc)}
                 {loc.nameEn && (
                   <span className="text-xs text-bible-muted ml-1">{loc.nameEn}</span>
                 )}
