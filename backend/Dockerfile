@@ -32,7 +32,7 @@ WORKDIR /app
 RUN apk add --no-cache curl tzdata python3 py3-pip \
     tesseract-ocr tesseract-ocr-data-chi_sim tesseract-ocr-data-eng && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/Shanghai" > /etc/timezone && \
+    echo "Asia/Shanghai" > /etc/timezone
 
 COPY bible-tts.py /usr/local/bin/bible-tts.py
 
