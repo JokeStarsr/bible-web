@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { annotationApi, bookmarkApi, messageApi } from '@/services/api';
 import ChatModal from './ChatModal';
+import { useI18n } from '@/i18n/I18nContext';
+import { localizeScriptureReference } from '@/utils/bibleBookNames';
 
 interface VerseItem {
   versionId: string;
@@ -54,6 +56,7 @@ export default function ScriptureReader({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const modalOpenRef = useRef(false); // 追踪弹窗是否打开，防止 selectionchange 误清除 selectedRange
+  const { lang } = useI18n();
   const [userAnnotations, setUserAnnotations] = useState<Annotation[]>([]);
   const [publicAnnotations, setPublicAnnotations] = useState<Annotation[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkMap>({});
@@ -352,7 +355,7 @@ export default function ScriptureReader({
     <div className="space-y-6">
       <div className="scripture-card relative" ref={containerRef}>
         <div className="text-center text-bible-gold text-sm font-semibold mb-4 tracking-wider">
-          {scripture.referenceText}
+          {localizeScriptureReference(scripture.referenceText, lang)}
         </div>
 
         {loading && (

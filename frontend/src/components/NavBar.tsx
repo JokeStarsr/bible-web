@@ -121,7 +121,7 @@ export default function NavBar() {
                         className="block w-full text-left px-4 py-2 text-sm text-amber-700 font-medium hover:bg-amber-50 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
-                        QT 管理
+                        {t('nav.qtAdmin')}
                       </a>
                     )}
                     <button
@@ -194,7 +194,7 @@ export default function NavBar() {
                   className="block text-amber-700 font-medium hover:text-amber-900"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  QT 管理
+                  {t('nav.qtAdmin')}
                 </a>
               )}
               <button

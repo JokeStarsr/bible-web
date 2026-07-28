@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { useI18n } from '@/i18n/I18nContext';
+import { localizeScriptureReference, localizeBibleBookNames } from '@/utils/bibleBookNames';
 
 interface ResponseItem {
   responseId: string;
@@ -30,7 +31,7 @@ interface UserGroup {
 
 export default function QtHistoryPage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [loading, setLoading] = useState(true);
   const [responses, setResponses] = useState<ResponseItem[]>([]);
@@ -80,7 +81,7 @@ export default function QtHistoryPage() {
       const res = await api.get('/qt/all-responses');
       setResponses(res.data.data || []);
     } catch (err: any) {
-      setError(err.response?.data?.message || '加载失败');
+      setError(err.response?.data?.message || t('qtHistory.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -88,13 +89,14 @@ export default function QtHistoryPage() {
 
   // 按用户名分组
   const userGroups: UserGroup[] = useMemo(() => {
+    const defaultUser = t('qtHistory.defaultUser');
     const map = new Map<string, UserGroup>();
     for (const r of responses) {
       if (!map.has(r.userId)) {
         map.set(r.userId, {
           userId: r.userId,
-          username: r.username || '用户',
-          displayName: r.displayName || r.username || '用户',
+          username: r.username || defaultUser,
+          displayName: r.displayName || r.username || defaultUser,
           responses: [],
         });
       }
@@ -102,7 +104,7 @@ export default function QtHistoryPage() {
     }
     // 每个用户组内按日期倒序（API 已按 created_at 倒序，这里保持）
     return Array.from(map.values());
-  }, [responses]);
+  }, [responses, t]);
 
   // 按时间视图：以灵修日期为维度分组，当天优先，分页（默认5个日期/页）
   interface DateGroup {
@@ -188,27 +190,27 @@ export default function QtHistoryPage() {
       setEditingId(null);
       await loadAllResponses();
     } catch (err: any) {
-      setError(err.response?.data?.message || '保存失败');
+      setError(err.response?.data?.message || t('qtHistory.saveFail'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (item: ResponseItem) => {
-    if (!window.confirm(`确定删除 ${item.qtDate} 的回应吗？此操作不可撤销。`)) return;
+    if (!window.confirm(t('qtHistory.deleteConfirm', { date: item.qtDate }))) return;
     setDeletingId(item.responseId);
     try {
       await api.delete(`/qt/response/by-id/${item.responseId}`);
       await loadAllResponses();
     } catch (err: any) {
-      setError(err.response?.data?.message || '删除失败');
+      setError(err.response?.data?.message || t('qtHistory.deleteFail'));
     } finally {
       setDeletingId(null);
     }
   };
 
   const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleDateString('zh-CN', {
+    return new Date(iso).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'zh-CN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -216,7 +218,7 @@ export default function QtHistoryPage() {
   };
 
   const formatDateTime = (iso: string) => {
-    return new Date(iso).toLocaleString('zh-CN', {
+    return new Date(iso).toLocaleString(lang === 'ko' ? 'ko-KR' : 'zh-CN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -249,7 +251,7 @@ export default function QtHistoryPage() {
 
       <div className="text-center py-4">
         <h1 className="text-3xl font-bold text-bible-dark mb-2">{t('qtHistory.title')}</h1>
-        <p className="text-bible-muted">切换查看方式，点开条目查看默想内容，可管理自己的回应</p>
+        <p className="text-bible-muted">{t('qtHistory.subtitle')}</p>
       </div>
 
       {/* 视图切换 Tab */}
@@ -263,7 +265,7 @@ export default function QtHistoryPage() {
                 : 'bg-bible-warm/40 text-bible-dark hover:bg-bible-warm/60'
             }`}
           >
-            按用户名
+            {t('qtHistory.byUser')}
           </button>
           <button
             onClick={() => { setViewMode('time'); setCurrentPage(1); setExpandedResponse(null); setEditingId(null); }}
@@ -273,7 +275,7 @@ export default function QtHistoryPage() {
                 : 'bg-bible-warm/40 text-bible-dark hover:bg-bible-warm/60'
             }`}
           >
-            按时间
+            {t('qtHistory.byTime')}
           </button>
         </div>
       )}
@@ -315,10 +317,10 @@ export default function QtHistoryPage() {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-bible-dark">{group.displayName}</span>
                         {isMe && (
-                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">我</span>
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{t('qtHistory.me')}</span>
                         )}
                       </div>
-                      <span className="text-sm text-bible-muted">{group.responses.length} 条回应</span>
+                      <span className="text-sm text-bible-muted">{group.responses.length} {t('qtHistory.responsesCount')}</span>
                     </div>
                   </div>
                   <svg
@@ -345,9 +347,9 @@ export default function QtHistoryPage() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <span className="text-sm text-bible-muted">{formatDate(item.qtDate)}</span>
-                                <h3 className="text-base font-semibold text-bible-dark mt-1">{item.title}</h3>
+                                <h3 className="text-base font-semibold text-bible-dark mt-1">{localizeBibleBookNames(item.title, lang)}</h3>
                                 {item.scriptureReference && (
-                                  <p className="text-sm text-bible-gold mt-0.5">{item.scriptureReference}</p>
+                                  <p className="text-sm text-bible-gold mt-0.5">{localizeScriptureReference(item.scriptureReference, lang)}</p>
                                 )}
                               </div>
                               <svg
@@ -382,10 +384,10 @@ export default function QtHistoryPage() {
                               )}
                               {item.photos && item.photos.length > 0 && (
                                 <div>
-                                  <p className="text-xs font-medium text-bible-gold mb-1">照片</p>
+                                  <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.photo')}</p>
                                   <div className="flex flex-wrap gap-2">
                                     {item.photos.map((p, i) => (
-                                      <img key={i} src={p} alt={`照片${i + 1}`} className="w-20 h-20 object-cover rounded" />
+                                      <img key={i} src={p} alt={`${t('qtHistory.photo')}${i + 1}`} className="w-20 h-20 object-cover rounded" />
                                     ))}
                                   </div>
                                 </div>
@@ -398,14 +400,14 @@ export default function QtHistoryPage() {
                                     onClick={() => startEdit(item)}
                                     className="px-3 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors"
                                   >
-                                    修改
+                                    {t('qtHistory.edit')}
                                   </button>
                                   <button
                                     onClick={() => handleDelete(item)}
                                     disabled={deletingId === item.responseId}
                                     className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
                                   >
-                                    {deletingId === item.responseId ? '删除中...' : '删除'}
+                                    {deletingId === item.responseId ? t('qtHistory.deleting') : t('qtHistory.delete')}
                                   </button>
                                 </div>
                               )}
@@ -448,13 +450,13 @@ export default function QtHistoryPage() {
                                   disabled={saving}
                                   className="px-4 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors disabled:opacity-50"
                                 >
-                                  {saving ? '保存中...' : '保存'}
+                                  {saving ? t('qtHistory.saving') : t('qtHistory.save')}
                                 </button>
                                 <button
                                   onClick={cancelEdit}
                                   className="px-4 py-1.5 text-sm border border-bible-warm text-bible-dark rounded hover:bg-bible-warm/30 transition-colors"
                                 >
-                                  取消
+                                  {t('qtHistory.cancel')}
                                 </button>
                               </div>
                             </div>
@@ -489,15 +491,15 @@ export default function QtHistoryPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-bible-dark">{formatDate(group.qtDate)}</span>
                       {isToday && (
-                        <span className="text-xs bg-bible-gold text-white px-2 py-0.5 rounded-full">今日</span>
+                        <span className="text-xs bg-bible-gold text-white px-2 py-0.5 rounded-full">{t('qtHistory.today')}</span>
                       )}
                       <span className="text-xs text-bible-muted bg-gray-100 px-2 py-0.5 rounded-full">
-                        {group.responses.length} 人回应
+                        {group.responses.length} {t('qtHistory.peopleCount')}
                       </span>
                     </div>
-                    <h3 className="text-base font-semibold text-bible-dark mt-1">{group.title}</h3>
+                    <h3 className="text-base font-semibold text-bible-dark mt-1">{localizeBibleBookNames(group.title, lang)}</h3>
                     {group.scriptureReference && (
-                      <p className="text-sm text-bible-gold mt-0.5">{group.scriptureReference}</p>
+                      <p className="text-sm text-bible-gold mt-0.5">{localizeScriptureReference(group.scriptureReference, lang)}</p>
                     )}
                   </div>
                   <svg
@@ -526,13 +528,13 @@ export default function QtHistoryPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isMe ? 'bg-bible-gold' : 'bg-bible-muted'}`}>
-                                    {(item.displayName || item.username || '用户').charAt(0).toUpperCase()}
+                                    {(item.displayName || item.username || t('qtHistory.defaultUser')).charAt(0).toUpperCase()}
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
-                                      <span className="font-medium text-bible-dark text-sm">{item.displayName || item.username || '用户'}</span>
+                                      <span className="font-medium text-bible-dark text-sm">{item.displayName || item.username || t('qtHistory.defaultUser')}</span>
                                       {isMe && (
-                                        <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">我</span>
+                                        <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">{t('qtHistory.me')}</span>
                                       )}
                                     </div>
                                     <span className="text-xs text-bible-muted">{formatDateTime(item.createdAt)}</span>
@@ -571,10 +573,10 @@ export default function QtHistoryPage() {
                               )}
                               {item.photos && item.photos.length > 0 && (
                                 <div>
-                                  <p className="text-xs font-medium text-bible-gold mb-1">照片</p>
+                                  <p className="text-xs font-medium text-bible-gold mb-1">{t('qtHistory.photo')}</p>
                                   <div className="flex flex-wrap gap-2">
                                     {item.photos.map((p, i) => (
-                                      <img key={i} src={p} alt={`照片${i + 1}`} className="w-20 h-20 object-cover rounded" />
+                                      <img key={i} src={p} alt={`${t('qtHistory.photo')}${i + 1}`} className="w-20 h-20 object-cover rounded" />
                                     ))}
                                   </div>
                                 </div>
@@ -587,14 +589,14 @@ export default function QtHistoryPage() {
                                     onClick={() => startEdit(item)}
                                     className="px-3 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors"
                                   >
-                                    修改
+                                    {t('qtHistory.edit')}
                                   </button>
                                   <button
                                     onClick={() => handleDelete(item)}
                                     disabled={deletingId === item.responseId}
                                     className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
                                   >
-                                    {deletingId === item.responseId ? '删除中...' : '删除'}
+                                    {deletingId === item.responseId ? t('qtHistory.deleting') : t('qtHistory.delete')}
                                   </button>
                                 </div>
                               )}
@@ -637,13 +639,13 @@ export default function QtHistoryPage() {
                                   disabled={saving}
                                   className="px-4 py-1.5 text-sm bg-bible-gold text-white rounded hover:bg-amber-600 transition-colors disabled:opacity-50"
                                 >
-                                  {saving ? '保存中...' : '保存'}
+                                  {saving ? t('qtHistory.saving') : t('qtHistory.save')}
                                 </button>
                                 <button
                                   onClick={cancelEdit}
                                   className="px-4 py-1.5 text-sm border border-bible-warm text-bible-dark rounded hover:bg-bible-warm/30 transition-colors"
                                 >
-                                  取消
+                                  {t('qtHistory.cancel')}
                                 </button>
                               </div>
                             </div>
@@ -665,22 +667,22 @@ export default function QtHistoryPage() {
                 disabled={safePage <= 1}
                 className="px-3 py-1.5 text-sm rounded-lg border border-bible-warm text-bible-dark hover:bg-bible-warm/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                上一页
+                {t('qtHistory.prevPage')}
               </button>
               <span className="text-sm text-bible-muted px-2">
-                第 {safePage} / {totalPages} 页（共 {dateGroups.length} 个日期）
+                {t('qtHistory.pageInfo', { cur: safePage, total: totalPages, count: dateGroups.length })}
               </span>
               <button
                 onClick={() => goToPage(safePage + 1)}
                 disabled={safePage >= totalPages}
                 className="px-3 py-1.5 text-sm rounded-lg border border-bible-warm text-bible-dark hover:bg-bible-warm/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                下一页
+                {t('qtHistory.nextPage')}
               </button>
             </div>
           )}
           {totalPages === 1 && dateGroups.length > 0 && (
-            <div className="text-center text-xs text-bible-muted">共 {dateGroups.length} 个日期</div>
+            <div className="text-center text-xs text-bible-muted">{t('qtHistory.totalDates', { count: dateGroups.length })}</div>
           )}
         </div>
       )}

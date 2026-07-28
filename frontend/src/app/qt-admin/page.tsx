@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { useI18n } from '@/i18n/I18nContext';
 
 interface QtImportItem {
   date: string;
@@ -19,6 +20,7 @@ interface OcrResult {
 
 export default function QtAdminPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -140,7 +142,7 @@ export default function QtAdminPage() {
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-amber-700 text-lg animate-pulse">正在验证权限...</div>
+        <div className="text-amber-700 text-lg animate-pulse">{t('qtAdmin.checkingAuth')}</div>
       </div>
     );
   }
@@ -149,13 +151,13 @@ export default function QtAdminPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 text-lg font-medium mb-2">无权限访问</p>
-          <p className="text-gray-500 text-sm">此页面仅限管理员使用</p>
+          <p className="text-red-600 text-lg font-medium mb-2">{t('qtAdmin.noPermission')}</p>
+          <p className="text-gray-500 text-sm">{t('qtAdmin.noPermissionHint')}</p>
           <button
             onClick={() => router.push('/')}
             className="mt-4 text-amber-600 hover:text-amber-800 text-sm"
           >
-            返回首页
+            {t('qtAdmin.backHome')}
           </button>
         </div>
       </div>
@@ -173,18 +175,17 @@ export default function QtAdminPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          返回
+          {t('qtAdmin.back')}
         </button>
-        <h1 className="text-xl font-bold text-gray-900">QT 灵修内容管理</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('qtAdmin.title')}</h1>
         <div className="w-16" />
       </div>
 
       {/* 上传区域 */}
       <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">上传灵修图片</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('qtAdmin.uploadTitle')}</h2>
         <p className="text-sm text-gray-500 mb-4">
-          上传每日灵修内容的截图（如「活泼的生命」等），系统会自动 OCR 识别图片中的文字，
-          智能解析日期、标题、经文、注释等内容，并更新到对应日期下。
+          {t('qtAdmin.uploadHint')}
         </p>
 
         {/* 文件选择 */}
@@ -231,7 +232,7 @@ export default function QtAdminPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              {loading ? '识别中...' : '先预览识别结果'}
+              {loading ? t('qtAdmin.previewing') : t('qtAdmin.previewBtn')}
             </button>
             <button
               onClick={handleOcrImport}
@@ -241,14 +242,14 @@ export default function QtAdminPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              {loading ? '识别并导入中...' : '直接识别并导入'}
+              {loading ? t('qtAdmin.importing') : t('qtAdmin.importBtn')}
             </button>
             {file && (
               <button
                 onClick={handleReset}
                 className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
               >
-                重置
+                {t('qtAdmin.resetBtn')}
               </button>
             )}
           </div>
@@ -288,17 +289,17 @@ export default function QtAdminPage() {
       {ocrResult && ocrResult.items.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">识别结果预览</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('qtAdmin.previewTitle')}</h2>
             {!saved && (
               <button
                 onClick={handleConfirmAndSave}
                 disabled={loading}
                 className="bg-green-600 text-white hover:bg-green-700 disabled:bg-green-300 text-sm font-medium py-2 px-5 rounded-xl transition-colors"
               >
-                {loading ? '保存中...' : '确认并保存'}
+                {loading ? t('qtAdmin.saving') : t('qtAdmin.saveBtn')}
               </button>
             )}
-            {saved && <span className="text-green-600 text-sm font-medium">已保存</span>}
+            {saved && <span className="text-green-600 text-sm font-medium">{t('qtAdmin.saved')}</span>}
           </div>
 
           <div className="space-y-4">
@@ -314,25 +315,25 @@ export default function QtAdminPage() {
                 <div className="space-y-2 text-sm">
                   {item.scriptureReference && (
                     <div>
-                      <span className="text-xs font-medium text-amber-600">经文出处</span>
+                      <span className="text-xs font-medium text-amber-600">{t('qtAdmin.scriptureRef')}</span>
                       <p className="text-gray-700">{item.scriptureReference}</p>
                     </div>
                   )}
                   {item.scriptureText && (
                     <div>
-                      <span className="text-xs font-medium text-amber-600">经文正文</span>
+                      <span className="text-xs font-medium text-amber-600">{t('qtAdmin.scriptureText')}</span>
                       <p className="text-gray-700 whitespace-pre-wrap">{item.scriptureText}</p>
                     </div>
                   )}
                   {item.commentary && (
                     <div>
-                      <span className="text-xs font-medium text-amber-600">注释/默想</span>
+                      <span className="text-xs font-medium text-amber-600">{t('qtAdmin.commentary')}</span>
                       <p className="text-gray-700 whitespace-pre-wrap">{item.commentary}</p>
                     </div>
                   )}
                   {item.hymn && (
                     <div>
-                      <span className="text-xs font-medium text-amber-600">诗歌</span>
+                      <span className="text-xs font-medium text-amber-600">{t('qtAdmin.hymn')}</span>
                       <p className="text-gray-700 whitespace-pre-wrap">{item.hymn}</p>
                     </div>
                   )}
@@ -349,14 +350,14 @@ export default function QtAdminPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          使用说明
+          {t('qtAdmin.usageTitle')}
         </h3>
         <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-          <li>上传清晰的灵修内容截图，系统会自动识别图片中的文字</li>
-          <li>识别后会自动提取日期、标题、经文出处、经文正文、注释和诗歌</li>
-          <li>内容会根据图片中的日期自动更新到对应日期，不依赖操作日期</li>
-          <li>建议先点击「预览识别结果」确认无误后再保存</li>
-          <li>如已有该日期的内容，将会被覆盖更新</li>
+          <li>{t('qtAdmin.usage1')}</li>
+          <li>{t('qtAdmin.usage2')}</li>
+          <li>{t('qtAdmin.usage3')}</li>
+          <li>{t('qtAdmin.usage4')}</li>
+          <li>{t('qtAdmin.usage5')}</li>
         </ul>
       </div>
     </div>

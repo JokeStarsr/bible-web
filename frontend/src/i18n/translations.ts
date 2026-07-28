@@ -10,6 +10,7 @@ export interface Translations {
   'nav.register': string;
   'nav.openMenu': string;
   'nav.user': string;
+  'nav.qtAdmin': string;
 
   // ========== Layout ==========
   'layout.banner': string;
@@ -360,6 +361,57 @@ export interface Translations {
   'qtHistory.meditation': string;
   'qtHistory.application': string;
   'qtHistory.prayer': string;
+  'qtHistory.byUser': string;
+  'qtHistory.byTime': string;
+  'qtHistory.responsesCount': string;
+  'qtHistory.peopleCount': string;
+  'qtHistory.me': string;
+  'qtHistory.today': string;
+  'qtHistory.photo': string;
+  'qtHistory.edit': string;
+  'qtHistory.delete': string;
+  'qtHistory.deleting': string;
+  'qtHistory.save': string;
+  'qtHistory.saving': string;
+  'qtHistory.cancel': string;
+  'qtHistory.prevPage': string;
+  'qtHistory.nextPage': string;
+  'qtHistory.pageInfo': string;
+  'qtHistory.totalDates': string;
+  'qtHistory.deleteConfirm': string;
+  'qtHistory.loadFail': string;
+  'qtHistory.saveFail': string;
+  'qtHistory.deleteFail': string;
+  'qtHistory.defaultUser': string;
+
+  // ========== QT Admin ==========
+  'qtAdmin.title': string;
+  'qtAdmin.back': string;
+  'qtAdmin.uploadTitle': string;
+  'qtAdmin.uploadHint': string;
+  'qtAdmin.previewBtn': string;
+  'qtAdmin.previewing': string;
+  'qtAdmin.importBtn': string;
+  'qtAdmin.importing': string;
+  'qtAdmin.resetBtn': string;
+  'qtAdmin.previewTitle': string;
+  'qtAdmin.saveBtn': string;
+  'qtAdmin.saving': string;
+  'qtAdmin.saved': string;
+  'qtAdmin.scriptureRef': string;
+  'qtAdmin.scriptureText': string;
+  'qtAdmin.commentary': string;
+  'qtAdmin.hymn': string;
+  'qtAdmin.usageTitle': string;
+  'qtAdmin.usage1': string;
+  'qtAdmin.usage2': string;
+  'qtAdmin.usage3': string;
+  'qtAdmin.usage4': string;
+  'qtAdmin.usage5': string;
+  'qtAdmin.checkingAuth': string;
+  'qtAdmin.noPermission': string;
+  'qtAdmin.noPermissionHint': string;
+  'qtAdmin.backHome': string;
 }
 
 export const zh: Translations = {
@@ -372,6 +424,7 @@ export const zh: Translations = {
   'nav.register': '注册',
   'nav.openMenu': '打开菜单',
   'nav.user': '用户',
+  'nav.qtAdmin': 'QT 管理',
 
   // Layout
   'layout.banner': '亲爱的小羊们，这里的所有话语只提供参考，我们跟神的关系还是取决于各自的祷告和圣灵的感动。',
@@ -729,6 +782,57 @@ export const zh: Translations = {
   'qtHistory.meditation': '默想',
   'qtHistory.application': '应用',
   'qtHistory.prayer': '祷告',
+  'qtHistory.byUser': '按用户名',
+  'qtHistory.byTime': '按时间',
+  'qtHistory.responsesCount': '条回应',
+  'qtHistory.peopleCount': '人回应',
+  'qtHistory.me': '我',
+  'qtHistory.today': '今日',
+  'qtHistory.photo': '照片',
+  'qtHistory.edit': '修改',
+  'qtHistory.delete': '删除',
+  'qtHistory.deleting': '删除中...',
+  'qtHistory.save': '保存',
+  'qtHistory.saving': '保存中...',
+  'qtHistory.cancel': '取消',
+  'qtHistory.prevPage': '上一页',
+  'qtHistory.nextPage': '下一页',
+  'qtHistory.pageInfo': '第 {cur} / {total} 页（共 {count} 个日期）',
+  'qtHistory.totalDates': '共 {count} 个日期',
+  'qtHistory.deleteConfirm': '确定删除 {date} 的回应吗？此操作不可撤销。',
+  'qtHistory.loadFail': '加载失败',
+  'qtHistory.saveFail': '保存失败',
+  'qtHistory.deleteFail': '删除失败',
+  'qtHistory.defaultUser': '用户',
+
+  // QT Admin
+  'qtAdmin.title': 'QT 灵修内容管理',
+  'qtAdmin.back': '返回',
+  'qtAdmin.uploadTitle': '上传灵修图片',
+  'qtAdmin.uploadHint': '上传每日灵修图片，系统将自动识别内容并导入到对应日期',
+  'qtAdmin.previewBtn': '先预览识别结果',
+  'qtAdmin.previewing': '识别中...',
+  'qtAdmin.importBtn': '直接识别并导入',
+  'qtAdmin.importing': '识别并导入中...',
+  'qtAdmin.resetBtn': '重置',
+  'qtAdmin.previewTitle': '识别结果预览',
+  'qtAdmin.saveBtn': '确认并保存',
+  'qtAdmin.saving': '保存中...',
+  'qtAdmin.saved': '已保存',
+  'qtAdmin.scriptureRef': '经文出处',
+  'qtAdmin.scriptureText': '经文正文',
+  'qtAdmin.commentary': '注释/默想',
+  'qtAdmin.hymn': '诗歌',
+  'qtAdmin.usageTitle': '使用说明',
+  'qtAdmin.usage1': '1. 上传灵修图片（支持 JPG/PNG，建议小于 10MB）',
+  'qtAdmin.usage2': '2. 可先预览识别结果，确认无误后再保存',
+  'qtAdmin.usage3': '3. 也可直接识别并导入到对应日期',
+  'qtAdmin.usage4': '4. 系统会自动识别图片中的经文、注释、诗歌等内容',
+  'qtAdmin.usage5': '5. 识别结果可手动编辑修正后再保存',
+  'qtAdmin.checkingAuth': '正在验证权限...',
+  'qtAdmin.noPermission': '无权限访问',
+  'qtAdmin.noPermissionHint': '此页面仅限管理员使用',
+  'qtAdmin.backHome': '返回首页',
 };
 
 export const ko: Translations = {
@@ -741,6 +845,7 @@ export const ko: Translations = {
   'nav.register': '가입하기',
   'nav.openMenu': '메뉴 열기',
   'nav.user': '사용자',
+  'nav.qtAdmin': 'QT 관리',
 
   // Layout
   'layout.banner': '사랑하는 어린 양들아, 여기 모든 말씀은 참고용일 뿐이란다. 하나님과의 관계는 각자의 기도와 성령의 감동에 달려 있음을 기억하렴.',
@@ -1098,4 +1203,55 @@ export const ko: Translations = {
   'qtHistory.meditation': '묵상',
   'qtHistory.application': '적용',
   'qtHistory.prayer': '기도',
+  'qtHistory.byUser': '사용자별',
+  'qtHistory.byTime': '날짜별',
+  'qtHistory.responsesCount': '건 응답',
+  'qtHistory.peopleCount': '명 응답',
+  'qtHistory.me': '나',
+  'qtHistory.today': '오늘',
+  'qtHistory.photo': '사진',
+  'qtHistory.edit': '수정',
+  'qtHistory.delete': '삭제',
+  'qtHistory.deleting': '삭제 중...',
+  'qtHistory.save': '저장',
+  'qtHistory.saving': '저장 중...',
+  'qtHistory.cancel': '취소',
+  'qtHistory.prevPage': '이전',
+  'qtHistory.nextPage': '다음',
+  'qtHistory.pageInfo': '{cur} / {total} 페이지 (총 {count}개 날짜)',
+  'qtHistory.totalDates': '총 {count}개 날짜',
+  'qtHistory.deleteConfirm': '{date} 의 응답을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.',
+  'qtHistory.loadFail': '로딩 실패',
+  'qtHistory.saveFail': '저장 실패',
+  'qtHistory.deleteFail': '삭제 실패',
+  'qtHistory.defaultUser': '사용자',
+
+  // QT Admin
+  'qtAdmin.title': 'QT 묵상 콘텐츠 관리',
+  'qtAdmin.back': '뒤로',
+  'qtAdmin.uploadTitle': '묵상 이미지 업로드',
+  'qtAdmin.uploadHint': '매일 묵상 이미지를 업로드하면 시스템이 자동으로 인식하여 해당 날짜에 가져옵니다',
+  'qtAdmin.previewBtn': '인식 결과 미리보기',
+  'qtAdmin.previewing': '인식 중...',
+  'qtAdmin.importBtn': '바로 인식 및 가져오기',
+  'qtAdmin.importing': '인식 및 가져오는 중...',
+  'qtAdmin.resetBtn': '초기화',
+  'qtAdmin.previewTitle': '인식 결과 미리보기',
+  'qtAdmin.saveBtn': '확인 및 저장',
+  'qtAdmin.saving': '저장 중...',
+  'qtAdmin.saved': '저장됨',
+  'qtAdmin.scriptureRef': '성경 구절',
+  'qtAdmin.scriptureText': '성경 본문',
+  'qtAdmin.commentary': '주석/묵상',
+  'qtAdmin.hymn': '찬송',
+  'qtAdmin.usageTitle': '사용 안내',
+  'qtAdmin.usage1': '1. 묵상 이미지 업로드 (JPG/PNG 지원, 10MB 이하 권장)',
+  'qtAdmin.usage2': '2. 인식 결과를 미리보고 확인 후 저장할 수 있습니다',
+  'qtAdmin.usage3': '3. 바로 인식하여 해당 날짜에 가져올 수도 있습니다',
+  'qtAdmin.usage4': '4. 시스템이 이미지 속 성경, 주석, 찬송 등을 자동 인식합니다',
+  'qtAdmin.usage5': '5. 인식 결과를 수동으로 수정한 후 저장할 수 있습니다',
+  'qtAdmin.checkingAuth': '권한 확인 중...',
+  'qtAdmin.noPermission': '접근 권한 없음',
+  'qtAdmin.noPermissionHint': '이 페이지는 관리자 전용입니다',
+  'qtAdmin.backHome': '홈으로',
 };

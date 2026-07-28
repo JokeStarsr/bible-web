@@ -6,7 +6,7 @@ import { ko, zh, Lang } from './translations';
 
 interface I18nContextType {
   lang: Lang;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   setLang: (lang: Lang) => void;
   swapLang: () => void;
 }
@@ -33,9 +33,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     setLang(lang === 'zh' ? 'ko' : 'zh');
   }, [lang, setLang]);
 
-  const t = useCallback((key: string): string => {
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     const dict = dictionaries[lang] as unknown as Record<string, string>;
-    return dict[key] ?? key;
+    let text = dict[key] ?? key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+      }
+    }
+    return text;
   }, [lang]);
 
   return (

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { localizeScriptureReference, localizeBibleBookNames } from '@/utils/bibleBookNames';
 
 type Lang = 'zh' | 'ko';
 
@@ -81,6 +82,9 @@ const L = {
     confirm: '确定',
     cancel: '取消',
     noContentForDate: '该日期没有灵修内容',
+    yearSuffix: '年',
+    monthSuffix: '月',
+    daySuffix: '日',
   },
   ko: {
     qtTitle: 'QT 경건의 시간',
@@ -131,6 +135,9 @@ const L = {
     confirm: '확인',
     cancel: '취소',
     noContentForDate: '해당 날짜의 묵상 콘텐츠가 없습니다',
+    yearSuffix: '년',
+    monthSuffix: '월',
+    daySuffix: '일',
   }
 };
 
@@ -508,7 +515,7 @@ export default function QtSharePage() {
             onChange={(e) => setPickerYear(parseInt(e.target.value))}
             className="text-sm px-2 py-1.5 rounded-lg border border-amber-200 bg-white text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
           >
-            {years.map(y => <option key={y} value={y}>{y}年</option>)}
+            {years.map(y => <option key={y} value={y}>{y}{t.yearSuffix}</option>)}
           </select>
           <select
             value={pickerMonth}
@@ -520,14 +527,14 @@ export default function QtSharePage() {
             }}
             className="text-sm px-2 py-1.5 rounded-lg border border-amber-200 bg-white text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
           >
-            {months.map(m => <option key={m} value={m}>{m}月</option>)}
+            {months.map(m => <option key={m} value={m}>{m}{t.monthSuffix}</option>)}
           </select>
           <select
             value={pickerDay}
             onChange={(e) => setPickerDay(parseInt(e.target.value))}
             className="text-sm px-2 py-1.5 rounded-lg border border-amber-200 bg-white text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
           >
-            {getDays().map(d => <option key={d} value={d}>{d}日</option>)}
+            {getDays().map(d => <option key={d} value={d}>{d}{t.daySuffix}</option>)}
           </select>
           <button
             onClick={() => {
@@ -578,8 +585,8 @@ export default function QtSharePage() {
                 <span className="text-3xl font-bold text-amber-800">{getDayNumber(content.qtDate)}</span>
                 <span className="text-xs text-amber-400">{getMonthDay(content.qtDate)}</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mt-2">{content.title}</h1>
-              {content.scriptureReference && <p className="text-amber-700 font-medium text-sm mt-1">{content.scriptureReference}</p>}
+              <h1 className="text-2xl font-bold text-gray-900 mt-2">{localizeBibleBookNames(content.title, lang)}</h1>
+              {content.scriptureReference && <p className="text-amber-700 font-medium text-sm mt-1">{localizeScriptureReference(content.scriptureReference, lang)}</p>}
             </div>
 
             <div className="border-t border-amber-100"></div>
