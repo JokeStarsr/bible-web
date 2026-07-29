@@ -310,16 +310,17 @@ export default function QtSharePage() {
     return `${d.getMonth() + 1}${t('qt.monthUnit')}${d.getDate()}${t('qt.dayUnit')}`;
   };
 
-  // 经文渲染：中韩文使用同一份 scriptureText（中文+英文对照版），保证节数一致
+  // 经文渲染：韩文模式使用 scriptureTextKo（韩文+英文对照），中文模式使用 scriptureText（中文+英文对照）
   const renderScripture = () => {
-    const text = content?.scriptureText || '';
+    const text = (lang === 'ko' && content?.scriptureTextKo) ? content.scriptureTextKo : (content?.scriptureText || '');
     if (!text) return null;
 
     const lines = text.split('\n');
     return lines.map((line, i) => {
       const trimmed = line.trim();
       if (!trimmed) return <div key={i} className="h-2"></div>;
-      const isEnglish = /^[A-Za-z"(]/.test(trimmed) && !/[\u4e00-\u9fff]/.test(trimmed);
+      // 英文行：以字母/引号/括号开头，且不含中文或韩文
+      const isEnglish = /^[A-Za-z"(]/.test(trimmed) && !/[\u4e00-\u9fff\uac00-\ud7af]/.test(trimmed);
       return (
         <p key={i} className={
           isEnglish
