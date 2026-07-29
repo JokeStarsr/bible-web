@@ -18,6 +18,7 @@ public class BookmarkResponse {
     private UUID versionId;
     private UUID bookId;
     private String bookName;
+    private String bookNameKo;
     private int chapterNumber;
     private int verseNumber;
     private LocalDateTime createdAt;

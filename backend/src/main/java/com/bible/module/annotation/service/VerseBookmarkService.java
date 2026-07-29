@@ -59,10 +59,12 @@ public class VerseBookmarkService {
         if (existing != null) {
             return toResponse(existing, true);
         }
+        BibleBook book = resolveBook(bookId);
         return BookmarkResponse.builder()
                 .versionId(versionId)
                 .bookId(bookId)
-                .bookName(resolveBookName(bookId))
+                .bookName(book != null ? book.getBookNameZh() : null)
+                .bookNameKo(book != null ? book.getBookNameKo() : null)
                 .chapterNumber(chapterNumber)
                 .verseNumber(verseNumber)
                 .bookmarked(false)
@@ -70,11 +72,13 @@ public class VerseBookmarkService {
     }
 
     private BookmarkResponse toResponse(VerseBookmark b, boolean bookmarked) {
+        BibleBook book = resolveBook(b.getBookId());
         return BookmarkResponse.builder()
                 .id(b.getId())
                 .versionId(b.getVersionId())
                 .bookId(b.getBookId())
-                .bookName(resolveBookName(b.getBookId()))
+                .bookName(book != null ? book.getBookNameZh() : null)
+                .bookNameKo(book != null ? book.getBookNameKo() : null)
                 .chapterNumber(b.getChapterNumber())
                 .verseNumber(b.getVerseNumber())
                 .createdAt(b.getCreatedAt())
@@ -82,10 +86,9 @@ public class VerseBookmarkService {
                 .build();
     }
 
-    /** 查询书卷中文名（韩文由前端 localizeScriptureReference 转换） */
-    private String resolveBookName(UUID bookId) {
+    /** 查询书卷实体（包含中韩文书名） */
+    private BibleBook resolveBook(UUID bookId) {
         if (bookId == null) return null;
-        BibleBook book = bookMapper.findById(bookId);
-        return book != null ? book.getBookNameZh() : null;
+        return bookMapper.findById(bookId);
     }
 }

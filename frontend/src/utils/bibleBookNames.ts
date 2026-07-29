@@ -114,3 +114,29 @@ export function localizeBibleBookNames(text: string | undefined | null, lang: 'z
   }
   return result;
 }
+
+/** 韩文 -> 中文 反向映射 */
+const KO_TO_ZH: Record<string, string> = Object.fromEntries(
+  Object.entries(ZH_TO_KO).map(([zh, ko]) => [ko, zh])
+);
+
+/**
+ * 根据当前语言和后端返回的中/韩文书名，解析出应显示的书名。
+ * - 中文模式：优先中文，缺失则用韩文反查中文
+ * - 韩文模式：优先韩文，缺失则用中文转韩文
+ */
+export function resolveDisplayBookName(
+  bookNameZh: string | undefined | null,
+  bookNameKo: string | undefined | null,
+  lang: 'zh' | 'ko'
+): string {
+  if (lang === 'ko') {
+    if (bookNameKo) return bookNameKo;
+    if (bookNameZh) return localizeScriptureReference(bookNameZh, 'ko');
+    return '';
+  }
+  // 中文模式
+  if (bookNameZh) return bookNameZh;
+  if (bookNameKo) return KO_TO_ZH[bookNameKo] || bookNameKo;
+  return '';
+}
