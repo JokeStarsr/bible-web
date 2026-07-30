@@ -319,20 +319,20 @@ export default function QtSharePage() {
     return lines.map((line, i) => {
       const trimmed = line.trim();
       if (!trimmed) return <div key={i} className="h-2"></div>;
-      // 英文行：以字母/引号/括号开头，且不含中文或韩文
-      const isEnglish = /^[A-Za-z"(]/.test(trimmed) && !/[\u4e00-\u9fff\uac00-\ud7af]/.test(trimmed);
-      // 提取节号前缀（数字 + 空格），用高亮样式展示
+      // 提取节号前缀（数字 + 空格），先于英文判断
       const verseMatch = trimmed.match(/^(\d+)\s+(.*)$/);
       const verseNum = verseMatch ? verseMatch[1] : null;
-      const verseContent = verseMatch ? verseMatch[2] : line;
+      const restText = verseMatch ? verseMatch[2] : trimmed;
+      // 英文行：去除节号后以字母/引号/括号开头，且不含中文或韩文
+      const isEnglish = /^[A-Za-z"(]/.test(restText) && !/[\u4e00-\u9fff\uac00-\ud7af]/.test(restText);
       return (
         <p key={i} className={
           isEnglish
             ? 'text-[13px] text-gray-400 italic leading-relaxed pl-4 border-l-2 border-amber-200 my-0.5'
             : 'text-[15px] text-gray-800 leading-relaxed'
         }>
-          {verseNum && <span className="text-amber-600 font-bold mr-1">{verseNum}</span>}
-          {verseContent}
+          {verseNum && <span className="text-amber-600 font-bold mr-1.5">{verseNum}</span>}
+          {restText}
         </p>
       );
     });
@@ -467,7 +467,7 @@ export default function QtSharePage() {
                   )}
                   {copyFeedback ? t('qt.copied') : t('qt.copyAll')}
                 </button>
-                <span className="text-xs text-amber-500">{t('qt.todayHymn')}</span>
+                {hymnText && <span className="text-xs text-amber-500">{hymnText.split('\n')[0].trim()}</span>}
               </div>
             </div>
 
