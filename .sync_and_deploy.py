@@ -12,7 +12,7 @@ USER = "root"
 PASS = "!c7W/@8L_*6mEJXQ"
 PROXY_HOST = "127.0.0.1"
 PROXY_PORT = 18080
-TARGET_COMMIT = "c6908d4"
+TARGET_COMMIT = "2d52105"
 FILES = [
     "backend/src/main/java/com/bible/module/qt/service/QtOcrService.java",
 ]
