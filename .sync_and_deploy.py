@@ -12,9 +12,8 @@ USER = "root"
 PASS = "!c7W/@8L_*6mEJXQ"
 PROXY_HOST = "127.0.0.1"
 PROXY_PORT = 18080
-TARGET_COMMIT = "c6c448c"
+TARGET_COMMIT = "a9eb985"
 FILES = [
-    "backend/src/main/java/com/bible/module/qt/service/QtOcrService.java",
     "frontend/src/app/qt-share/page.tsx",
     "frontend/src/i18n/translations.ts",
 ]
