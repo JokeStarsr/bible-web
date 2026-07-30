@@ -231,6 +231,69 @@ public class QtController {
         }
     }
 
+    // ==================== 文本粘贴解析接口（仅管理员） ====================
+
+    /**
+     * 粘贴 QT 灵修文本，自动解析并返回结果（不保存）
+     * 仅管理员（852341467@qq.com）可用
+     */
+    @PostMapping("/admin/text-preview")
+    public ApiResponse<QtImportRequest> textPreview(
+            @RequestBody TextImportRequest req,
+            Authentication auth) {
+        checkAdmin(auth);
+        if (req.getText() == null || req.getText().isBlank()) {
+            return ApiResponse.fail("文本内容为空");
+        }
+        try {
+            QtImportRequest result = qtOcrService.recognizeFromText(req.getText());
+            log.info("Text preview success: {} items", result.getItems().size());
+            return ApiResponse.ok("解析成功", result);
+        } catch (Exception e) {
+            log.error("Text preview failed", e);
+            return ApiResponse.fail("解析失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 粘贴 QT 灵修文本，自动解析并直接更新到数据库
+     * 仅管理员（852341467@qq.com）可用
+     */
+    @PostMapping("/admin/text-import")
+    public ApiResponse<String> textImport(
+            @RequestBody TextImportRequest req,
+            Authentication auth) {
+        checkAdmin(auth);
+        if (req.getText() == null || req.getText().isBlank()) {
+            return ApiResponse.fail("文本内容为空");
+        }
+        try {
+            QtImportRequest result = qtOcrService.recognizeFromText(req.getText());
+            if (result.getItems().isEmpty()) {
+                return ApiResponse.fail("未能从文本中解析出 QT 内容");
+            }
+            qtService.importContents(result);
+            StringBuilder sb = new StringBuilder("成功导入 ");
+            sb.append(result.getItems().size()).append(" 条记录：");
+            for (QtImportRequest.QtImportItem item : result.getItems()) {
+                sb.append("\n").append(item.getDate()).append(" - ").append(item.getTitle());
+            }
+            log.info("Text import success: {} items", result.getItems().size());
+            return ApiResponse.ok(sb.toString(), null);
+        } catch (Exception e) {
+            log.error("Text import failed", e);
+            return ApiResponse.fail("解析失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 文本导入请求 DTO
+     */
+    @lombok.Data
+    public static class TextImportRequest {
+        private String text;
+    }
+
     /**
      * 检查当前用户是否为 QT 管理员
      */

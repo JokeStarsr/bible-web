@@ -24,6 +24,9 @@ export default function QtAdminPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Tab 切换：image=图片上传，text=文本粘贴
+  const [activeTab, setActiveTab] = useState<'image' | 'text'>('image');
+
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,6 +35,9 @@ export default function QtAdminPage() {
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [saved, setSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 文本粘贴相关状态
+  const [rawText, setRawText] = useState('');
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -139,6 +145,54 @@ export default function QtAdminPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // ==================== 文本粘贴解析 ====================
+
+  const handleTextPreview = async () => {
+    if (!rawText.trim()) return;
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    setOcrResult(null);
+    setSaved(false);
+    try {
+      const res = await api.post('/qt/admin/text-preview', { text: rawText }, {
+        timeout: 180000,
+      });
+      setOcrResult(res.data.data);
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('qtAdmin.recognizeFail'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTextImport = async () => {
+    if (!rawText.trim()) return;
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    setOcrResult(null);
+    try {
+      const res = await api.post('/qt/admin/text-import', { text: rawText }, {
+        timeout: 180000,
+      });
+      setSuccess(res.data.message || t('qtAdmin.importSuccess'));
+      setSaved(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('qtAdmin.importFail'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTextReset = () => {
+    setRawText('');
+    setOcrResult(null);
+    setSaved(false);
+    setError('');
+    setSuccess('');
+  };
+
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -181,111 +235,186 @@ export default function QtAdminPage() {
         <div className="w-16" />
       </div>
 
-      {/* 上传区域 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('qtAdmin.uploadTitle')}</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          {t('qtAdmin.uploadHint')}
-        </p>
-
-        {/* 文件选择 */}
-        <div className="space-y-4">
-          <div
-            className="border-2 border-dashed border-amber-200 rounded-xl p-6 text-center hover:border-amber-400 transition-colors cursor-pointer bg-amber-50/30"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {preview ? (
-              <div className="space-y-3">
-                <img
-                  src={preview}
-                  alt={t('qtAdmin.previewAlt')}
-                  className="max-h-80 mx-auto rounded-lg shadow-sm"
-                />
-                <p className="text-sm text-gray-500">{file?.name}</p>
-              </div>
-            ) : (
-              <div className="py-8">
-                <svg className="w-12 h-12 mx-auto text-amber-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-amber-700 font-medium">{t('qtAdmin.clickToSelect')}</p>
-                <p className="text-xs text-gray-400 mt-1">{t('qtAdmin.supportedFormats')}</p>
-              </div>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          </div>
-
-          {/* 操作按钮 */}
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleOcrPreview}
-              disabled={!file || loading}
-              className="flex items-center gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              {loading ? t('qtAdmin.previewing') : t('qtAdmin.previewBtn')}
-            </button>
-            <button
-              onClick={handleOcrImport}
-              disabled={!file || loading}
-              className="flex items-center gap-2 bg-amber-600 text-white hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              {loading ? t('qtAdmin.importing') : t('qtAdmin.importBtn')}
-            </button>
-            {file && (
-              <button
-                onClick={handleReset}
-                className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
-              >
-                {t('qtAdmin.resetBtn')}
-              </button>
-            )}
-          </div>
-
-          {/* 提示信息 */}
-          {loading && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-amber-700">
-                  {t('qtAdmin.recognizingHint')}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <div className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-green-700 whitespace-pre-line">{success}</p>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Tab 切换 */}
+      <div className="flex border-b border-amber-200 mb-6">
+        <button
+          onClick={() => { setActiveTab('image'); setOcrResult(null); setSaved(false); setError(''); setSuccess(''); }}
+          className={`px-6 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            activeTab === 'image'
+              ? 'border-amber-600 text-amber-700'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          {t('qtAdmin.tabImage')}
+        </button>
+        <button
+          onClick={() => { setActiveTab('text'); setOcrResult(null); setSaved(false); setError(''); setSuccess(''); }}
+          className={`px-6 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            activeTab === 'text'
+              ? 'border-amber-600 text-amber-700'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          {t('qtAdmin.tabText')}
+        </button>
       </div>
 
-      {/* OCR 预览结果 */}
+      {/* ==================== 图片上传区域 ==================== */}
+      {activeTab === 'image' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('qtAdmin.uploadTitle')}</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            {t('qtAdmin.uploadHint')}
+          </p>
+
+          <div className="space-y-4">
+            <div
+              className="border-2 border-dashed border-amber-200 rounded-xl p-6 text-center hover:border-amber-400 transition-colors cursor-pointer bg-amber-50/30"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {preview ? (
+                <div className="space-y-3">
+                  <img
+                    src={preview}
+                    alt={t('qtAdmin.previewAlt')}
+                    className="max-h-80 mx-auto rounded-lg shadow-sm"
+                  />
+                  <p className="text-sm text-gray-500">{file?.name}</p>
+                </div>
+              ) : (
+                <div className="py-8">
+                  <svg className="w-12 h-12 mx-auto text-amber-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-amber-700 font-medium">{t('qtAdmin.clickToSelect')}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('qtAdmin.supportedFormats')}</p>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleOcrPreview}
+                disabled={!file || loading}
+                className="flex items-center gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                {loading ? t('qtAdmin.previewing') : t('qtAdmin.previewBtn')}
+              </button>
+              <button
+                onClick={handleOcrImport}
+                disabled={!file || loading}
+                className="flex items-center gap-2 bg-amber-600 text-white hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                {loading ? t('qtAdmin.importing') : t('qtAdmin.importBtn')}
+              </button>
+              {file && (
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
+                >
+                  {t('qtAdmin.resetBtn')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== 文本粘贴区域 ==================== */}
+      {activeTab === 'text' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('qtAdmin.textUploadTitle')}</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            {t('qtAdmin.textUploadHint')}
+          </p>
+
+          <div className="space-y-4">
+            <textarea
+              value={rawText}
+              onChange={(e) => setRawText(e.target.value)}
+              placeholder={t('qtAdmin.textPlaceholder')}
+              className="w-full h-64 p-4 border border-amber-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-y bg-amber-50/20 font-mono"
+            />
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleTextPreview}
+                disabled={!rawText.trim() || loading}
+                className="flex items-center gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                {loading ? t('qtAdmin.previewing') : t('qtAdmin.previewBtn')}
+              </button>
+              <button
+                onClick={handleTextImport}
+                disabled={!rawText.trim() || loading}
+                className="flex items-center gap-2 bg-amber-600 text-white hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                {loading ? t('qtAdmin.importing') : t('qtAdmin.importBtn')}
+              </button>
+              {rawText && (
+                <button
+                  onClick={handleTextReset}
+                  className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium py-2.5 px-5 rounded-xl transition-colors"
+                >
+                  {t('qtAdmin.resetBtn')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 提示信息（两个 Tab 共用） */}
+      {loading && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-amber-700">
+              {t('qtAdmin.recognizingHint')}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start gap-2">
+            <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-green-700 whitespace-pre-line">{success}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 解析结果预览（两个 Tab 共用） */}
       {ocrResult && ocrResult.items.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
