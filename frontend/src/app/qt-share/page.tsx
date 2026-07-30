@@ -321,14 +321,48 @@ export default function QtSharePage() {
       if (!trimmed) return <div key={i} className="h-2"></div>;
       // 英文行：以字母/引号/括号开头，且不含中文或韩文
       const isEnglish = /^[A-Za-z"(]/.test(trimmed) && !/[\u4e00-\u9fff\uac00-\ud7af]/.test(trimmed);
+      // 提取节号前缀（数字 + 空格），用高亮样式展示
+      const verseMatch = trimmed.match(/^(\d+)\s+(.*)$/);
+      const verseNum = verseMatch ? verseMatch[1] : null;
+      const verseContent = verseMatch ? verseMatch[2] : line;
       return (
         <p key={i} className={
           isEnglish
             ? 'text-[13px] text-gray-400 italic leading-relaxed pl-4 border-l-2 border-amber-200 my-0.5'
             : 'text-[15px] text-gray-800 leading-relaxed'
-        }>{line}</p>
+        }>
+          {verseNum && <span className="text-amber-600 font-bold mr-1">{verseNum}</span>}
+          {verseContent}
+        </p>
       );
     });
+  };
+
+  // 复制当日 QT 全文
+  const handleCopyAll = async () => {
+    if (!content) return;
+    const title = lang === 'ko' && content.titleKo ? content.titleKo : localizeBibleBookNames(content.title, lang);
+    const ref = lang === 'ko' && content.scriptureReferenceKo ? content.scriptureReferenceKo : localizeScriptureReference(content.scriptureReference, lang);
+    const scripture = (lang === 'ko' && content.scriptureTextKo) ? content.scriptureTextKo : (content.scriptureText || '');
+    const parts = [
+      `${getMonthDay(content.qtDate)} ${getDayOfWeek(content.qtDate)}`,
+      title,
+      ref,
+      '',
+      scripture,
+      '',
+      commentaryText,
+      '',
+      hymnText,
+    ].filter(p => p !== '');
+    const fullText = parts.join('\n');
+    try {
+      await navigator.clipboard.writeText(fullText);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 1500);
+    } catch {
+      try { document.execCommand('copy'); } catch { /* ignore */ }
+    }
   };
 
   if (checkingAuth) {
@@ -420,7 +454,21 @@ export default function QtSharePage() {
                 <span className="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded">{t('qt.meditationEssay')}</span>
                 <span className="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded">{t('qt.scriptureExplain')}</span>
               </div>
-              <span className="text-xs text-amber-500">{t('qt.todayHymn')}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyAll}
+                  className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded transition-colors"
+                  title={t('qt.copyAll')}
+                >
+                  {copyFeedback ? (
+                    <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  )}
+                  {copyFeedback ? t('qt.copied') : t('qt.copyAll')}
+                </button>
+                <span className="text-xs text-amber-500">{t('qt.todayHymn')}</span>
+              </div>
             </div>
 
             {/* Date + Title */}

@@ -182,13 +182,14 @@ public class QtOcrService {
                 【输出格式规范（严格遵守）】
 
                 ■ scriptureText（经文正文）格式：
-                每节经文"中文一行 + 英文一行"交替排列，节与节之间用空行分隔。不要保留节号前缀。
+                每节经文"中文一行 + 英文一行"交替排列，节与节之间用空行分隔。
+                每行开头必须保留节号前缀（阿拉伯数字 + 空格），中文行和英文行的节号保持一致。
                 示例：
-                我们被掳之后十二年十月初五日，有人从耶路撒冷逃到我这里，说：「城已攻破。」
-                In the twelfth year of our exile, in the tenth month on the fifth day, a man who had escaped from Jerusalem came to me and said, "The city has fallen!"
+                10 人子啊，你要对以色列家说：『你们常说：「我们的过犯罪恶在我们身上，我们必因此消灭，怎能存活呢？」』
+                10 "Son of man, say to the Israelites: 'This is what you are saying: "Our offenses and sins weigh us down, and we are wasting away because of them. How then can we live?"
 
-                逃来的人未到前一日的晚上，耶和华的灵降在我身上，开我的口，到第二日早晨，那人来到我这里，我口就开了，不再缄默。
-                Now the evening before the man arrived, the hand of the LORD was on me, and he opened my mouth before the man came to me in the morning. So my mouth was opened and I was no longer silent.
+                11 你对他们说，主耶和华说：『我指着我的永生起誓，我断不喜悦恶人死亡，唯喜悦恶人转离所行的道而活。以色列家啊，你们转回，转回吧！离开恶道，何必死亡呢？』
+                11 Say to them, 'As surely as I live, declares the Sovereign LORD, I take no pleasure in the death of the wicked, but rather that they turn from their ways and live. Turn! Turn from your evil ways! Why will you die, people of Israel?'
 
                 ■ commentary（注释/默想散文）格式：
                 包含多个小节，每个小节有标题（如"今日经文摘要"、"经文解释小标题"、"一节默想"、"祷告"等）。

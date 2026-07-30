@@ -386,6 +386,8 @@ export interface Translations {
   'qt.meditationEssay': string;
   'qt.scriptureExplain': string;
   'qt.todayHymn': string;
+  'qt.copyAll': string;
+  'qt.copied': string;
   'qt.scripture': string;
   'qt.meditation': string;
   'qt.myResponse': string;
@@ -892,6 +894,8 @@ export const zh: Translations = {
   'qt.meditationEssay': '默想散文',
   'qt.scriptureExplain': '经文解释',
   'qt.todayHymn': '今日诗歌 · 真神之爱',
+  'qt.copyAll': '复制全文',
+  'qt.copied': '已复制',
   'qt.scripture': '今日经文',
   'qt.meditation': '默想',
   'qt.myResponse': '我的灵修回应',
@@ -1398,6 +1402,8 @@ export const ko: Translations = {
   'qt.meditationEssay': '묵상 산문',
   'qt.scriptureExplain': '성경 해설',
   'qt.todayHymn': '오늘의 찬송 · 하나님의 사랑',
+  'qt.copyAll': '전체 복사',
+  'qt.copied': '복사됨',
   'qt.scripture': '오늘의 말씀',
   'qt.meditation': '묵상',
   'qt.myResponse': '나의 묵상 응답',
