@@ -495,6 +495,8 @@ export interface Translations {
   'qtAdmin.textUploadTitle': string;
   'qtAdmin.textUploadHint': string;
   'qtAdmin.textPlaceholder': string;
+  'qtAdmin.targetDate': string;
+  'qtAdmin.targetDateHint': string;
 }
 
 export const zh: Translations = {
@@ -997,8 +999,10 @@ export const zh: Translations = {
   'qtAdmin.tabImage': '图片上传',
   'qtAdmin.tabText': '文本粘贴',
   'qtAdmin.textUploadTitle': '粘贴灵修文本',
-  'qtAdmin.textUploadHint': '粘贴每日灵修的文本内容，系统将自动解析并导入到对应日期',
-  'qtAdmin.textPlaceholder': '请将灵修文本粘贴到此处...\n\n支持粘贴包含日期、标题、经文出处、经文正文、注释/默想散文、诗歌等内容的完整文本。系统会自动解析结构化信息。',
+  'qtAdmin.textUploadHint': '粘贴每日灵修的文本内容，选择目标日期，系统将自动解析并导入到指定日期',
+  'qtAdmin.textPlaceholder': '请将灵修文本粘贴到此处...\n\n支持粘贴包含标题、经文出处、经文正文、注释/默想散文、诗歌等内容的完整文本。系统会自动解析结构化信息。',
+  'qtAdmin.targetDate': '目标日期',
+  'qtAdmin.targetDateHint': '选择要填充的日期，将覆盖文本中识别出的日期',
 };
 
 export const ko: Translations = {
@@ -1501,6 +1505,8 @@ export const ko: Translations = {
   'qtAdmin.tabImage': '이미지 업로드',
   'qtAdmin.tabText': '텍스트 붙여넣기',
   'qtAdmin.textUploadTitle': '묵상 텍스트 붙여넣기',
-  'qtAdmin.textUploadHint': '매일 묵상 텍스트를 붙여넣으면 시스템이 자동으로 파싱하여 해당 날짜에 가져옵니다',
-  'qtAdmin.textPlaceholder': '묵상 텍스트를 여기에 붙여넣으세요...\n\n날짜, 제목, 성경 구절 참조, 성경 본문, 주석/묵상 산문, 찬송가 등이 포함된 전체 텍스트 붙여넣기를 지원합니다. 시스템이 자동으로 구조화된 정보를 파싱합니다.',
+  'qtAdmin.textUploadHint': '매일 묵상 텍스트를 붙여넣고 대상 날짜를 선택하면 시스템이 자동으로 파싱하여 지정된 날짜에 가져옵니다',
+  'qtAdmin.textPlaceholder': '묵상 텍스트를 여기에 붙여넣으세요...\n\n제목, 성경 구절 참조, 성경 본문, 주석/묵상 산문, 찬송가 등이 포함된 전체 텍스트 붙여넣기를 지원합니다. 시스템이 자동으로 구조화된 정보를 파싱합니다.',
+  'qtAdmin.targetDate': '대상 날짜',
+  'qtAdmin.targetDateHint': '채울 날짜를 선택하면 텍스트에서 인식된 날짜를 덮어씁니다',
 };

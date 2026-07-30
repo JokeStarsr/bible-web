@@ -38,6 +38,7 @@ export default function QtAdminPage() {
 
   // 文本粘贴相关状态
   const [rawText, setRawText] = useState('');
+  const [targetDate, setTargetDate] = useState('');
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -155,7 +156,7 @@ export default function QtAdminPage() {
     setOcrResult(null);
     setSaved(false);
     try {
-      const res = await api.post('/qt/admin/text-preview', { text: rawText }, {
+      const res = await api.post('/qt/admin/text-preview', { text: rawText, targetDate }, {
         timeout: 180000,
       });
       setOcrResult(res.data.data);
@@ -173,7 +174,7 @@ export default function QtAdminPage() {
     setSuccess('');
     setOcrResult(null);
     try {
-      const res = await api.post('/qt/admin/text-import', { text: rawText }, {
+      const res = await api.post('/qt/admin/text-import', { text: rawText, targetDate }, {
         timeout: 180000,
       });
       setSuccess(res.data.message || t('qtAdmin.importSuccess'));
@@ -187,6 +188,7 @@ export default function QtAdminPage() {
 
   const handleTextReset = () => {
     setRawText('');
+    setTargetDate('');
     setOcrResult(null);
     setSaved(false);
     setError('');
@@ -343,6 +345,20 @@ export default function QtAdminPage() {
           </p>
 
           <div className="space-y-4">
+            {/* 目标日期选择器 */}
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-amber-700 shrink-0">
+                {t('qtAdmin.targetDate')}
+              </label>
+              <input
+                type="date"
+                value={targetDate}
+                onChange={(e) => setTargetDate(e.target.value)}
+                className="px-3 py-2 border border-amber-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 bg-white"
+              />
+              <span className="text-xs text-gray-400">{t('qtAdmin.targetDateHint')}</span>
+            </div>
+
             <textarea
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}

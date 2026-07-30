@@ -133,15 +133,24 @@ public class QtOcrService {
     /**
      * 从用户粘贴的原始文本中解析 QT 灵修内容
      * 复用 parseWithLlm 的 LLM 解析逻辑，跳过图片识别步骤
+     * @param rawText 用户粘贴的原始文本
+     * @param targetDate 用户指定的目标日期（yyyy-MM-dd），非空时覆盖 LLM 推断的日期
      */
-    public QtImportRequest recognizeFromText(String rawText) throws Exception {
+    public QtImportRequest recognizeFromText(String rawText, String targetDate) throws Exception {
         if (rawText == null || rawText.isBlank()) {
             throw new RuntimeException("文本内容为空");
         }
-        log.info("解析用户粘贴的文本, length={}", rawText.length());
+        log.info("解析用户粘贴的文本, length={}, targetDate={}", rawText.length(), targetDate);
         QtImportRequest result = parseWithLlm(rawText);
         if (result == null || result.getItems() == null || result.getItems().isEmpty()) {
             throw new RuntimeException("无法从文本中解析出 QT 内容，请检查文本是否完整");
+        }
+        // 用户指定日期时，覆盖所有 item 的日期
+        if (targetDate != null && !targetDate.isBlank()) {
+            for (QtImportRequest.QtImportItem item : result.getItems()) {
+                item.setDate(targetDate);
+            }
+            log.info("已用用户指定日期 {} 覆盖 {} 条记录", targetDate, result.getItems().size());
         }
         return result;
     }

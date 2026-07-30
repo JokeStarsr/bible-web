@@ -246,7 +246,7 @@ public class QtController {
             return ApiResponse.fail("文本内容为空");
         }
         try {
-            QtImportRequest result = qtOcrService.recognizeFromText(req.getText());
+            QtImportRequest result = qtOcrService.recognizeFromText(req.getText(), req.getTargetDate());
             log.info("Text preview success: {} items", result.getItems().size());
             return ApiResponse.ok("解析成功", result);
         } catch (Exception e) {
@@ -268,7 +268,7 @@ public class QtController {
             return ApiResponse.fail("文本内容为空");
         }
         try {
-            QtImportRequest result = qtOcrService.recognizeFromText(req.getText());
+            QtImportRequest result = qtOcrService.recognizeFromText(req.getText(), req.getTargetDate());
             if (result.getItems().isEmpty()) {
                 return ApiResponse.fail("未能从文本中解析出 QT 内容");
             }
@@ -292,6 +292,7 @@ public class QtController {
     @lombok.Data
     public static class TextImportRequest {
         private String text;
+        private String targetDate; // 用户指定的目标日期（yyyy-MM-dd），可选
     }
 
     /**
