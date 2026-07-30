@@ -312,8 +312,11 @@ export default function QtSharePage() {
 
   // 经文渲染：韩文模式使用 scriptureTextKo（韩文+英文对照），中文模式使用 scriptureText（中文+英文对照）
   const renderScripture = () => {
-    const text = (lang === 'ko' && content?.scriptureTextKo) ? content.scriptureTextKo : (content?.scriptureText || '');
-    if (!text) return null;
+    const raw = (lang === 'ko' && content?.scriptureTextKo) ? content.scriptureTextKo : (content?.scriptureText || '');
+    if (!raw) return null;
+    // 兜底：将上标数字（¹²³⁴⁵⁶⁷⁸⁹⁰）转换为普通数字，确保节号格式一致
+    const superscriptMap: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
+    const text = raw.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => m.split('').map(c => superscriptMap[c] || c).join(''));
 
     const lines = text.split('\n');
     return lines.map((line, i) => {
