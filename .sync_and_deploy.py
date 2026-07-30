@@ -12,9 +12,12 @@ USER = "root"
 PASS = "!c7W/@8L_*6mEJXQ"
 PROXY_HOST = "127.0.0.1"
 PROXY_PORT = 18080
-TARGET_COMMIT = "8c0ecfb"
+TARGET_COMMIT = "f24b8a6"
 FILES = [
-    "frontend/src/app/qt-share/page.tsx",
+    "frontend/src/app/qt-admin/page.tsx",
+    "backend/src/main/java/com/bible/module/qt/controller/QtController.java",
+    "backend/src/main/java/com/bible/module/qt/service/QtOcrService.java",
+    "frontend/src/i18n/translations.ts",
 ]
 
 def make_proxy_socket():
