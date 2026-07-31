@@ -38,27 +38,6 @@ export default function Sidebar({
 
   return (
     <div className="flex flex-col h-full bg-white border-r border-amber-100">
-      {/* 顶部标题 + 连接状态 */}
-      <div className="px-4 py-3 border-b border-amber-100">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-amber-800">{t('fellowship.title')}</h1>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
-              connected
-                ? 'bg-green-50 text-green-600'
-                : 'bg-amber-50 text-amber-600'
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                connected ? 'bg-green-500' : 'bg-amber-500 animate-pulse'
-              }`}
-            />
-            {connected ? t('fellowship.connected') : t('fellowship.connecting')}
-          </span>
-        </div>
-      </div>
-
       {/* Tab 切换 */}
       <div className="flex border-b border-amber-100">
         <button

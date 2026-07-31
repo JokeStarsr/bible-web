@@ -512,17 +512,20 @@ export default function QtSharePage() {
             }}
             className="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors"
           >{t('qt.confirm')}</button>
-          {selectedDate !== getTodayStr() && (
-            <button
-              onClick={() => {
-                const tdy = getTodayStr();
-                setSelectedDate(tdy);
-                syncPickerFromDate(tdy);
-                loadToday();
-              }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
-            >{t('qt.goToday')}</button>
-          )}
+          <button
+            onClick={() => {
+              const tdy = getTodayStr();
+              setSelectedDate(tdy);
+              syncPickerFromDate(tdy);
+              loadToday();
+            }}
+            className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${
+              selectedDate === getTodayStr()
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+            }`}
+            disabled={selectedDate === getTodayStr()}
+          >{t('qt.goToday')}</button>
         </div>
       </div>
 
