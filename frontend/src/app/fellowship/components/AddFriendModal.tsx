@@ -72,7 +72,7 @@ export default function AddFriendModal({ onClose, onDone }: AddFriendModalProps)
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[70vh] flex flex-col overflow-hidden">
         {/* 头部 */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-amber-100">
           <h2 className="text-base font-bold text-amber-800">{t('fellowship.addFriend')}</h2>
@@ -110,9 +110,9 @@ export default function AddFriendModal({ onClose, onDone }: AddFriendModalProps)
         </div>
 
         {/* 结果列表 */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {results.length === 0 ? (
-            <div className="text-center text-gray-400 text-sm py-10">
+            <div className="text-center text-gray-400 text-sm py-6">
               {keyword.trim() ? '' : t('fellowship.searchPlaceholder')}
             </div>
           ) : (

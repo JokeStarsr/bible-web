@@ -186,6 +186,14 @@ export default function Sidebar({
           })
         )}
       </div>
+
+      {/* 底部连接状态 */}
+      <div className="flex-shrink-0 px-3 py-2 border-t border-amber-50 bg-gray-50/50">
+        <span className={`flex items-center gap-1.5 text-xs ${connected ? 'text-green-600' : 'text-gray-400'}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-500' : 'bg-gray-400 animate-pulse'}`} />
+          {connected ? t('fellowship.connected') : t('fellowship.connecting')}
+        </span>
+      </div>
     </div>
   );
 }
