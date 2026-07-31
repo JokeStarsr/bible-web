@@ -342,6 +342,61 @@ export default function QtSharePage() {
     });
   };
 
+  // 灵修内容标题识别：判断某行是否为小节标题
+  // 命中：今日经文摘要 / 今日祷告 / 默想散文 / 一节默想 / 讲道笔记 / 主日小组 / 主日代祷
+  // 以及含「｜章节：节～节」格式的经文解释标题，如「只顾自己饱足的以色列牧人｜34：1～6」
+  const COMMENTARY_TITLE_PATTERNS = [
+    /^今日经文摘要/,
+    /^今日祷告/,
+    /^默想散文/,
+    /^一节默想/,
+    /^讲道笔记/,
+    /^主日小组/,
+    /^主日代祷/,
+    /.+[｜|]\s*\d+[\s：:]*\d+\s*[～~]\s*\d+/,
+  ];
+  const isCommentaryTitle = (line: string): boolean => {
+    const trimmed = line.trim();
+    if (!trimmed) return false;
+    return COMMENTARY_TITLE_PATTERNS.some((re) => re.test(trimmed));
+  };
+
+  // 灵修内容渲染：按空行分块，标题行醒目展示，内容段落彼此区分
+  const renderCommentary = () => {
+    const raw = commentaryText;
+    if (!raw) return null;
+    // 按空行（连续换行）切分成块
+    const blocks = raw.split(/\n\s*\n/);
+    return blocks.map((block, i) => {
+      const lines = block.split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => l.trim() !== '' || l === '');
+      if (lines.length === 0) return null;
+      const firstLine = lines[0].trim();
+      const isTitle = isCommentaryTitle(firstLine);
+      if (isTitle) {
+        const title = firstLine;
+        const body = lines.slice(1).join('\n').trim();
+        return (
+          <div key={i} className="mt-5 first:mt-0">
+            <h4 className="text-[15px] font-bold text-amber-800 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg px-3 py-2">
+              {title}
+            </h4>
+            {body && (
+              <p className="mt-2 text-gray-700 leading-relaxed text-[15px] whitespace-pre-wrap">
+                {body}
+              </p>
+            )}
+          </div>
+        );
+      }
+      // 普通段落
+      return (
+        <p key={i} className="mt-3 text-gray-700 leading-relaxed text-[15px] whitespace-pre-wrap">
+          {block.trim()}
+        </p>
+      );
+    });
+  };
+
   // 健壮的复制函数：优先 Clipboard API，HTTP 等非安全上下文降级为 textarea + execCommand
   const copyTextToClipboard = async (text: string): Promise<boolean> => {
     // 1. 优先使用 Clipboard API（仅 HTTPS / localhost 可用）
@@ -529,7 +584,7 @@ export default function QtSharePage() {
                 <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
                   <span className="w-1 h-4 bg-amber-400 rounded-full"></span>{t('qt.meditation')}
                 </h3>
-                <div className="text-gray-700 leading-relaxed text-[15px] whitespace-pre-wrap selection:bg-amber-200/60">{commentaryText}</div>
+                <div className="selection:bg-amber-200/60">{renderCommentary()}</div>
               </div>
             </>)}
 
