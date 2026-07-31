@@ -187,7 +187,13 @@ public class QtOcrService {
             String json = llmService.extractJson(response);
             log.info("LLM parsed QT JSON (first 300): {}",
                     json != null && json.length() > 300 ? json.substring(0, 300) : json);
-            return parseItemsFromJson(json);
+            QtImportRequest result = parseItemsFromJson(json);
+            // LLM 返回空/null 时走降级正则解析，避免直接返回 null 导致上层报错
+            if (result == null || result.getItems() == null || result.getItems().isEmpty()) {
+                log.warn("LLM 未解析出有效内容，降级到正则解析");
+                return fallbackParse(rawText);
+            }
+            return result;
         } catch (Exception e) {
             log.error("LLM parsing failed", e);
             return fallbackParse(rawText);
@@ -237,19 +243,59 @@ public class QtOcrService {
         List<QtImportRequest.QtImportItem> items = new ArrayList<>();
 
         QtImportRequest.QtImportItem item = new QtImportRequest.QtImportItem();
-        item.setDate("2026-07-27");
+        item.setDate("");
         item.setTitle("每日灵修");
         item.setScriptureReference("");
         item.setScriptureText(rawText);
         item.setCommentary("");
         item.setHymn("");
 
+        // 1. 优先匹配显式日期：X月X日 / M月D日 / MM-DD / MM/DD
         Pattern datePattern = Pattern.compile("(\\d{1,2})月(\\d{1,2})日");
         Matcher dateMatcher = datePattern.matcher(rawText);
         if (dateMatcher.find()) {
             String month = String.format("%02d", Integer.parseInt(dateMatcher.group(1)));
             String day = String.format("%02d", Integer.parseInt(dateMatcher.group(2)));
             item.setDate("2026-" + month + "-" + day);
+        } else {
+            // 2. 降级：根据"礼拜X"推断 2026 年 7 月日期
+            // 2026-07 日历：周三=29、周四=30、周五=31；8 月：周六=1、周日=2...
+            Matcher weekMatcher = Pattern.compile("礼\\s*拜\\s*([一二三四五六日天])").matcher(rawText);
+            if (weekMatcher.find()) {
+                String wk = weekMatcher.group(1);
+                String date = switch (wk) {
+                    case "三" -> "2026-07-29";
+                    case "四" -> "2026-07-30";
+                    case "五" -> "2026-07-31";
+                    case "六" -> "2026-08-01";
+                    case "日", "天" -> "2026-08-02";
+                    case "一" -> "2026-08-03";
+                    case "二" -> "2026-08-04";
+                    default -> "";
+                };
+                if (!date.isEmpty()) {
+                    item.setDate(date);
+                    log.info("Fallback: 根据礼拜{}推断日期为 {}", wk, date);
+                }
+            }
+        }
+
+        // 3. 尝试提取经文出处：书卷名 + 章:节（支持 ~ - – 连接符）
+        Pattern refPattern = Pattern.compile(
+                "(创世记|出埃及记|利未记|民数记|申命记|约书亚记|士师记|路得记|撒母耳记上|撒母耳记下|"
+                + "列王纪上|列王纪下|历代志上|历代志下|以斯拉记|尼希米记|以斯帖记|约伯记|诗篇|箴言|传道书|雅歌|"
+                + "以赛亚书|耶利米书|耶利米哀歌|以西结书|但以理书|何西阿书|约珥书|阿摩司书|俄巴底亚书|约拿书|"
+                + "弥迦书|那鸿书|哈巴谷书|西番雅书|哈该书|撒迦利亚书|玛拉基书|"
+                + "马太福音|马可福音|路加福音|约翰福音|使徒行传|罗马书|哥林多前书|哥林多后书|加拉太书|"
+                + "以弗所书|腓立比书|歌罗西书|帖撒罗尼迦前书|帖撒罗尼迦后书|提摩太前书|提摩太后书|提多书|腓利门书|"
+                + "希伯来书|雅各书|彼得前书|彼得后书|约翰一书|约翰二书|约翰三书|犹大书|启示录)"
+                + "\\s*(\\d+)\\s*[:：]\\s*(\\d+)\\s*[~\\-–—]\\s*(\\d+)");
+        Matcher refMatcher = refPattern.matcher(rawText);
+        if (refMatcher.find()) {
+            String ref = refMatcher.group(1) + " " + refMatcher.group(2) + ":" + refMatcher.group(3) + "-" + refMatcher.group(4);
+            item.setScriptureReference(ref);
+            item.setTitle(ref);
+            log.info("Fallback: 提取经文出处 {}", ref);
         }
 
         items.add(item);
@@ -265,9 +311,16 @@ public class QtOcrService {
         if (original == null) {
             throw new RuntimeException("无法读取图片文件，请检查图片格式");
         }
-        // 放大 3 倍提升小字识别率
-        int newWidth = original.getWidth() * 3;
-        int newHeight = original.getHeight() * 3;
+        // 放大提升小字识别率，但限制最大边长避免 Tesseract 处理过慢
+        final int MAX_DIM = 3000;
+        int ow = original.getWidth();
+        int oh = original.getHeight();
+        double scale = 3.0;
+        if (ow * scale > MAX_DIM || oh * scale > MAX_DIM) {
+            scale = (double) MAX_DIM / Math.max(ow, oh);
+        }
+        int newWidth = (int) (ow * scale);
+        int newHeight = (int) (oh * scale);
         BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = scaled.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -283,6 +336,7 @@ public class QtOcrService {
 
     private String runTesseract(Path imagePath) throws Exception {
         // --psm 3: 全自动版面分析，适合灵修图片的复杂排版（标题+经文+注释多区块）
+        // --oem 1: 仅用 LSTM 神经网络引擎（比默认混合引擎快，中文识别也更好）
         List<String> command = new ArrayList<>();
         command.add("tesseract");
         command.add(imagePath.toString());
@@ -291,6 +345,8 @@ public class QtOcrService {
         command.add("chi_sim+eng");
         command.add("--psm");
         command.add("3");
+        command.add("--oem");
+        command.add("1");
 
         log.info("Running Tesseract: {}", String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
