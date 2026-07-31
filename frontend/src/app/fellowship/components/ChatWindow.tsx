@@ -314,9 +314,9 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-white overflow-hidden">
       {/* 顶部 */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-amber-100">
+      <div className="flex flex-shrink-0 items-center justify-between px-3 py-2.5 border-b border-amber-100">
         <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={onBack}
@@ -364,7 +364,7 @@ export default function ChatWindow({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-[#FDF8F0]"
+        className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-3 bg-[#FDF8F0]"
       >
         {hasMore && (
           <div className="text-center">
@@ -443,14 +443,14 @@ export default function ChatWindow({
 
       {/* 错误提示 */}
       {error && (
-        <div className="px-3 py-1.5 text-xs text-red-500 bg-red-50 border-t border-red-100">
+        <div className="flex-shrink-0 px-3 py-1.5 text-xs text-red-500 bg-red-50 border-t border-red-100">
           {error}
         </div>
       )}
 
       {/* 录音状态条 */}
       {recording && (
-        <div className="flex items-center justify-between px-3 py-2 bg-red-50 border-t border-red-100">
+        <div className="flex flex-shrink-0 items-center justify-between px-3 py-2 bg-red-50 border-t border-red-100">
           <span className="flex items-center gap-2 text-sm text-red-600">
             <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
             {t('fellowship.recording')}
@@ -476,7 +476,7 @@ export default function ChatWindow({
       {showEmoji && (
         <div
           data-emoji-panel
-          className="border-t border-amber-100 bg-white p-2 max-h-48 overflow-y-auto"
+          className="flex-shrink-0 border-t border-amber-100 bg-white p-2 max-h-48 overflow-y-auto"
         >
           <div className="grid grid-cols-8 gap-1">
             {EMOJI_LIST.map((emoji, i) => (
@@ -502,7 +502,7 @@ export default function ChatWindow({
       />
 
       {/* 输入框：两行布局，避免手机端按钮挤压 */}
-      <div className="border-t border-amber-100 p-2">
+      <div className="flex-shrink-0 border-t border-amber-100 p-2">
         {/* 工具按钮行：左工具，右发送 */}
         <div className="flex items-center gap-1 mb-1.5">
           {/* 表情按钮 */}

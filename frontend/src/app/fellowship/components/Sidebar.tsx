@@ -37,9 +37,9 @@ export default function Sidebar({
   const { t } = useI18n();
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-amber-100">
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-white border-r border-amber-100 overflow-hidden">
       {/* Tab 切换 */}
-      <div className="flex border-b border-amber-100">
+      <div className="flex flex-shrink-0 border-b border-amber-100">
         <button
           onClick={() => onTabChange('friends')}
           className={`flex-1 py-2.5 text-sm font-medium transition-colors relative ${
@@ -68,7 +68,7 @@ export default function Sidebar({
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex gap-2 px-3 py-2 border-b border-amber-100 bg-amber-50/30">
+      <div className="flex flex-shrink-0 gap-2 px-3 py-2 border-b border-amber-100 bg-amber-50/30">
         {activeTab === 'friends' ? (
           <>
             <button
@@ -106,7 +106,7 @@ export default function Sidebar({
       </div>
 
       {/* 列表 */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {activeTab === 'friends' ? (
           friends.length === 0 ? (
             <div className="text-center text-gray-400 text-sm py-12 px-4">
