@@ -4,7 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useI18n } from '@/i18n/I18nContext';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
 export default function LoginPage() {
   const { t } = useI18n();

@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+// 默认使用相对路径 /api/v1，由 Next.js rewrites 代理到后端（dev）或 nginx 代理（生产）
+// 仅当显式设置 NEXT_PUBLIC_API_URL 时才用绝对地址（如 Docker 构建时注入）
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE,
