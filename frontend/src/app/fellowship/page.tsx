@@ -460,7 +460,7 @@ export default function FellowshipPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#FDF8F0]">
+    <div className="fixed inset-0 flex flex-col bg-[#FDF8F0] z-30">
       {/* 顶部栏：返回首页 + 标题，固定高度 */}
       <div className="flex-shrink-0 bg-white border-b border-amber-100">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between">
@@ -488,8 +488,9 @@ export default function FellowshipPage() {
         </div>
       </div>
 
-      {/* 主体：填满剩余空间，左右分栏（桌面），切换显示（移动） */}
-      <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-3">
+      {/* 主体：填满剩余空间，左右分栏（桌面），切换显示（移动）
+          用 100dvh 适配手机端 Edge/Chrome 地址栏伸缩，避免底部输入栏被遮挡 */}
+      <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-3" style={{ height: 'calc(100dvh - 3rem)' }}>
         <div className="flex h-full bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden">
           {/* 侧栏：桌面常驻，移动端仅在未选中会话时显示 */}
           <div
