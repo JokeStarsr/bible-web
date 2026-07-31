@@ -70,3 +70,12 @@ gen_ssh.py
 
 # 其他项目目录
 bible-web/
+
+# 临时部署/测试脚本（含敏感信息，禁止入库）
+.sync_and_deploy.py
+.git_push.py
+.test_*.py
+.check_*.py
+.import_*.py
+.query_*.py
+.verify_*.py
