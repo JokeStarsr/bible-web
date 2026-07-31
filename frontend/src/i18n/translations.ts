@@ -539,6 +539,19 @@ export interface Translations {
   'fellowship.confirmLeaveRoom': string;
   'fellowship.loadMore': string;
   'fellowship.noMoreMessages': string;
+  'fellowship.emoji': string;
+  'fellowship.image': string;
+  'fellowship.voice': string;
+  'fellowship.recording': string;
+  'fellowship.holdToRecord': string;
+  'fellowship.clickToRecord': string;
+  'fellowship.releaseToSend': string;
+  'fellowship.cancelRecord': string;
+  'fellowship.imageTooLarge': string;
+  'fellowship.voiceTooLarge': string;
+  'fellowship.uploadFailed': string;
+  'fellowship.sendImageFailed': string;
+  'fellowship.sendVoiceFailed': string;
 }
 
 export const zh: Translations = {
@@ -1087,6 +1100,19 @@ export const zh: Translations = {
   'fellowship.confirmLeaveRoom': '确认退出该群聊？',
   'fellowship.loadMore': '加载更多',
   'fellowship.noMoreMessages': '没有更多消息了',
+  'fellowship.emoji': '表情',
+  'fellowship.image': '图片',
+  'fellowship.voice': '语音',
+  'fellowship.recording': '正在录音...',
+  'fellowship.holdToRecord': '按住说话',
+  'fellowship.clickToRecord': '点击录音',
+  'fellowship.releaseToSend': '松开发送',
+  'fellowship.cancelRecord': '取消',
+  'fellowship.imageTooLarge': '图片不能超过10MB',
+  'fellowship.voiceTooLarge': '语音不能超过5MB',
+  'fellowship.uploadFailed': '上传失败',
+  'fellowship.sendImageFailed': '发送图片失败',
+  'fellowship.sendVoiceFailed': '发送语音失败',
 };
 
 export const ko: Translations = {
@@ -1635,4 +1661,17 @@ export const ko: Translations = {
   'fellowship.confirmLeaveRoom': '이 그룹에서 나가시겠습니까?',
   'fellowship.loadMore': '더 보기',
   'fellowship.noMoreMessages': '더 이상 메시지가 없습니다',
+  'fellowship.emoji': '이모티콘',
+  'fellowship.image': '사진',
+  'fellowship.voice': '음성',
+  'fellowship.recording': '녹음 중...',
+  'fellowship.holdToRecord': '눌러서 말하기',
+  'fellowship.clickToRecord': '녹음',
+  'fellowship.releaseToSend': '놓으면 전송',
+  'fellowship.cancelRecord': '취소',
+  'fellowship.imageTooLarge': '사진은 10MB 이하만 가능',
+  'fellowship.voiceTooLarge': '음성은 5MB 이하만 가능',
+  'fellowship.uploadFailed': '업로드 실패',
+  'fellowship.sendImageFailed': '사진 전송 실패',
+  'fellowship.sendVoiceFailed': '음성 전송 실패',
 };

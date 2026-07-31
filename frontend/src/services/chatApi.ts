@@ -127,6 +127,28 @@ export const chatApi = {
       .post(`/chat/rooms/${roomId}/messages`, { content })
       .then((r) => r.data.data as ChatMessageInfo),
 
+  /** 发送图片消息（FormData 上传） */
+  sendImageMessage: (roomId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api
+      .post(`/chat/rooms/${roomId}/messages/image`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data.data as ChatMessageInfo);
+  },
+
+  /** 发送语音消息（FormData 上传） */
+  sendAudioMessage: (roomId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api
+      .post(`/chat/rooms/${roomId}/messages/audio`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data.data as ChatMessageInfo);
+  },
+
   /** 标记房间已读 */
   markRead: (roomId: string) =>
     api.post(`/chat/rooms/${roomId}/read`).then((r) => r.data.data),

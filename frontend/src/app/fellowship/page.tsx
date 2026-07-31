@@ -233,6 +233,82 @@ export default function FellowshipPage() {
     }
   }, [selectedRoomId, input, sending, appendMessage, t]);
 
+  // 发送图片消息
+  const handleSendImage = useCallback(
+    async (file: File) => {
+      if (!selectedRoomId || sending) return;
+      setSending(true);
+      setError('');
+      try {
+        const msg = await chatApi.sendImageMessage(selectedRoomId, file);
+        appendMessage(msg);
+        const preview = '[图片]';
+        setFriends((prev) =>
+          prev.map((f) =>
+            f.roomId === selectedRoomId
+              ? { ...f, lastMessageContent: preview, lastMessageAt: msg.createdAt }
+              : f
+          )
+        );
+        setRooms((prev) =>
+          prev.map((r) =>
+            r.id === selectedRoomId
+              ? {
+                  ...r,
+                  lastMessageContent: preview,
+                  lastMessageAt: msg.createdAt,
+                  lastMessageSenderName: msg.senderName,
+                }
+              : r
+          )
+        );
+      } catch (err: any) {
+        setError(err.response?.data?.message || t('fellowship.sendImageFailed'));
+      } finally {
+        setSending(false);
+      }
+    },
+    [selectedRoomId, sending, appendMessage, t]
+  );
+
+  // 发送语音消息
+  const handleSendAudio = useCallback(
+    async (file: File) => {
+      if (!selectedRoomId || sending) return;
+      setSending(true);
+      setError('');
+      try {
+        const msg = await chatApi.sendAudioMessage(selectedRoomId, file);
+        appendMessage(msg);
+        const preview = '[语音]';
+        setFriends((prev) =>
+          prev.map((f) =>
+            f.roomId === selectedRoomId
+              ? { ...f, lastMessageContent: preview, lastMessageAt: msg.createdAt }
+              : f
+          )
+        );
+        setRooms((prev) =>
+          prev.map((r) =>
+            r.id === selectedRoomId
+              ? {
+                  ...r,
+                  lastMessageContent: preview,
+                  lastMessageAt: msg.createdAt,
+                  lastMessageSenderName: msg.senderName,
+                }
+              : r
+          )
+        );
+      } catch (err: any) {
+        setError(err.response?.data?.message || t('fellowship.sendVoiceFailed'));
+      } finally {
+        setSending(false);
+      }
+    },
+    [selectedRoomId, sending, appendMessage, t]
+  );
+
   // ---------- WebSocket 全局监听：更新侧栏 ----------
   useEffect(() => {
     const unsubscribe = subscribeAll((message) => {
@@ -447,6 +523,8 @@ export default function FellowshipPage() {
               error={error}
               onInputChange={setInput}
               onSend={handleSend}
+              onSendImage={handleSendImage}
+              onSendAudio={handleSendAudio}
               onLoadMore={handleLoadMore}
               onBack={handleBack}
               onOpenMembers={() => setShowMembers(true)}

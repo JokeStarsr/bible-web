@@ -18,9 +18,15 @@ import com.bible.module.user.mapper.UserMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,6 +54,17 @@ public class ChatService {
     private static final String TYPE_DIRECT = "DIRECT";
     private static final String TYPE_GROUP = "GROUP";
     private static final String MSG_TYPE_TEXT = "TEXT";
+    private static final String MSG_TYPE_IMAGE = "IMAGE";
+    private static final String MSG_TYPE_AUDIO = "AUDIO";
+
+    /** 聊天文件（图片/语音）保存目录，由 nginx 静态服务 /uploads/ 下 */
+    @Value("${app.chat.upload-dir:/opt/bible-web/uploads/chat-files}")
+    private String chatUploadDir;
+
+    /** 图片大小上限：10MB */
+    private static final long IMAGE_MAX_SIZE = 10L * 1024 * 1024;
+    /** 语音大小上限：5MB */
+    private static final long AUDIO_MAX_SIZE = 5L * 1024 * 1024;
 
     // ==================== 好友 ====================
 
@@ -209,9 +226,83 @@ public class ChatService {
         if (req == null || req.getContent() == null || req.getContent().isBlank()) {
             throw new BusinessException("INVALID_PARAM", "消息内容不能为空");
         }
+        // 仅允许 TEXT 走此接口，IMAGE/AUDIO 必须走专用上传接口以保证文件落盘
+        String type = normalizeType(req.getType());
+        if (!MSG_TYPE_TEXT.equals(type)) {
+            throw new BusinessException("INVALID_PARAM", "该消息类型请走专用上传接口");
+        }
 
-        ChatMessage msg = new ChatMessage(UUID.randomUUID(), roomId, userId, req.getContent().trim(),
-                MSG_TYPE_TEXT, LocalDateTime.now());
+        return saveAndPushMessage(userId, roomId, req.getContent().trim(), MSG_TYPE_TEXT);
+    }
+
+    /** 发送图片消息：校验 + 落盘 + 建消息 + 推送 */
+    @Transactional
+    public ChatMessageResponse sendImageMessage(UUID userId, UUID roomId, MultipartFile file) {
+        assertRoomMember(roomId, userId);
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("FILE_EMPTY", "图片文件为空");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BusinessException("FILE_TYPE", "仅支持图片文件");
+        }
+        if (file.getSize() > IMAGE_MAX_SIZE) {
+            throw new BusinessException("FILE_SIZE", "图片大小不能超过10MB");
+        }
+        String url = saveUploadFile(file, userId, "img");
+        return saveAndPushMessage(userId, roomId, url, MSG_TYPE_IMAGE);
+    }
+
+    /** 发送语音消息：校验 + 落盘 + 建消息 + 推送 */
+    @Transactional
+    public ChatMessageResponse sendAudioMessage(UUID userId, UUID roomId, MultipartFile file) {
+        assertRoomMember(roomId, userId);
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("FILE_EMPTY", "语音文件为空");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("audio/")) {
+            throw new BusinessException("FILE_TYPE", "仅支持音频文件");
+        }
+        if (file.getSize() > AUDIO_MAX_SIZE) {
+            throw new BusinessException("FILE_SIZE", "语音大小不能超过5MB");
+        }
+        String url = saveUploadFile(file, userId, "audio");
+        return saveAndPushMessage(userId, roomId, url, MSG_TYPE_AUDIO);
+    }
+
+    /** 保存文件到磁盘并返回可访问的相对 URL */
+    private String saveUploadFile(MultipartFile file, UUID userId, String prefix) {
+        try {
+            Path dir = Paths.get(chatUploadDir);
+            Files.createDirectories(dir);
+            String ext = getExtension(file.getOriginalFilename());
+            // 语音统一用 .m4a/.webm 等浏览器可播放格式，此处保留原始扩展名
+            String filename = prefix + "_" + userId + "_" + System.currentTimeMillis()
+                    + "_" + (int) (Math.random() * 10000) + ext;
+            Path filePath = dir.resolve(filename);
+            file.transferTo(filePath.toFile());
+            log.info("Chat file uploaded: {}", filePath);
+            return "/uploads/chat-files/" + filename;
+        } catch (IOException e) {
+            log.error("Failed to save chat file", e);
+            throw new BusinessException("FILE_SAVE_FAILED", "文件保存失败");
+        }
+    }
+
+    /** 归一化消息类型，非法值一律按 TEXT */
+    private String normalizeType(String type) {
+        if (type == null || type.isBlank()) return MSG_TYPE_TEXT;
+        String upper = type.trim().toUpperCase();
+        return switch (upper) {
+            case MSG_TYPE_TEXT, MSG_TYPE_IMAGE, MSG_TYPE_AUDIO -> upper;
+            default -> MSG_TYPE_TEXT;
+        };
+    }
+
+    /** 落库 + 推送的公共逻辑 */
+    private ChatMessageResponse saveAndPushMessage(UUID userId, UUID roomId, String content, String type) {
+        ChatMessage msg = new ChatMessage(UUID.randomUUID(), roomId, userId, content, type, LocalDateTime.now());
         chatMessageMapper.insert(msg);
 
         User sender = userMapper.findById(userId);
@@ -223,6 +314,12 @@ public class ChatService {
         // 推送给房间所有在线成员（含发送者多端同步）
         pushMessage(roomId, resp);
         return resp;
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null) return "";
+        int dot = filename.lastIndexOf('.');
+        return dot > 0 ? filename.substring(dot).toLowerCase() : "";
     }
 
     /** 标记房间已读 */

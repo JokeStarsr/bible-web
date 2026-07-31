@@ -68,6 +68,8 @@ app:
     unlock-rounds: 20
   qt:
     upload-dir: /opt/bible-web/uploads/qt-photos
+  chat:
+    upload-dir: /opt/bible-web/uploads/chat-files
   llm:
     provider: ${LLM_PROVIDER:deepseek}
     api-key: ${LLM_API_KEY:}

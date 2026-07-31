@@ -7,6 +7,7 @@ import com.bible.module.fellowship.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -112,6 +113,24 @@ public class ChatController {
                                                     Authentication auth) {
         UUID userId = (UUID) auth.getPrincipal();
         return ApiResponse.ok(chatService.sendMessage(userId, roomId, req));
+    }
+
+    /** 发送图片消息（multipart/form-data） */
+    @PostMapping(value = "/rooms/{roomId}/messages/image", consumes = "multipart/form-data")
+    public ApiResponse<ChatMessageResponse> sendImageMessage(@PathVariable UUID roomId,
+                                                         @RequestParam("file") MultipartFile file,
+                                                         Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        return ApiResponse.ok(chatService.sendImageMessage(userId, roomId, file));
+    }
+
+    /** 发送语音消息（multipart/form-data） */
+    @PostMapping(value = "/rooms/{roomId}/messages/audio", consumes = "multipart/form-data")
+    public ApiResponse<ChatMessageResponse> sendAudioMessage(@PathVariable UUID roomId,
+                                                         @RequestParam("file") MultipartFile file,
+                                                         Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        return ApiResponse.ok(chatService.sendAudioMessage(userId, roomId, file));
     }
 
     /** 标记房间已读 */

@@ -10,4 +10,7 @@ import lombok.Data;
 public class SendChatMessageRequest {
 
     private String content;
+
+    /** 消息类型：TEXT / IMAGE / AUDIO。为空按 TEXT 处理。 */
+    private String type;
 }
