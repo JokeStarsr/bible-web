@@ -288,11 +288,12 @@ export default function QtSharePage() {
     const sel = window.getSelection();
     if (sel) {
       const text = sel.toString();
-      try { await navigator.clipboard.writeText(text); }
-      catch { document.execCommand('copy'); }
+      const ok = await copyTextToClipboard(text);
       sel.removeAllRanges();
-      setCopyFeedback(true);
-      setTimeout(() => setCopyFeedback(false), 1500);
+      if (ok) {
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 1500);
+      }
     }
     setSelectionToolbar(null);
   };
@@ -341,6 +342,34 @@ export default function QtSharePage() {
     });
   };
 
+  // 健壮的复制函数：优先 Clipboard API，HTTP 等非安全上下文降级为 textarea + execCommand
+  const copyTextToClipboard = async (text: string): Promise<boolean> => {
+    // 1. 优先使用 Clipboard API（仅 HTTPS / localhost 可用）
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch { /* 降级到 execCommand */ }
+    }
+    // 2. 降级：临时 textarea + select + execCommand('copy')，兼容 HTTP 环境
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-9999px';
+      textarea.style.left = '-9999px';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
   // 复制当日 QT 全文
   const handleCopyAll = async () => {
     if (!content) return;
@@ -359,12 +388,10 @@ export default function QtSharePage() {
       hymnText,
     ].filter(p => p !== '');
     const fullText = parts.join('\n');
-    try {
-      await navigator.clipboard.writeText(fullText);
+    const ok = await copyTextToClipboard(fullText);
+    if (ok) {
       setCopyFeedback(true);
       setTimeout(() => setCopyFeedback(false), 1500);
-    } catch {
-      try { document.execCommand('copy'); } catch { /* ignore */ }
     }
   };
 
