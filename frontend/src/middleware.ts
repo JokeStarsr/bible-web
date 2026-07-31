@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED_PATHS = ['/', '/daily-thought'];
+const PROTECTED_PATHS = ['/', '/daily-thought', '/fellowship'];
 const AUTH_PATHS = ['/login', '/register'];
 
 export function middleware(request: NextRequest) {
@@ -27,5 +27,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/daily-thought/:path*', '/login', '/register'],
+  matcher: ['/', '/daily-thought/:path*', '/fellowship/:path*', '/login', '/register'],
 };

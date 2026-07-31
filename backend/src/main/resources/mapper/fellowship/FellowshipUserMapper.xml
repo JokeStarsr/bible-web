@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.fellowship.mapper.FellowshipUserMapper">
+
+    <resultMap id="UserMap" type="com.bible.module.user.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="email" property="email"/>
+        <result column="openid" property="openid"/>
+        <result column="display_name" property="displayName"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="bio" property="bio"/>
+        <result column="status" property="status"/>
+        <result column="email_verified_at" property="emailVerifiedAt"/>
+        <result column="last_login_at" property="lastLoginAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <!-- 按 username/displayName/email 模糊搜索，排除自己 -->
+    <select id="searchByKeyword" resultMap="UserMap">
+        SELECT * FROM users
+        WHERE id &lt;&gt; #{excludeUserId}
+          AND deleted_at IS NULL
+          AND (LOWER(username) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+               OR LOWER(display_name) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+               OR LOWER(email) LIKE CONCAT('%', LOWER(#{keyword}), '%'))
+        LIMIT #{limit}
+    </select>
+
+</mapper>

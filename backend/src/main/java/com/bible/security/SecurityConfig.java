@@ -37,6 +37,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // H2 控制台（开发环境）
                 .requestMatchers("/h2-console/**").permitAll()
+                // WebSocket 握手端点（鉴权由 JwtHandshakeInterceptor 处理，浏览器升级请求无法带 Authorization 头）
+                .requestMatchers("/ws-chat/**").permitAll()
                 // 公开接口
                 .requestMatchers(HttpMethod.POST,
                         "/api/v1/auth/send-register-code",

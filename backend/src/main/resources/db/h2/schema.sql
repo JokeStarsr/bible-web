@@ -285,3 +285,52 @@ CREATE INDEX IF NOT EXISTS idx_reflection_comments_reflection ON reflection_comm
 CREATE INDEX IF NOT EXISTS idx_private_messages_session ON private_messages(session_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_reports_reporter ON reports(reporter_id);
 CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
+
+-- ==================== 主内通讯 (fellowship) ====================
+-- 好友关系表（H2 不支持 LEAST/GREATEST 表达式索引，此处省略唯一对索引）
+CREATE TABLE IF NOT EXISTS friendships (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    friend_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    message TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_friendship_user ON friendships(user_id);
+CREATE INDEX IF NOT EXISTS idx_friendship_friend ON friendships(friend_id);
+
+-- 聊天室表
+CREATE TABLE IF NOT EXISTS chat_rooms (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    name VARCHAR(100),
+    type VARCHAR(20) NOT NULL,
+    avatar_url TEXT,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 聊天室成员表
+CREATE TABLE IF NOT EXISTS chat_room_members (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    last_read_at TIMESTAMP,
+    joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_member_pair UNIQUE (room_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_member_room ON chat_room_members(room_id);
+CREATE INDEX IF NOT EXISTS idx_member_user ON chat_room_members(user_id);
+
+-- 聊天消息表
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    type VARCHAR(20) NOT NULL DEFAULT 'TEXT',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_msg_room_created ON chat_messages(room_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_msg_sender ON chat_messages(sender_id);

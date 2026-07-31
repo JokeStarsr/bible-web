@@ -96,6 +96,9 @@ export default function NavBar() {
               <a href="/messages" className="text-bible-muted hover:text-bible-gold transition-colors">
 {t('nav.messages')}
               </a>
+              <a href="/fellowship" className="text-bible-muted hover:text-bible-gold transition-colors">
+                {t('nav.fellowship')}
+              </a>
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -180,6 +183,13 @@ export default function NavBar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
 {t('nav.messages')}
+              </a>
+              <a
+                href="/fellowship"
+                className="block text-bible-dark hover:text-bible-gold"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('nav.fellowship')}
               </a>
               <a
                 href="/profile"

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.fellowship.mapper.ChatRoomMemberMapper">
+
+    <resultMap id="ChatRoomMemberMap" type="com.bible.module.fellowship.entity.ChatRoomMember">
+        <id column="id" property="id"/>
+        <result column="room_id" property="roomId"/>
+        <result column="user_id" property="userId"/>
+        <result column="last_read_at" property="lastReadAt"/>
+        <result column="joined_at" property="joinedAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO chat_room_members(id, room_id, user_id, last_read_at)
+        VALUES(#{id}, #{roomId}, #{userId}, #{lastReadAt})
+    </insert>
+
+    <resultMap id="RoomMemberMap" type="com.bible.module.fellowship.dto.RoomMemberResponse">
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="display_name" property="displayName"/>
+        <result column="avatar_url" property="avatarUrl"/>
+    </resultMap>
+
+    <!-- 房间成员列表（JOIN users） -->
+    <select id="findRoomMembersWithUserInfo" resultMap="RoomMemberMap">
+        SELECT m.user_id, u.username, u.display_name, u.avatar_url
+        FROM chat_room_members m
+        LEFT JOIN users u ON u.id = m.user_id
+        WHERE m.room_id = #{roomId}
+        ORDER BY m.joined_at ASC
+    </select>
+
+    <select id="findByRoomAndUser" resultMap="ChatRoomMemberMap">
+        SELECT * FROM chat_room_members WHERE room_id = #{roomId} AND user_id = #{userId}
+    </select>
+
+    <update id="updateLastReadAt">
+        UPDATE chat_room_members SET last_read_at = NOW() WHERE room_id = #{roomId} AND user_id = #{userId}
+    </update>
+
+    <delete id="deleteByRoomAndUser">
+        DELETE FROM chat_room_members WHERE room_id = #{roomId} AND user_id = #{userId}
+    </delete>
+
+    <!-- 房间所有成员 userId -->
+    <select id="findMemberUserIds" resultType="java.util.UUID">
+        SELECT user_id FROM chat_room_members WHERE room_id = #{roomId}
+    </select>
+
+</mapper>

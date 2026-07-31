@@ -11,6 +11,7 @@ export interface Translations {
   'nav.openMenu': string;
   'nav.user': string;
   'nav.qtAdmin': string;
+  'nav.fellowship': string;
 
   // ========== Layout ==========
   'layout.banner': string;
@@ -56,6 +57,8 @@ export interface Translations {
   'home.cardQtShareDesc': string;
   'home.cardContact': string;
   'home.cardContactDesc': string;
+  'home.cardFellowship': string;
+  'home.cardFellowshipDesc': string;
   'home.checkingAuth': string;
   'home.generateFail': string;
   'home.generatingScripture': string;
@@ -498,6 +501,44 @@ export interface Translations {
   'qtAdmin.textPlaceholder': string;
   'qtAdmin.targetDate': string;
   'qtAdmin.targetDateHint': string;
+
+  // ========== Fellowship (主内通讯) ==========
+  'fellowship.title': string;
+  'fellowship.friends': string;
+  'fellowship.rooms': string;
+  'fellowship.addFriend': string;
+  'fellowship.createRoom': string;
+  'fellowship.requests': string;
+  'fellowship.search': string;
+  'fellowship.searchPlaceholder': string;
+  'fellowship.sendMessage': string;
+  'fellowship.messagePlaceholder': string;
+  'fellowship.accept': string;
+  'fellowship.reject': string;
+  'fellowship.noFriends': string;
+  'fellowship.noRooms': string;
+  'fellowship.noMessages': string;
+  'fellowship.leaveRoom': string;
+  'fellowship.members': string;
+  'fellowship.online': string;
+  'fellowship.connected': string;
+  'fellowship.connecting': string;
+  'fellowship.requestSent': string;
+  'fellowship.alreadyFriend': string;
+  'fellowship.userNotFound': string;
+  'fellowship.you': string;
+  'fellowship.today': string;
+  'fellowship.yesterday': string;
+  'fellowship.memberCount': string;
+  'fellowship.roomNamePlaceholder': string;
+  'fellowship.selectFriends': string;
+  'fellowship.create': string;
+  'fellowship.cancel': string;
+  'fellowship.deleteFriend': string;
+  'fellowship.confirmDeleteFriend': string;
+  'fellowship.confirmLeaveRoom': string;
+  'fellowship.loadMore': string;
+  'fellowship.noMoreMessages': string;
 }
 
 export const zh: Translations = {
@@ -511,6 +552,7 @@ export const zh: Translations = {
   'nav.openMenu': '打开菜单',
   'nav.user': '用户',
   'nav.qtAdmin': 'QT 管理',
+  'nav.fellowship': '主内通讯',
 
   // Layout
   'layout.banner': '亲爱的小羊们，这里的所有话语只提供参考，我们跟神的关系还是取决于各自的祷告和圣灵的感动。',
@@ -556,6 +598,8 @@ export const zh: Translations = {
   'home.cardQtShareDesc': '每日灵修经文默想',
   'home.cardContact': '联系牧者',
   'home.cardContactDesc': '寻求牧养帮助',
+  'home.cardFellowship': '主内通讯',
+  'home.cardFellowshipDesc': '彼此相交祷告',
   'home.checkingAuth': '正在确认登录状态...',
   'home.generateFail': '生成失败，请先登录',
   'home.generatingScripture': '正在生成经文...',
@@ -1005,6 +1049,44 @@ export const zh: Translations = {
   'qtAdmin.textPlaceholder': '请将灵修文本粘贴到此处...\n\n支持粘贴包含标题、经文出处、经文正文、注释/默想散文、诗歌等内容的完整文本。系统会自动解析结构化信息。',
   'qtAdmin.targetDate': '目标日期',
   'qtAdmin.targetDateHint': '选择要填充的日期，将覆盖文本中识别出的日期',
+
+  // Fellowship (主内通讯)
+  'fellowship.title': '主内通讯',
+  'fellowship.friends': '好友',
+  'fellowship.rooms': '群聊',
+  'fellowship.addFriend': '添加好友',
+  'fellowship.createRoom': '创建群聊',
+  'fellowship.requests': '好友请求',
+  'fellowship.search': '搜索',
+  'fellowship.searchPlaceholder': '输入用户名或邮箱',
+  'fellowship.sendMessage': '发送',
+  'fellowship.messagePlaceholder': '输入消息...',
+  'fellowship.accept': '接受',
+  'fellowship.reject': '拒绝',
+  'fellowship.noFriends': '还没有好友，去添加吧',
+  'fellowship.noRooms': '还没有群聊',
+  'fellowship.noMessages': '开始你们的对话吧',
+  'fellowship.leaveRoom': '退出群聊',
+  'fellowship.members': '成员',
+  'fellowship.online': '在线',
+  'fellowship.connected': '已连接',
+  'fellowship.connecting': '连接中',
+  'fellowship.requestSent': '请求已发送',
+  'fellowship.alreadyFriend': '已经是好友了',
+  'fellowship.userNotFound': '未找到用户',
+  'fellowship.you': '我',
+  'fellowship.today': '今天',
+  'fellowship.yesterday': '昨天',
+  'fellowship.memberCount': '人',
+  'fellowship.roomNamePlaceholder': '输入群名称',
+  'fellowship.selectFriends': '选择好友',
+  'fellowship.create': '创建',
+  'fellowship.cancel': '取消',
+  'fellowship.deleteFriend': '删除好友',
+  'fellowship.confirmDeleteFriend': '确认删除该好友？',
+  'fellowship.confirmLeaveRoom': '确认退出该群聊？',
+  'fellowship.loadMore': '加载更多',
+  'fellowship.noMoreMessages': '没有更多消息了',
 };
 
 export const ko: Translations = {
@@ -1018,6 +1100,7 @@ export const ko: Translations = {
   'nav.openMenu': '메뉴 열기',
   'nav.user': '사용자',
   'nav.qtAdmin': 'QT 관리',
+  'nav.fellowship': '성도 교제',
 
   // Layout
   'layout.banner': '사랑하는 어린 양들아, 여기 모든 말씀은 참고용일 뿐이란다. 하나님과의 관계는 각자의 기도와 성령의 감동에 달려 있음을 기억하렴.',
@@ -1063,6 +1146,8 @@ export const ko: Translations = {
   'home.cardQtShareDesc': '매일 말씀 묵상',
   'home.cardContact': '목회자에게 문의',
   'home.cardContactDesc': '도움 요청하기',
+  'home.cardFellowship': '성도 교제',
+  'home.cardFellowshipDesc': '서로 교제하며 기도',
   'home.checkingAuth': '로그인 상태 확인 중...',
   'home.generateFail': '생성 실패. 먼저 로그인해 주세요',
   'home.generatingScripture': '말씀을 생성하는 중...',
@@ -1512,4 +1597,42 @@ export const ko: Translations = {
   'qtAdmin.textPlaceholder': '묵상 텍스트를 여기에 붙여넣으세요...\n\n제목, 성경 구절 참조, 성경 본문, 주석/묵상 산문, 찬송가 등이 포함된 전체 텍스트 붙여넣기를 지원합니다. 시스템이 자동으로 구조화된 정보를 파싱합니다.',
   'qtAdmin.targetDate': '대상 날짜',
   'qtAdmin.targetDateHint': '채울 날짜를 선택하면 텍스트에서 인식된 날짜를 덮어씁니다',
+
+  // Fellowship (성도 교제)
+  'fellowship.title': '성도 교제',
+  'fellowship.friends': '친구',
+  'fellowship.rooms': '그룹',
+  'fellowship.addFriend': '친구 추가',
+  'fellowship.createRoom': '그룹 만들기',
+  'fellowship.requests': '친구 요청',
+  'fellowship.search': '검색',
+  'fellowship.searchPlaceholder': '사용자명 또는 이메일 입력',
+  'fellowship.sendMessage': '전송',
+  'fellowship.messagePlaceholder': '메시지 입력...',
+  'fellowship.accept': '수락',
+  'fellowship.reject': '거절',
+  'fellowship.noFriends': '아직 친구가 없습니다',
+  'fellowship.noRooms': '아직 그룹이 없습니다',
+  'fellowship.noMessages': '대화를 시작하세요',
+  'fellowship.leaveRoom': '그룹 나가기',
+  'fellowship.members': '멤버',
+  'fellowship.online': '온라인',
+  'fellowship.connected': '연결됨',
+  'fellowship.connecting': '연결 중',
+  'fellowship.requestSent': '요청 전송됨',
+  'fellowship.alreadyFriend': '이미 친구입니다',
+  'fellowship.userNotFound': '사용자를 찾을 수 없습니다',
+  'fellowship.you': '나',
+  'fellowship.today': '오늘',
+  'fellowship.yesterday': '어제',
+  'fellowship.memberCount': '명',
+  'fellowship.roomNamePlaceholder': '그룹 이름 입력',
+  'fellowship.selectFriends': '친구 선택',
+  'fellowship.create': '만들기',
+  'fellowship.cancel': '취소',
+  'fellowship.deleteFriend': '친구 삭제',
+  'fellowship.confirmDeleteFriend': '이 친구를 삭제하시겠습니까?',
+  'fellowship.confirmLeaveRoom': '이 그룹에서 나가시겠습니까?',
+  'fellowship.loadMore': '더 보기',
+  'fellowship.noMoreMessages': '더 이상 메시지가 없습니다',
 };
