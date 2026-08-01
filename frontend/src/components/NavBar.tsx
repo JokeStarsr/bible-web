@@ -185,13 +185,6 @@ export default function NavBar() {
 {t('nav.messages')}
               </a>
               <a
-                href="/fellowship"
-                className="block text-bible-dark hover:text-bible-gold"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t('nav.fellowship')}
-              </a>
-              <a
                 href="/profile"
                 className="block text-bible-dark hover:text-bible-gold"
                 onClick={() => setMobileMenuOpen(false)}
