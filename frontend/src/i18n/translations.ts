@@ -27,6 +27,7 @@ export interface Translations {
   'login.fail': string;
   'login.noAccount': string;
   'login.registerNow': string;
+  'login.forgotPassword': string;
 
   // ========== Register ==========
   'register.title': string;
@@ -45,6 +46,25 @@ export interface Translations {
   'register.registerFail': string;
   'register.hasAccount': string;
   'register.loginNow': string;
+
+  // ========== Forgot Password ==========
+  'forgot.title': string;
+  'forgot.subtitle': string;
+  'forgot.email': string;
+  'forgot.getCode': string;
+  'forgot.codeSent': string;
+  'forgot.verificationCode': string;
+  'forgot.newPassword': string;
+  'forgot.confirmPassword': string;
+  'forgot.submit': string;
+  'forgot.submitting': string;
+  'forgot.codeAutoFilled': string;
+  'forgot.codeSentMsg': string;
+  'forgot.sendCodeFail': string;
+  'forgot.resetFail': string;
+  'forgot.resetSuccess': string;
+  'forgot.backToLogin': string;
+  'forgot.passwordRule': string;
 
   // ========== Homepage ==========
   'home.heroTitle': string;
@@ -599,6 +619,7 @@ export const zh: Translations = {
   'login.fail': '登录失败',
   'login.noAccount': '还没有账号？',
   'login.registerNow': '立即注册',
+  'login.forgotPassword': '忘记密码？',
 
   // Register
   'register.title': '注册',
@@ -617,6 +638,25 @@ export const zh: Translations = {
   'register.registerFail': '注册失败',
   'register.hasAccount': '已有账号？',
   'register.loginNow': '立即登录',
+
+  // Forgot Password
+  'forgot.title': '找回密码',
+  'forgot.subtitle': '输入注册邮箱获取验证码，设置新密码',
+  'forgot.email': '邮箱',
+  'forgot.getCode': '获取验证码',
+  'forgot.codeSent': '已发送',
+  'forgot.verificationCode': '验证码',
+  'forgot.newPassword': '新密码',
+  'forgot.confirmPassword': '确认新密码',
+  'forgot.submit': '重置密码',
+  'forgot.submitting': '重置中...',
+  'forgot.codeAutoFilled': '验证码已自动填入，请查看上方输入框',
+  'forgot.codeSentMsg': '验证码已发送至您的邮箱，请注意查收',
+  'forgot.sendCodeFail': '发送验证码失败',
+  'forgot.resetFail': '重置密码失败',
+  'forgot.resetSuccess': '密码重置成功，请使用新密码登录',
+  'forgot.backToLogin': '返回登录',
+  'forgot.passwordRule': '至少8位，需包含字母和数字',
 
   // Homepage
   'home.heroTitle': '每日领受神的话语',
@@ -1178,6 +1218,7 @@ export const ko: Translations = {
   'login.fail': '로그인 실패',
   'login.noAccount': '계정이 없으신가요?',
   'login.registerNow': '회원가입',
+  'login.forgotPassword': '비밀번호를 잊으셨나요?',
 
   // Register
   'register.title': '회원가입',
@@ -1196,6 +1237,25 @@ export const ko: Translations = {
   'register.registerFail': '회원가입 실패',
   'register.hasAccount': '이미 계정이 있으신가요?',
   'register.loginNow': '로그인',
+
+  // Forgot Password
+  'forgot.title': '비밀번호 찾기',
+  'forgot.subtitle': '가입한 이메일로 인증번호를 받아 새 비밀번호를 설정하세요',
+  'forgot.email': '이메일',
+  'forgot.getCode': '인증번호 받기',
+  'forgot.codeSent': '발송됨',
+  'forgot.verificationCode': '인증번호',
+  'forgot.newPassword': '새 비밀번호',
+  'forgot.confirmPassword': '새 비밀번호 확인',
+  'forgot.submit': '비밀번호 재설정',
+  'forgot.submitting': '재설정 중...',
+  'forgot.codeAutoFilled': '인증번호가 자동 입력되었습니다. 위 입력창을 확인하세요',
+  'forgot.codeSentMsg': '인증번호가 이메일로 발송되었습니다. 확인해 주세요',
+  'forgot.sendCodeFail': '인증번호 발송 실패',
+  'forgot.resetFail': '비밀번호 재설정 실패',
+  'forgot.resetSuccess': '비밀번호가 재설정되었습니다. 새 비밀번호로 로그인하세요',
+  'forgot.backToLogin': '로그인으로',
+  'forgot.passwordRule': '8자리 이상, 영문과 숫자 포함',
 
   // Homepage
   'home.heroTitle': '매일 하나님의 말씀을 받다',
