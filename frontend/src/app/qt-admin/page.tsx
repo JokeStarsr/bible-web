@@ -150,16 +150,24 @@ export default function QtAdminPage() {
 
   const handleTextPreview = async () => {
     if (!rawText.trim()) return;
+    if (!targetDate) {
+      setError(t('qtAdmin.targetDateRequired'));
+      return;
+    }
     setLoading(true);
     setError('');
     setSuccess('');
     setOcrResult(null);
     setSaved(false);
     try {
-      const res = await api.post('/qt/admin/text-preview', { text: rawText, targetDate }, {
-        timeout: 180000,
+      const res = await api.post('/qt/admin/text-format-preview', { text: rawText, targetDate }, {
+        timeout: 60000,
       });
-      setOcrResult(res.data.data);
+      if (!res.data.success) {
+        setError(res.data.message || t('qtAdmin.recognizeFail'));
+      } else {
+        setOcrResult(res.data.data);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || t('qtAdmin.recognizeFail'));
     } finally {
@@ -169,16 +177,24 @@ export default function QtAdminPage() {
 
   const handleTextImport = async () => {
     if (!rawText.trim()) return;
+    if (!targetDate) {
+      setError(t('qtAdmin.targetDateRequired'));
+      return;
+    }
     setLoading(true);
     setError('');
     setSuccess('');
     setOcrResult(null);
     try {
-      const res = await api.post('/qt/admin/text-import', { text: rawText, targetDate }, {
-        timeout: 180000,
+      const res = await api.post('/qt/admin/text-format-import', { text: rawText, targetDate }, {
+        timeout: 60000,
       });
-      setSuccess(res.data.message || t('qtAdmin.importSuccess'));
-      setSaved(true);
+      if (!res.data.success) {
+        setError(res.data.message || t('qtAdmin.importFail'));
+      } else {
+        setSuccess(res.data.message || t('qtAdmin.importSuccess'));
+        setSaved(true);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || t('qtAdmin.importFail'));
     } finally {
@@ -339,22 +355,23 @@ export default function QtAdminPage() {
       {/* ==================== 文本粘贴区域 ==================== */}
       {activeTab === 'text' && (
         <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('qtAdmin.textUploadTitle')}</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            {t('qtAdmin.textUploadHint')}
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('qtAdmin.textUploadTitle')}</h2>
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 leading-relaxed">
+            {t('qtAdmin.textFormatHint')}
           </p>
 
           <div className="space-y-4">
-            {/* 目标日期选择器 */}
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-amber-700 shrink-0">
+            {/* 目标日期选择器（必填） */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="text-sm font-semibold text-amber-700 shrink-0 flex items-center gap-1">
                 {t('qtAdmin.targetDate')}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="px-3 py-2 border border-amber-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 bg-white"
+                className="px-3 py-2 border-2 border-amber-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-500 bg-white font-medium"
               />
               <span className="text-xs text-gray-400">{t('qtAdmin.targetDateHint')}</span>
             </div>

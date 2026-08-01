@@ -542,6 +542,8 @@ export interface Translations {
   'qtAdmin.textPlaceholder': string;
   'qtAdmin.targetDate': string;
   'qtAdmin.targetDateHint': string;
+  'qtAdmin.targetDateRequired': string;
+  'qtAdmin.textFormatHint': string;
 
   // ========== Fellowship (主内通讯) ==========
   'fellowship.title': string;
@@ -1231,6 +1233,8 @@ export const zh: Translations = {
   'qtAdmin.textPlaceholder': '请将灵修文本粘贴到此处...\n\n支持粘贴包含标题、经文出处、经文正文、注释/默想散文、诗歌等内容的完整文本。系统会自动解析结构化信息。',
   'qtAdmin.targetDate': '目标日期',
   'qtAdmin.targetDateHint': '选择要填充的日期，将覆盖文本中识别出的日期',
+  'qtAdmin.targetDateRequired': '请先选择目标日期',
+  'qtAdmin.textFormatHint': '粘贴《每日灵修手册》标准版式文本（礼拜/标题/经文中英对照/今日诗歌/经文解释/今日祷告/默想散文/一节默想），系统将按固定格式自动排版填充到所选日期',
 
   // Fellowship (主内通讯)
   'fellowship.title': '主内通讯',
@@ -1916,6 +1920,8 @@ export const ko: Translations = {
   'qtAdmin.textPlaceholder': '묵상 텍스트를 여기에 붙여넣으세요...\n\n제목, 성경 구절 참조, 성경 본문, 주석/묵상 산문, 찬송가 등이 포함된 전체 텍스트 붙여넣기를 지원합니다. 시스템이 자동으로 구조화된 정보를 파싱합니다.',
   'qtAdmin.targetDate': '대상 날짜',
   'qtAdmin.targetDateHint': '채울 날짜를 선택하면 텍스트에서 인식된 날짜를 덮어씁니다',
+  'qtAdmin.targetDateRequired': '대상 날짜를 먼저 선택하세요',
+  'qtAdmin.textFormatHint': '《매일 묵상》 표준 양식 텍스트(요일/제목/중영문 대조 경문/오늘의 찬양/경문 해설/오늘의 기도/묵상 산문/한 절 묵상)를 붙여넣으면, 선택한 날짜에 고정 서식으로 자동 배치됩니다',
 
   // Fellowship (성도 교제)
   'fellowship.title': '성도 교제',
