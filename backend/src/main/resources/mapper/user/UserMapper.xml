@@ -40,7 +40,16 @@
     </insert>
 
     <update id="update">
-        UPDATE users SET display_name = #{displayName}, avatar_url = #{avatarUrl}, bio = #{bio}, updated_at = NOW() WHERE id = #{id}
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="displayName != null">display_name = #{displayName},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="bio != null">bio = #{bio},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
     </update>
 
     <update id="updateStatus">

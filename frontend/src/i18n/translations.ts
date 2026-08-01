@@ -194,6 +194,24 @@ export interface Translations {
   'profile.bookmarks.loadingVerses': string;
   'profile.bookmarks.loadVersesFail': string;
   'profile.bookmarks.clickToView': string;
+  'profile.account.section': string;
+  'profile.account.username': string;
+  'profile.account.email': string;
+  'profile.account.password': string;
+  'profile.account.displayName': string;
+  'profile.account.bio': string;
+  'profile.account.edit': string;
+  'profile.account.save': string;
+  'profile.account.cancel': string;
+  'profile.account.changePassword': string;
+  'profile.account.oldPassword': string;
+  'profile.account.newPassword': string;
+  'profile.account.confirmPassword': string;
+  'profile.account.saving': string;
+  'profile.account.saveSuccess': string;
+  'profile.account.saveFailed': string;
+  'profile.account.passwordChanged': string;
+  'profile.account.passwordRule': string;
 
   // ========== Messages ==========
   'messages.title': string;
@@ -755,6 +773,24 @@ export const zh: Translations = {
   'profile.bookmarks.loadingVerses': '正在加载经文...',
   'profile.bookmarks.loadVersesFail': '加载经文失败',
   'profile.bookmarks.clickToView': '点击查看整章经文',
+  'profile.account.section': '账户信息',
+  'profile.account.username': '用户名',
+  'profile.account.email': '邮箱',
+  'profile.account.password': '密码',
+  'profile.account.displayName': '昵称',
+  'profile.account.bio': '简介',
+  'profile.account.edit': '修改',
+  'profile.account.save': '保存',
+  'profile.account.cancel': '取消',
+  'profile.account.changePassword': '修改密码',
+  'profile.account.oldPassword': '当前密码',
+  'profile.account.newPassword': '新密码',
+  'profile.account.confirmPassword': '确认新密码',
+  'profile.account.saving': '保存中...',
+  'profile.account.saveSuccess': '保存成功',
+  'profile.account.saveFailed': '保存失败',
+  'profile.account.passwordChanged': '密码修改成功',
+  'profile.account.passwordRule': '至少8位，需包含字母和数字',
 
   // Messages
   'messages.title': '私信',
@@ -1316,6 +1352,24 @@ export const ko: Translations = {
   'profile.bookmarks.loadingVerses': '말씀을 불러오는 중...',
   'profile.bookmarks.loadVersesFail': '말씀을 불러오지 못했습니다',
   'profile.bookmarks.clickToView': '클릭하여 전체 장 말씀 보기',
+  'profile.account.section': '계정 정보',
+  'profile.account.username': '사용자명',
+  'profile.account.email': '이메일',
+  'profile.account.password': '비밀번호',
+  'profile.account.displayName': '닉네임',
+  'profile.account.bio': '소개',
+  'profile.account.edit': '수정',
+  'profile.account.save': '저장',
+  'profile.account.cancel': '취소',
+  'profile.account.changePassword': '비밀번호 변경',
+  'profile.account.oldPassword': '현재 비밀번호',
+  'profile.account.newPassword': '새 비밀번호',
+  'profile.account.confirmPassword': '새 비밀번호 확인',
+  'profile.account.saving': '저장 중...',
+  'profile.account.saveSuccess': '저장되었습니다',
+  'profile.account.saveFailed': '저장 실패',
+  'profile.account.passwordChanged': '비밀번호가 변경되었습니다',
+  'profile.account.passwordRule': '8자리 이상, 영문과 숫자 포함',
 
   // Messages
   'messages.title': '메시지',

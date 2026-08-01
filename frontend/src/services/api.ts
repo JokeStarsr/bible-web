@@ -180,3 +180,25 @@ export const messageApi = {
 
 export default api;
 export { API_BASE };
+
+// ==================== 用户中心 API ====================
+export const userApi = {
+  /** 获取当前用户信息 */
+  getProfile: () => api.get('/users/me'),
+
+  /** 更新用户信息（用户名/邮箱/昵称/简介/头像） */
+  updateProfile: (data: {
+    username?: string;
+    email?: string;
+    displayName?: string;
+    bio?: string;
+    avatarUrl?: string;
+  }) => api.patch('/users/me', data),
+
+  /** 修改密码 */
+  changePassword: (data: {
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => api.post('/auth/change-password', data),
+};

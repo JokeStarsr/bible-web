@@ -32,6 +32,35 @@ public class UserService {
             throw new BusinessException("NOT_FOUND", "用户不存在");
         }
 
+        // 用户名修改：校验格式 + 唯一性
+        if (req.getUsername() != null && !req.getUsername().equals(user.getUsername())) {
+            String username = req.getUsername().trim();
+            if (username.length() < 3 || username.length() > 32) {
+                throw new BusinessException("VALIDATION_ERROR", "用户名长度3-32个字符");
+            }
+            if (!username.matches("^[A-Za-z0-9_]+$")) {
+                throw new BusinessException("VALIDATION_ERROR", "用户名只能包含字母、数字和下划线");
+            }
+            User existing = userMapper.findByUsername(username);
+            if (existing != null && !existing.getId().equals(userId)) {
+                throw new BusinessException("USERNAME_ALREADY_EXISTS", "用户名已存在");
+            }
+            user.setUsername(username);
+        }
+
+        // 邮箱修改：校验格式 + 唯一性
+        if (req.getEmail() != null && !req.getEmail().equals(user.getEmail())) {
+            String email = req.getEmail().trim();
+            if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+                throw new BusinessException("VALIDATION_ERROR", "邮箱格式不正确");
+            }
+            User existing = userMapper.findByEmail(email);
+            if (existing != null && !existing.getId().equals(userId)) {
+                throw new BusinessException("EMAIL_ALREADY_EXISTS", "邮箱已注册");
+            }
+            user.setEmail(email);
+        }
+
         if (req.getDisplayName() != null) {
             user.setDisplayName(req.getDisplayName());
         }

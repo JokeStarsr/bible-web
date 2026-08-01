@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { reflectionApi, annotationApi, bookmarkApi, scriptureApi } from '@/services/api';
+import { reflectionApi, annotationApi, bookmarkApi, scriptureApi, userApi } from '@/services/api';
 import { useI18n } from '@/i18n/I18nContext';
 import { localizeScriptureReference, resolveDisplayBookName } from '@/utils/bibleBookNames';
 
@@ -62,6 +62,25 @@ export default function ProfilePage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('reflections');
 
+  // 账户信息
+  const [profile, setProfile] = useState<{
+    username: string;
+    email: string;
+    displayName: string;
+    bio: string;
+    avatarUrl?: string;
+  } | null>(null);
+  const [editingAccount, setEditingAccount] = useState(false);
+  const [editForm, setEditForm] = useState({ username: '', email: '', displayName: '', bio: '' });
+  const [savingAccount, setSavingAccount] = useState(false);
+  const [accountMsg, setAccountMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // 修改密码弹窗
+  const [showPwdModal, setShowPwdModal] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [savingPwd, setSavingPwd] = useState(false);
+  const [pwdMsg, setPwdMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   // 响应式分页：手机端 5 条/页，PC 端 10 条/页
   const [pageSize, setPageSize] = useState(10);
   useEffect(() => {
@@ -110,9 +129,119 @@ export default function ProfilePage() {
     } else {
       setCheckingAuth(false);
       fetchReflections(1, pageSize);
+      fetchProfile();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 加载用户信息
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await userApi.getProfile();
+      const d = res.data.data;
+      setProfile({
+        username: d.username || '',
+        email: d.email || '',
+        displayName: d.displayName || '',
+        bio: d.bio || '',
+        avatarUrl: d.avatarUrl,
+      });
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // 进入编辑模式
+  const startEdit = () => {
+    if (!profile) return;
+    setEditForm({
+      username: profile.username,
+      email: profile.email,
+      displayName: profile.displayName,
+      bio: profile.bio,
+    });
+    setAccountMsg(null);
+    setEditingAccount(true);
+  };
+
+  // 保存账户信息
+  const handleSaveAccount = async () => {
+    setSavingAccount(true);
+    setAccountMsg(null);
+    try {
+      const payload: Record<string, string> = {};
+      if (editForm.username !== profile?.username) payload.username = editForm.username.trim();
+      if (editForm.email !== profile?.email) payload.email = editForm.email.trim();
+      if (editForm.displayName !== profile?.displayName) payload.displayName = editForm.displayName.trim();
+      if (editForm.bio !== profile?.bio) payload.bio = editForm.bio.trim();
+      if (Object.keys(payload).length === 0) {
+        setEditingAccount(false);
+        return;
+      }
+      const res = await userApi.updateProfile(payload);
+      const d = res.data.data;
+      setProfile({
+        username: d.username || '',
+        email: d.email || '',
+        displayName: d.displayName || '',
+        bio: d.bio || '',
+        avatarUrl: d.avatarUrl,
+      });
+      // 同步更新 localStorage userInfo（NavBar 显示用）
+      try {
+        const info = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        info.username = d.username;
+        info.displayName = d.displayName;
+        info.email = d.email;
+        localStorage.setItem('userInfo', JSON.stringify(info));
+      } catch {
+        /* ignore */
+      }
+      setAccountMsg({ type: 'success', text: t('profile.account.saveSuccess') });
+      setEditingAccount(false);
+    } catch (err: any) {
+      setAccountMsg({
+        type: 'error',
+        text: err.response?.data?.message || t('profile.account.saveFailed'),
+      });
+    } finally {
+      setSavingAccount(false);
+    }
+  };
+
+  // 修改密码
+  const handleChangePassword = async () => {
+    setPwdMsg(null);
+    if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+      setPwdMsg({ type: 'error', text: lang === 'ko' ? '비밀번호가 일치하지 않습니다' : '两次密码不一致' });
+      return;
+    }
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pwdForm.newPassword)) {
+      setPwdMsg({ type: 'error', text: t('profile.account.passwordRule') });
+      return;
+    }
+    setSavingPwd(true);
+    try {
+      await userApi.changePassword({
+        oldPassword: pwdForm.oldPassword,
+        newPassword: pwdForm.newPassword,
+        confirmPassword: pwdForm.confirmPassword,
+      });
+      setPwdMsg({ type: 'success', text: t('profile.account.passwordChanged') });
+      setPwdForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => {
+        setShowPwdModal(false);
+        setPwdMsg(null);
+      }, 1500);
+    } catch (err: any) {
+      setPwdMsg({
+        type: 'error',
+        text: err.response?.data?.message || t('profile.account.saveFailed'),
+      });
+    } finally {
+      setSavingPwd(false);
+    }
+  };
 
   // 页码大小变化时重新加载当前 tab 的第一页
   useEffect(() => {
@@ -312,6 +441,109 @@ export default function ProfilePage() {
       <div className="text-center py-6">
         <h1 className="text-3xl font-bold text-bible-dark mb-3">{t('profile.title')}</h1>
         <p className="text-bible-muted">{t('profile.subtitle')}</p>
+      </div>
+
+      {/* ==================== 账户信息 ==================== */}
+      <div className="scripture-card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-bible-dark">{t('profile.account.section')}</h2>
+          {!editingAccount && (
+            <button
+              onClick={startEdit}
+              className="text-sm text-bible-gold hover:text-amber-700 transition-colors"
+            >
+              {t('profile.account.edit')}
+            </button>
+          )}
+        </div>
+
+        {accountMsg && (
+          <div className={`mb-3 text-sm rounded-lg px-3 py-2 ${
+            accountMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+          }`}>
+            {accountMsg.text}
+          </div>
+        )}
+
+        {editingAccount ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs text-bible-muted mb-1">{t('profile.account.username')}</label>
+              <input
+                type="text"
+                value={editForm.username}
+                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-bible-warm rounded-lg focus:outline-none focus:border-bible-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-bible-muted mb-1">{t('profile.account.email')}</label>
+              <input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-bible-warm rounded-lg focus:outline-none focus:border-bible-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-bible-muted mb-1">{t('profile.account.displayName')}</label>
+              <input
+                type="text"
+                value={editForm.displayName}
+                onChange={(e) => setEditForm({ ...editForm, displayName: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-bible-warm rounded-lg focus:outline-none focus:border-bible-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-bible-muted mb-1">{t('profile.account.bio')}</label>
+              <textarea
+                value={editForm.bio}
+                onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                rows={2}
+                className="w-full px-3 py-2 text-sm border border-bible-warm rounded-lg focus:outline-none focus:border-bible-gold resize-none"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleSaveAccount}
+                disabled={savingAccount}
+                className="px-4 py-2 text-sm font-medium text-white bg-bible-gold rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors"
+              >
+                {savingAccount ? t('profile.account.saving') : t('profile.account.save')}
+              </button>
+              <button
+                onClick={() => { setEditingAccount(false); setAccountMsg(null); }}
+                className="px-4 py-2 text-sm font-medium text-bible-muted bg-bible-warm/30 rounded-lg hover:bg-bible-warm/50 transition-colors"
+              >
+                {t('profile.account.cancel')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-bible-muted">{t('profile.account.username')}</span>
+              <span className="text-bible-dark font-medium">{profile?.username || '-'}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-bible-muted">{t('profile.account.email')}</span>
+              <span className="text-bible-dark font-medium break-all text-right">{profile?.email || '-'}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-bible-muted">{t('profile.account.displayName')}</span>
+              <span className="text-bible-dark font-medium">{profile?.displayName || '-'}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-bible-muted">{t('profile.account.password')}</span>
+              <button
+                onClick={() => { setShowPwdModal(true); setPwdMsg(null); setPwdForm({ oldPassword: '', newPassword: '', confirmPassword: '' }); }}
+                className="text-bible-gold hover:text-amber-700 transition-colors"
+              >
+                {t('profile.account.changePassword')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tab 切换 */}
@@ -587,6 +819,78 @@ export default function ProfilePage() {
             />
           )}
         </>
+      )}
+
+      {/* ==================== 修改密码弹窗 ==================== */}
+      {showPwdModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() => !savingPwd && setShowPwdModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-bible-dark mb-4">{t('profile.account.changePassword')}</h3>
+
+            {pwdMsg && (
+              <div className={`mb-3 text-sm rounded-lg px-3 py-2 ${
+                pwdMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+              }`}>
+                {pwdMsg.text}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-bible-muted mb-1">{t('profile.account.oldPassword')}</label>
+                <input
+                  type="password"
+                  value={pwdForm.oldPassword}
+                  onChange={(e) => setPwdForm({ ...pwdForm, oldPassword: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-bible-warm rounded-lg focus:outline-none focus:border-bible-gold"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-bible-muted mb-1">{t('profile.account.newPassword')}</label>
+                <input
+                  type="password"
+                  value={pwdForm.newPassword}
+                  onChange={(e) => setPwdForm({ ...pwdForm, newPassword: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-bible-warm rounded-lg focus:outline-none focus:border-bible-gold"
+                />
+                <p className="text-xs text-bible-muted mt-1">{t('profile.account.passwordRule')}</p>
+              </div>
+              <div>
+                <label className="block text-xs text-bible-muted mb-1">{t('profile.account.confirmPassword')}</label>
+                <input
+                  type="password"
+                  value={pwdForm.confirmPassword}
+                  onChange={(e) => setPwdForm({ ...pwdForm, confirmPassword: e.target.value })}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !savingPwd) handleChangePassword(); }}
+                  className="w-full px-3 py-2 text-sm border border-bible-warm rounded-lg focus:outline-none focus:border-bible-gold"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={handleChangePassword}
+                disabled={savingPwd}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-bible-gold rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors"
+              >
+                {savingPwd ? t('profile.account.saving') : t('profile.account.save')}
+              </button>
+              <button
+                onClick={() => { setShowPwdModal(false); setPwdMsg(null); }}
+                disabled={savingPwd}
+                className="flex-1 px-4 py-2 text-sm font-medium text-bible-muted bg-bible-warm/30 rounded-lg hover:bg-bible-warm/50 disabled:opacity-50 transition-colors"
+              >
+                {t('profile.account.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
