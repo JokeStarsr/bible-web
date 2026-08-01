@@ -334,3 +334,81 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 );
 CREATE INDEX IF NOT EXISTS idx_msg_room_created ON chat_messages(room_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_msg_sender ON chat_messages(sender_id);
+
+-- ==================== 主内佳偶 (courtship) ====================
+-- 交友资料表（每个用户一份，photos 为逗号分隔字符串）
+CREATE TABLE IF NOT EXISTS courtship_profiles (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    nickname VARCHAR(50) NOT NULL,
+    gender VARCHAR(10) NOT NULL,
+    birth_date DATE,
+    region VARCHAR(100),
+    occupation VARCHAR(100),
+    bio TEXT,
+    belief_years INT,
+    church_name VARCHAR(150),
+    ministry_role VARCHAR(100),
+    seeking_gender VARCHAR(10),
+    seeking_age_min INT,
+    seeking_age_max INT,
+    seeking_region VARCHAR(100),
+    photos VARCHAR(2000),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    reject_reason VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_courtship_profile_status ON courtship_profiles(status);
+CREATE INDEX IF NOT EXISTS idx_courtship_profile_gender_region ON courtship_profiles(gender, region);
+
+-- 心动意向表
+CREATE TABLE IF NOT EXISTS courtship_likes (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    from_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    to_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message VARCHAR(300),
+    matched BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_courtship_like_from ON courtship_likes(from_user_id);
+CREATE INDEX IF NOT EXISTS idx_courtship_like_to ON courtship_likes(to_user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_courtship_like_pair ON courtship_likes(from_user_id, to_user_id);
+
+-- 匹配关系表
+CREATE TABLE IF NOT EXISTS courtship_matches (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    user_a_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_b_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_courtship_match_a ON courtship_matches(user_a_id);
+CREATE INDEX IF NOT EXISTS idx_courtship_match_b ON courtship_matches(user_b_id);
+
+-- 见证分享表
+CREATE TABLE IF NOT EXISTS courtship_witnesses (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(150) NOT NULL,
+    content TEXT NOT NULL,
+    photo_url TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    reject_reason VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_courtship_witness_status ON courtship_witnesses(status, created_at DESC);
+
+-- 举报表
+CREATE TABLE IF NOT EXISTS courtship_reports (
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
+    reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reported_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reason VARCHAR(20) NOT NULL,
+    detail VARCHAR(500),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_courtship_report_status ON courtship_reports(status);

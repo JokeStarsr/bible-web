@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.courtship.mapper.CourtshipProfileMapper">
+
+    <resultMap id="ProfileMap" type="com.bible.module.courtship.entity.CourtshipProfile">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="gender" property="gender"/>
+        <result column="birth_date" property="birthDate"/>
+        <result column="region" property="region"/>
+        <result column="occupation" property="occupation"/>
+        <result column="bio" property="bio"/>
+        <result column="belief_years" property="beliefYears"/>
+        <result column="church_name" property="churchName"/>
+        <result column="ministry_role" property="ministryRole"/>
+        <result column="seeking_gender" property="seekingGender"/>
+        <result column="seeking_age_min" property="seekingAgeMin"/>
+        <result column="seeking_age_max" property="seekingAgeMax"/>
+        <result column="seeking_region" property="seekingRegion"/>
+        <result column="photos" property="photos"/>
+        <result column="status" property="status"/>
+        <result column="reject_reason" property="rejectReason"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="ProfileResponseMap" type="com.bible.module.courtship.dto.ProfileResponse">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="username" property="username"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="gender" property="gender"/>
+        <result column="birth_date" property="birthDate"/>
+        <result column="region" property="region"/>
+        <result column="occupation" property="occupation"/>
+        <result column="bio" property="bio"/>
+        <result column="belief_years" property="beliefYears"/>
+        <result column="church_name" property="churchName"/>
+        <result column="ministry_role" property="ministryRole"/>
+        <result column="seeking_gender" property="seekingGender"/>
+        <result column="seeking_age_min" property="seekingAgeMin"/>
+        <result column="seeking_age_max" property="seekingAgeMax"/>
+        <result column="seeking_region" property="seekingRegion"/>
+        <result column="photos" property="photos"/>
+        <result column="status" property="status"/>
+        <result column="reject_reason" property="rejectReason"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="liked_by_me" property="likedByMe"/>
+    </resultMap>
+
+    <!-- 资料基础列 + JOIN users（不含 liked_by_me，由各查询自行拼接以使用正确的当前用户参数） -->
+    <sql id="profileUserColumns">
+        p.id, p.user_id, p.nickname, u.username, u.avatar_url,
+        p.gender, p.birth_date, p.region, p.occupation, p.bio,
+        p.belief_years, p.church_name, p.ministry_role,
+        p.seeking_gender, p.seeking_age_min, p.seeking_age_max, p.seeking_region,
+        p.photos,
+        p.status, p.reject_reason, p.created_at, p.updated_at
+    </sql>
+
+    <insert id="insert">
+        INSERT INTO courtship_profiles(id, user_id, nickname, gender, birth_date, region, occupation, bio,
+            belief_years, church_name, ministry_role, seeking_gender, seeking_age_min, seeking_age_max,
+            seeking_region, photos, status)
+        VALUES(#{id}, #{userId}, #{nickname}, #{gender}, #{birthDate}, #{region}, #{occupation}, #{bio},
+            #{beliefYears}, #{churchName}, #{ministryRole}, #{seekingGender}, #{seekingAgeMin}, #{seekingAgeMax},
+            #{seekingRegion}, #{photos}, #{status})
+    </insert>
+
+    <!-- 更新资料（按 user_id，不修改 status，避免改资料后被重新审核） -->
+    <update id="update">
+        UPDATE courtship_profiles SET
+            nickname = #{nickname},
+            gender = #{gender},
+            birth_date = #{birthDate},
+            region = #{region},
+            occupation = #{occupation},
+            bio = #{bio},
+            belief_years = #{beliefYears},
+            church_name = #{churchName},
+            ministry_role = #{ministryRole},
+            seeking_gender = #{seekingGender},
+            seeking_age_min = #{seekingAgeMin},
+            seeking_age_max = #{seekingAgeMax},
+            seeking_region = #{seekingRegion},
+            photos = #{photos},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 按用户 id 查询自己的资料（任意状态） -->
+    <select id="findByUserId" resultMap="ProfileMap">
+        SELECT id, user_id, nickname, gender, birth_date, region, occupation, bio,
+               belief_years, church_name, ministry_role, seeking_gender, seeking_age_min,
+               seeking_age_max, seeking_region, photos,
+               status, reject_reason, created_at, updated_at
+        FROM courtship_profiles
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 我的资料响应（任意状态，JOIN users，附带 likedByMe） -->
+    <select id="findResponseByUserId" resultMap="ProfileResponseMap">
+        SELECT
+            <include refid="profileUserColumns"/>,
+            EXISTS(SELECT 1 FROM courtship_likes cl
+                   WHERE cl.from_user_id = #{currentUserId}
+                     AND cl.to_user_id = p.user_id) AS liked_by_me
+        FROM courtship_profiles p
+        LEFT JOIN users u ON u.id = p.user_id
+        WHERE p.user_id = #{userId}
+    </select>
+
+    <!-- 查看指定用户资料（仅 APPROVED，附带 likedByMe） -->
+    <select id="findApprovedResponseByUserId" resultMap="ProfileResponseMap">
+        SELECT
+            <include refid="profileUserColumns"/>,
+            EXISTS(SELECT 1 FROM courtship_likes cl
+                   WHERE cl.from_user_id = #{currentUserId}
+                     AND cl.to_user_id = p.user_id) AS liked_by_me
+        FROM courtship_profiles p
+        LEFT JOIN users u ON u.id = p.user_id
+        WHERE p.user_id = #{targetUserId} AND p.status = 'APPROVED'
+    </select>
+
+    <!-- 浏览资料列表（status=APPROVED 且排除自己，分页，按 updated_at DESC） -->
+    <select id="findApprovedProfiles" resultMap="ProfileResponseMap">
+        SELECT
+            <include refid="profileUserColumns"/>,
+            EXISTS(SELECT 1 FROM courtship_likes cl
+                   WHERE cl.from_user_id = #{userId}
+                     AND cl.to_user_id = p.user_id) AS liked_by_me
+        FROM courtship_profiles p
+        LEFT JOIN users u ON u.id = p.user_id
+        WHERE p.status = 'APPROVED' AND p.user_id != #{userId}
+        <if test="gender != null and gender != ''">AND p.gender = #{gender}</if>
+        <if test="region != null and region != ''">AND p.region = #{region}</if>
+        ORDER BY p.updated_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 浏览资料列表总数 -->
+    <select id="countApprovedProfiles" resultType="int">
+        SELECT COUNT(*) FROM courtship_profiles p
+        WHERE p.status = 'APPROVED' AND p.user_id != #{userId}
+        <if test="gender != null and gender != ''">AND p.gender = #{gender}</if>
+        <if test="region != null and region != ''">AND p.region = #{region}</if>
+    </select>
+
+</mapper>

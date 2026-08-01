@@ -366,6 +366,25 @@ public class ChatService {
         return room;
     }
 
+    /**
+     * 交友匹配成功时调用：确保两人互为好友（ACCEPTED），并保证存在单聊房间。
+     * 若已有好友记录则更新为 ACCEPTED；否则创建一条 ACCEPTED 记录。
+     */
+    @Transactional
+    public void ensureFriendshipForMatch(UUID userId1, UUID userId2) {
+        Friendship existing = friendshipMapper.findExisting(userId1, userId2);
+        if (existing != null) {
+            if (!STATUS_ACCEPTED.equals(existing.getStatus())) {
+                friendshipMapper.updateStatus(existing.getId(), STATUS_ACCEPTED);
+            }
+        } else {
+            Friendship f = new Friendship(UUID.randomUUID(), userId1, userId2, STATUS_ACCEPTED,
+                    null, null, null);
+            friendshipMapper.insert(f);
+        }
+        getOrCreateDirectRoom(userId1, userId2);
+    }
+
     /** 校验当前用户是房间成员 */
     private void assertRoomMember(UUID roomId, UUID userId) {
         ChatRoomMember member = chatRoomMemberMapper.findByRoomAndUser(roomId, userId);

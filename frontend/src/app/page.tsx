@@ -322,7 +322,7 @@ export default function HomePage() {
       </div>
 
       {/* 功能入口卡片 */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         <a
           href="/daily-thought"
           className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 hover:bg-amber-100 transition-colors"
@@ -395,6 +395,20 @@ export default function HomePage() {
           <div>
             <p className="font-semibold text-sm">{t('home.cardFellowship')}</p>
             <p className="text-xs text-violet-700/70">{t('home.cardFellowshipDesc')}</p>
+          </div>
+        </a>
+        <a
+          href="/courtship"
+          className="flex items-center gap-3 p-4 rounded-xl bg-pink-50 border border-pink-100 text-pink-800 hover:bg-pink-100 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-pink-200 flex items-center justify-center text-pink-700">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-sm">{t('home.cardCourtship')}</p>
+            <p className="text-xs text-pink-700/70">{t('home.cardCourtshipDesc')}</p>
           </div>
         </a>
       </div>

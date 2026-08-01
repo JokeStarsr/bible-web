@@ -12,6 +12,7 @@ export interface Translations {
   'nav.user': string;
   'nav.qtAdmin': string;
   'nav.fellowship': string;
+  'nav.courtship': string;
 
   // ========== Layout ==========
   'layout.banner': string;
@@ -79,6 +80,8 @@ export interface Translations {
   'home.cardContactDesc': string;
   'home.cardFellowship': string;
   'home.cardFellowshipDesc': string;
+  'home.cardCourtship': string;
+  'home.cardCourtshipDesc': string;
   'home.checkingAuth': string;
   'home.generateFail': string;
   'home.generatingScripture': string;
@@ -590,6 +593,93 @@ export interface Translations {
   'fellowship.uploadFailed': string;
   'fellowship.sendImageFailed': string;
   'fellowship.sendVoiceFailed': string;
+
+  // ========== Courtship (主内佳偶) ==========
+  'courtship.title': string;
+  'courtship.subtitle': string;
+  'courtship.browse': string;
+  'courtship.myProfile': string;
+  'courtship.myLikes': string;
+  'courtship.myMatches': string;
+  'courtship.witness': string;
+  'courtship.filter': string;
+  'courtship.allGender': string;
+  'courtship.male': string;
+  'courtship.female': string;
+  'courtship.regionPlaceholder': string;
+  'courtship.search': string;
+  'courtship.noProfiles': string;
+  'courtship.noMoreProfiles': string;
+  'courtship.loadMore': string;
+  'courtship.age': string;
+  'courtship.yearsOld': string;
+  'courtship.beliefYears': string;
+  'courtship.church': string;
+  'courtship.ministry': string;
+  'courtship.occupation': string;
+  'courtship.bio': string;
+  'courtship.like': string;
+  'courtship.liked': string;
+  'courtship.likeMessage': string;
+  'courtship.likeMessagePlaceholder': string;
+  'courtship.likeSent': string;
+  'courtship.matched': string;
+  'courtship.matchSuccess': string;
+  'courtship.matchSuccessDesc': string;
+  'courtship.startChat': string;
+  'courtship.dissolveMatch': string;
+  'courtship.confirmDissolve': string;
+  'courtship.noMatches': string;
+  'courtship.noLikes': string;
+  // 资料编辑
+  'courtship.editProfile': string;
+  'courtship.nickname': string;
+  'courtship.gender': string;
+  'courtship.birthDate': string;
+  'courtship.region': string;
+  'courtship.seekingGender': string;
+  'courtship.seekingAgeMin': string;
+  'courtship.seekingAgeMax': string;
+  'courtship.seekingRegion': string;
+  'courtship.photos': string;
+  'courtship.uploadPhoto': string;
+  'courtship.photoLimit': string;
+  'courtship.save': string;
+  'courtship.saving': string;
+  'courtship.saved': string;
+  'courtship.statusPending': string;
+  'courtship.statusApproved': string;
+  'courtship.statusRejected': string;
+  'courtship.statusHidden': string;
+  'courtship.rejectReason': string;
+  'courtship.profilePendingTip': string;
+  'courtship.profileRejectedTip': string;
+  // 见证
+  'courtship.witnessTitle': string;
+  'courtship.witnessContent': string;
+  'courtship.submitWitness': string;
+  'courtship.witnessSubmitted': string;
+  'courtship.noWitnesses': string;
+  'courtship.myWitnesses': string;
+  'courtship.witnessPending': string;
+  // 举报
+  'courtship.report': string;
+  'courtship.reportReason': string;
+  'courtship.reportInappropriate': string;
+  'courtship.reportFake': string;
+  'courtship.reportSpam': string;
+  'courtship.reportOther': string;
+  'courtship.reportDetail': string;
+  'courtship.reportSubmitted': string;
+  // 错误
+  'courtship.profileRequired': string;
+  'courtship.nicknameRequired': string;
+  'courtship.createProfileFirst': string;
+  'courtship.loadFailed': string;
+  'courtship.viewDetails': string;
+  'courtship.collapse': string;
+  'courtship.noMyWitnesses': string;
+  'courtship.witnessApproved': string;
 }
 
 export const zh: Translations = {
@@ -604,6 +694,7 @@ export const zh: Translations = {
   'nav.user': '用户',
   'nav.qtAdmin': 'QT 管理',
   'nav.fellowship': '主内通讯',
+  'nav.courtship': '主内佳偶',
 
   // Layout
   'layout.banner': '亲爱的小羊们，这里的所有话语只提供参考，我们跟神的关系还是取决于各自的祷告和圣灵的感动。',
@@ -671,6 +762,8 @@ export const zh: Translations = {
   'home.cardContactDesc': '寻求牧养帮助',
   'home.cardFellowship': '主内通讯',
   'home.cardFellowshipDesc': '彼此相交祷告',
+  'home.cardCourtship': '主内佳偶',
+  'home.cardCourtshipDesc': '在基督里寻找配偶',
   'home.checkingAuth': '正在确认登录状态...',
   'home.generateFail': '生成失败，请先登录',
   'home.generatingScripture': '正在生成经文...',
@@ -1189,6 +1282,89 @@ export const zh: Translations = {
   'fellowship.uploadFailed': '上传失败',
   'fellowship.sendImageFailed': '发送图片失败',
   'fellowship.sendVoiceFailed': '发送语音失败',
+
+  // Courtship (主内佳偶)
+  'courtship.title': '主内佳偶',
+  'courtship.subtitle': '在基督里寻找你的佳偶',
+  'courtship.browse': '浏览资料',
+  'courtship.myProfile': '我的资料',
+  'courtship.myLikes': '我的心动',
+  'courtship.myMatches': '我的匹配',
+  'courtship.witness': '见证分享',
+  'courtship.filter': '筛选',
+  'courtship.allGender': '全部',
+  'courtship.male': '弟兄',
+  'courtship.female': '姐妹',
+  'courtship.regionPlaceholder': '所在地区',
+  'courtship.search': '搜索',
+  'courtship.noProfiles': '暂无符合条件的资料，换个筛选条件试试',
+  'courtship.noMoreProfiles': '没有更多了',
+  'courtship.loadMore': '加载更多',
+  'courtship.age': '年龄',
+  'courtship.yearsOld': '岁',
+  'courtship.beliefYears': '信主年限',
+  'courtship.church': '聚会教会',
+  'courtship.ministry': '服侍岗位',
+  'courtship.occupation': '职业',
+  'courtship.bio': '自我介绍',
+  'courtship.like': '心动',
+  'courtship.liked': '已心动',
+  'courtship.likeMessage': '附言（可选）',
+  'courtship.likeMessagePlaceholder': '简单介绍一下自己，或一句想说的话…',
+  'courtship.likeSent': '心动已表达',
+  'courtship.matched': '已匹配',
+  'courtship.matchSuccess': '匹配成功！',
+  'courtship.matchSuccessDesc': '你们彼此心动，可以开始聊天了',
+  'courtship.startChat': '开始聊天',
+  'courtship.dissolveMatch': '解除匹配',
+  'courtship.confirmDissolve': '确定解除匹配吗？解除后将无法继续聊天。',
+  'courtship.noMatches': '还没有匹配，去浏览资料表达心动吧',
+  'courtship.noLikes': '还没有心动记录',
+  'courtship.editProfile': '编辑资料',
+  'courtship.nickname': '展示昵称',
+  'courtship.gender': '性别',
+  'courtship.birthDate': '生日',
+  'courtship.region': '所在地区',
+  'courtship.seekingGender': '期望对方',
+  'courtship.seekingAgeMin': '期望年龄下限',
+  'courtship.seekingAgeMax': '期望年龄上限',
+  'courtship.seekingRegion': '期望地区',
+  'courtship.photos': '生活照片',
+  'courtship.uploadPhoto': '上传照片',
+  'courtship.photoLimit': '最多 6 张，建议生活照，避免过度修饰',
+  'courtship.save': '保存资料',
+  'courtship.saving': '保存中…',
+  'courtship.saved': '资料已保存',
+  'courtship.statusPending': '审核中',
+  'courtship.statusApproved': '已通过',
+  'courtship.statusRejected': '未通过',
+  'courtship.statusHidden': '已隐藏',
+  'courtship.rejectReason': '驳回原因',
+  'courtship.profilePendingTip': '资料正在审核中，审核通过后将展示给其他弟兄姐妹',
+  'courtship.profileRejectedTip': '资料未通过审核，请根据原因修改后重新提交',
+  'courtship.witnessTitle': '标题',
+  'courtship.witnessContent': '见证内容',
+  'courtship.submitWitness': '提交见证',
+  'courtship.witnessSubmitted': '见证已提交，等待审核',
+  'courtship.noWitnesses': '还没有见证分享',
+  'courtship.myWitnesses': '我的见证',
+  'courtship.witnessPending': '审核中',
+  'courtship.report': '举报',
+  'courtship.reportReason': '举报原因',
+  'courtship.reportInappropriate': '内容不当',
+  'courtship.reportFake': '虚假信息',
+  'courtship.reportSpam': '广告骚扰',
+  'courtship.reportOther': '其他',
+  'courtship.reportDetail': '详细说明',
+  'courtship.reportSubmitted': '举报已提交',
+  'courtship.profileRequired': '请先完善交友资料',
+  'courtship.nicknameRequired': '请填写展示昵称',
+  'courtship.createProfileFirst': '请先创建交友资料，再进行此操作',
+  'courtship.loadFailed': '加载失败，请稍后重试',
+  'courtship.viewDetails': '查看详情',
+  'courtship.collapse': '收起',
+  'courtship.noMyWitnesses': '你还没有提交过见证',
+  'courtship.witnessApproved': '已通过',
 };
 
 export const ko: Translations = {
@@ -1203,6 +1379,7 @@ export const ko: Translations = {
   'nav.user': '사용자',
   'nav.qtAdmin': 'QT 관리',
   'nav.fellowship': '성도 교제',
+  'nav.courtship': '주내 배우자',
 
   // Layout
   'layout.banner': '사랑하는 어린 양들아, 여기 모든 말씀은 참고용일 뿐이란다. 하나님과의 관계는 각자의 기도와 성령의 감동에 달려 있음을 기억하렴.',
@@ -1270,6 +1447,8 @@ export const ko: Translations = {
   'home.cardContactDesc': '도움 요청하기',
   'home.cardFellowship': '성도 교제',
   'home.cardFellowshipDesc': '서로 교제하며 기도',
+  'home.cardCourtship': '주내 배우자',
+  'home.cardCourtshipDesc': '그리스도 안에서 배우자를 찾아보세요',
   'home.checkingAuth': '로그인 상태 확인 중...',
   'home.generateFail': '생성 실패. 먼저 로그인해 주세요',
   'home.generatingScripture': '말씀을 생성하는 중...',
@@ -1788,4 +1967,87 @@ export const ko: Translations = {
   'fellowship.uploadFailed': '업로드 실패',
   'fellowship.sendImageFailed': '사진 전송 실패',
   'fellowship.sendVoiceFailed': '음성 전송 실패',
+
+  // Courtship (주내 배우자)
+  'courtship.title': '주내 배우자',
+  'courtship.subtitle': '그리스도 안에서 배우자를 찾아보세요',
+  'courtship.browse': '프로필 둘러보기',
+  'courtship.myProfile': '내 프로필',
+  'courtship.myLikes': '내 마음',
+  'courtship.myMatches': '나의 매치',
+  'courtship.witness': '간증 나눔',
+  'courtship.filter': '필터',
+  'courtship.allGender': '전체',
+  'courtship.male': '형제',
+  'courtship.female': '자매',
+  'courtship.regionPlaceholder': '지역',
+  'courtship.search': '검색',
+  'courtship.noProfiles': '조건에 맞는 프로필이 없습니다. 필터를 바꿔보세요',
+  'courtship.noMoreProfiles': '더 이상 없습니다',
+  'courtship.loadMore': '더 보기',
+  'courtship.age': '나이',
+  'courtship.yearsOld': '세',
+  'courtship.beliefYears': '신앙 연수',
+  'courtship.church': '출석 교회',
+  'courtship.ministry': '사역 분야',
+  'courtship.occupation': '직업',
+  'courtship.bio': '자기소개',
+  'courtship.like': '마음 표현',
+  'courtship.liked': '마음 전달됨',
+  'courtship.likeMessage': '메시지(선택)',
+  'courtship.likeMessagePlaceholder': '간단히 자신을 소개하거나 하고 싶은 말을 적어보세요…',
+  'courtship.likeSent': '마음을 전했습니다',
+  'courtship.matched': '매칭됨',
+  'courtship.matchSuccess': '매칭 성공!',
+  'courtship.matchSuccessDesc': '서로 마음을 전했습니다. 대화를 시작할 수 있어요',
+  'courtship.startChat': '대화 시작',
+  'courtship.dissolveMatch': '매칭 해제',
+  'courtship.confirmDissolve': '매칭을 해제하시겠어요? 해제 후에는 대화할 수 없습니다.',
+  'courtship.noMatches': '아직 매칭이 없습니다. 프로필을 둘러보고 마음을 전해보세요',
+  'courtship.noLikes': '아직 마음 표현 기록이 없습니다',
+  'courtship.editProfile': '프로필 편집',
+  'courtship.nickname': '표시 닉네임',
+  'courtship.gender': '성별',
+  'courtship.birthDate': '생년월일',
+  'courtship.region': '지역',
+  'courtship.seekingGender': '원하는 상대',
+  'courtship.seekingAgeMin': '원하는 나이 하한',
+  'courtship.seekingAgeMax': '원하는 나이 상한',
+  'courtship.seekingRegion': '원하는 지역',
+  'courtship.photos': '생활 사진',
+  'courtship.uploadPhoto': '사진 업로드',
+  'courtship.photoLimit': '최대 6장, 일상 사진을 권장하며 과도한 보정은 피해주세요',
+  'courtship.save': '프로필 저장',
+  'courtship.saving': '저장 중…',
+  'courtship.saved': '프로필이 저장되었습니다',
+  'courtship.statusPending': '심사 중',
+  'courtship.statusApproved': '승인됨',
+  'courtship.statusRejected': '반려됨',
+  'courtship.statusHidden': '숨김',
+  'courtship.rejectReason': '반려 사유',
+  'courtship.profilePendingTip': '프로필이 심사 중입니다. 승인되면 다른 형제자매에게 보여집니다',
+  'courtship.profileRejectedTip': '프로필이 반려되었습니다. 사유를 확인 후 다시 제출해주세요',
+  'courtship.witnessTitle': '제목',
+  'courtship.witnessContent': '간증 내용',
+  'courtship.submitWitness': '간증 제출',
+  'courtship.witnessSubmitted': '간증이 제출되었습니다. 심사를 기다려주세요',
+  'courtship.noWitnesses': '아직 간증 나눔이 없습니다',
+  'courtship.myWitnesses': '나의 간증',
+  'courtship.witnessPending': '심사 중',
+  'courtship.report': '신고',
+  'courtship.reportReason': '신고 사유',
+  'courtship.reportInappropriate': '부적절한 내용',
+  'courtship.reportFake': '허위 정보',
+  'courtship.reportSpam': '광고/스팸',
+  'courtship.reportOther': '기타',
+  'courtship.reportDetail': '상세 설명',
+  'courtship.reportSubmitted': '신고가 접수되었습니다',
+  'courtship.profileRequired': '먼저 교제 프로필을 작성해주세요',
+  'courtship.nicknameRequired': '표시 닉네임을 입력해주세요',
+  'courtship.createProfileFirst': '먼저 교제 프로필을 생성한 후 이용해주세요',
+  'courtship.loadFailed': '로딩 실패. 잠시 후 다시 시도해주세요',
+  'courtship.viewDetails': '상세 보기',
+  'courtship.collapse': '접기',
+  'courtship.noMyWitnesses': '아직 제출한 간증이 없습니다',
+  'courtship.witnessApproved': '승인됨',
 };
