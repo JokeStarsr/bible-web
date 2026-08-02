@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.fellowship.mapper.ChatMessageMapper">
+
+    <resultMap id="ChatMessageMap" type="com.bible.module.fellowship.entity.ChatMessage">
+        <id column="id" property="id"/>
+        <result column="room_id" property="roomId"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="content" property="content"/>
+        <result column="type" property="type"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO chat_messages(id, room_id, sender_id, content, type, created_at)
+        VALUES(#{id}, #{roomId}, #{senderId}, #{content}, #{type}, #{createdAt})
+    </insert>
+
+    <resultMap id="ChatMessageResponseMap" type="com.bible.module.fellowship.dto.ChatMessageResponse">
+        <id column="id" property="id"/>
+        <result column="room_id" property="roomId"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="sender_name" property="senderName"/>
+        <result column="sender_avatar_url" property="senderAvatarUrl"/>
+        <result column="content" property="content"/>
+        <result column="type" property="type"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 分页查询房间消息（按 created_at DESC，JOIN users 取发送者信息） -->
+    <select id="findByRoomId" resultMap="ChatMessageResponseMap">
+        SELECT m.id,
+               m.room_id,
+               m.sender_id,
+               COALESCE(NULLIF(u.display_name, ''), u.username) AS sender_name,
+               u.avatar_url AS sender_avatar_url,
+               m.content,
+               m.type,
+               m.created_at
+        FROM chat_messages m
+        LEFT JOIN users u ON u.id = m.sender_id
+        WHERE m.room_id = #{roomId}
+        ORDER BY m.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countByRoomId" resultType="int">
+        SELECT COUNT(*) FROM chat_messages WHERE room_id = #{roomId}
+    </select>
+
+    <!-- 房间最后一条消息 -->
+    <select id="findLastMessageByRoomId" resultMap="ChatMessageMap">
+        SELECT * FROM chat_messages WHERE room_id = #{roomId} ORDER BY created_at DESC LIMIT 1
+    </select>
+
+    <!-- 用户在房间的未读消息数 -->
+    <select id="countUnread" resultType="int">
+        SELECT COUNT(*) FROM chat_messages
+        WHERE room_id = #{roomId}
+          AND created_at > COALESCE(
+                (SELECT last_read_at FROM chat_room_members WHERE room_id = #{roomId} AND user_id = #{userId}),
+                TIMESTAMP '1970-01-01 00:00:00')
+    </select>
+
+</mapper>

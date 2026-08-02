@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.courtship.mapper.CourtshipWitnessMapper">
+
+    <resultMap id="WitnessMap" type="com.bible.module.courtship.entity.CourtshipWitness">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="photo_url" property="photoUrl"/>
+        <result column="status" property="status"/>
+        <result column="reject_reason" property="rejectReason"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="WitnessResponseMap" type="com.bible.module.courtship.dto.WitnessResponse">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="photo_url" property="photoUrl"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO courtship_witnesses(id, user_id, title, content, photo_url, status)
+        VALUES(#{id}, #{userId}, #{title}, #{content}, #{photoUrl}, #{status})
+    </insert>
+
+    <!-- 已审核通过的见证（分页，JOIN users/profiles 取昵称） -->
+    <select id="findApproved" resultMap="WitnessResponseMap">
+        SELECT w.id,
+               w.user_id,
+               COALESCE(p.nickname, u.username) AS nickname,
+               w.title,
+               w.content,
+               w.photo_url,
+               w.status,
+               w.created_at
+        FROM courtship_witnesses w
+        JOIN users u ON u.id = w.user_id
+        LEFT JOIN courtship_profiles p ON p.user_id = w.user_id
+        WHERE w.status = 'APPROVED'
+        ORDER BY w.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countApproved" resultType="int">
+        SELECT COUNT(*) FROM courtship_witnesses WHERE status = 'APPROVED'
+    </select>
+
+    <!-- 我提交的见证（含审核状态） -->
+    <select id="findByUserId" resultMap="WitnessResponseMap">
+        SELECT w.id,
+               w.user_id,
+               COALESCE(p.nickname, u.username) AS nickname,
+               w.title,
+               w.content,
+               w.photo_url,
+               w.status,
+               w.created_at
+        FROM courtship_witnesses w
+        JOIN users u ON u.id = w.user_id
+        LEFT JOIN courtship_profiles p ON p.user_id = w.user_id
+        WHERE w.user_id = #{userId}
+        ORDER BY w.created_at DESC
+    </select>
+
+</mapper>

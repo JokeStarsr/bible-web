@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.messaging.mapper.MessageUnlockMapper">
+
+    <resultMap id="MessageUnlockResultMap" type="com.bible.module.messaging.entity.MessageUnlock">
+        <id column="id" property="id"/>
+        <result column="reflection_id" property="reflectionId"/>
+        <result column="user_a_id" property="userAId"/>
+        <result column="user_b_id" property="userBId"/>
+        <result column="status" property="status"/>
+        <result column="unlocked_at" property="unlockedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="MessageUnlockResultMap">
+        SELECT * FROM message_unlocks WHERE id = #{id}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO message_unlocks(id, reflection_id, user_a_id, user_b_id, status, unlocked_at, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{reflectionId}, #{userAId}, #{userBId}, #{status}, #{unlockedAt}, NOW(), NOW())
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE message_unlocks SET status = #{status}, unlocked_at = #{unlockedAt}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="findByReflectionAndUsers" resultMap="MessageUnlockResultMap">
+        SELECT * FROM message_unlocks
+        WHERE reflection_id = #{reflectionId} AND user_a_id = #{userA} AND user_b_id = #{userB}
+    </select>
+
+</mapper>

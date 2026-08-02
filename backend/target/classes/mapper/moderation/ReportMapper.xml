@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.moderation.mapper.ReportMapper">
+
+    <resultMap id="ReportResultMap" type="com.bible.module.moderation.entity.Report">
+        <id column="id" property="id"/>
+        <result column="reporter_id" property="reporterId"/>
+        <result column="target_type" property="targetType"/>
+        <result column="target_id" property="targetId"/>
+        <result column="reason" property="reason"/>
+        <result column="status" property="status"/>
+        <result column="handled_by" property="handledBy"/>
+        <result column="handled_at" property="handledAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="ReportResultMap">
+        SELECT * FROM reports WHERE id = #{id}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO reports(id, reporter_id, target_type, target_id, reason, status, created_at, updated_at)
+        VALUES(gen_random_uuid(), #{reporterId}, #{targetType}, #{targetId}, #{reason}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE reports
+        SET status = #{status}, handled_by = #{handledBy}, handled_at = NOW(), updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="findAll" resultMap="ReportResultMap">
+        SELECT * FROM reports ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM reports
+    </select>
+
+</mapper>

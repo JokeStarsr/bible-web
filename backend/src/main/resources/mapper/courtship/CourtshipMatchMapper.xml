@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.courtship.mapper.CourtshipMatchMapper">
+
+    <resultMap id="MatchMap" type="com.bible.module.courtship.entity.CourtshipMatch">
+        <id column="id" property="id"/>
+        <result column="user_a_id" property="userAId"/>
+        <result column="user_b_id" property="userBId"/>
+        <result column="room_id" property="roomId"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <resultMap id="MatchResponseMap" type="com.bible.module.courtship.dto.MatchResponse">
+        <id column="id" property="id"/>
+        <result column="other_user_id" property="otherUserId"/>
+        <result column="other_nickname" property="otherNickname"/>
+        <result column="other_avatar_url" property="otherAvatarUrl"/>
+        <result column="room_id" property="roomId"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO courtship_matches(id, user_a_id, user_b_id, room_id, status)
+        VALUES(#{id}, #{userAId}, #{userBId}, #{roomId}, #{status})
+    </insert>
+
+    <select id="findById" resultMap="MatchMap">
+        SELECT id, user_a_id, user_b_id, room_id, status, created_at
+        FROM courtship_matches
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE courtship_matches SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <!-- 我的匹配（status=ACTIVE，JOIN users/profiles 取对方信息） -->
+    <select id="findMyMatches" resultMap="MatchResponseMap">
+        SELECT m.id,
+               m.room_id,
+               m.status,
+               m.created_at,
+               (CASE WHEN m.user_a_id = #{userId} THEN m.user_b_id ELSE m.user_a_id END) AS other_user_id,
+               COALESCE(p.nickname, u.username) AS other_nickname,
+               u.avatar_url AS other_avatar_url
+        FROM courtship_matches m
+        JOIN users u ON u.id = (CASE WHEN m.user_a_id = #{userId} THEN m.user_b_id ELSE m.user_a_id END)
+        LEFT JOIN courtship_profiles p ON p.user_id = u.id
+        WHERE m.status = 'ACTIVE'
+          AND (m.user_a_id = #{userId} OR m.user_b_id = #{userId})
+        ORDER BY m.created_at DESC
+    </select>
+
+</mapper>

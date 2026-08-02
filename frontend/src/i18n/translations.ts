@@ -12,6 +12,60 @@ export interface Translations {
   'nav.user': string;
   'nav.qtAdmin': string;
   'nav.fellowship': string;
+  'nav.courtship': string;
+  'nav.userAdmin': string;
+
+  // ========== User Admin (用户管理) ==========
+  'userAdmin.title': string;
+  'userAdmin.back': string;
+  'userAdmin.checkingAuth': string;
+  'userAdmin.noPermission': string;
+  'userAdmin.noPermissionHint': string;
+  'userAdmin.backHome': string;
+  'userAdmin.subtitle': string;
+  'userAdmin.searchPlaceholder': string;
+  'userAdmin.total': string;
+  'userAdmin.addBtn': string;
+  'userAdmin.refreshBtn': string;
+  'userAdmin.colUsername': string;
+  'userAdmin.colEmail': string;
+  'userAdmin.colDisplayName': string;
+  'userAdmin.colStatus': string;
+  'userAdmin.colLastLogin': string;
+  'userAdmin.colCreatedAt': string;
+  'userAdmin.colActions': string;
+  'userAdmin.statusActive': string;
+  'userAdmin.statusSuspended': string;
+  'userAdmin.statusDisabled': string;
+  'userAdmin.never': string;
+  'userAdmin.noPassword': string;
+  'userAdmin.editBtn': string;
+  'userAdmin.resetPwdBtn': string;
+  'userAdmin.deleteBtn': string;
+  'userAdmin.confirmDelete': string;
+  'userAdmin.cannotDeleteAdmin': string;
+  'userAdmin.loading': string;
+  'userAdmin.loadFail': string;
+  'userAdmin.saveFail': string;
+  'userAdmin.deleteFail': string;
+  'userAdmin.saveSuccess': string;
+  'userAdmin.deleteSuccess': string;
+  'userAdmin.resetSuccess': string;
+  'userAdmin.createTitle': string;
+  'userAdmin.editTitle': string;
+  'userAdmin.resetTitle': string;
+  'userAdmin.fieldUsername': string;
+  'userAdmin.fieldEmail': string;
+  'userAdmin.fieldPassword': string;
+  'userAdmin.fieldDisplayName': string;
+  'userAdmin.fieldStatus': string;
+  'userAdmin.fieldBio': string;
+  'userAdmin.fieldNewPassword': string;
+  'userAdmin.cancelBtn': string;
+  'userAdmin.saveBtn': string;
+  'userAdmin.submitBtn': string;
+  'userAdmin.pwdHint': string;
+  'userAdmin.empty': string;
 
   // ========== Layout ==========
   'layout.banner': string;
@@ -27,6 +81,7 @@ export interface Translations {
   'login.fail': string;
   'login.noAccount': string;
   'login.registerNow': string;
+  'login.forgotPassword': string;
 
   // ========== Register ==========
   'register.title': string;
@@ -46,6 +101,25 @@ export interface Translations {
   'register.hasAccount': string;
   'register.loginNow': string;
 
+  // ========== Forgot Password ==========
+  'forgot.title': string;
+  'forgot.subtitle': string;
+  'forgot.email': string;
+  'forgot.getCode': string;
+  'forgot.codeSent': string;
+  'forgot.verificationCode': string;
+  'forgot.newPassword': string;
+  'forgot.confirmPassword': string;
+  'forgot.submit': string;
+  'forgot.submitting': string;
+  'forgot.codeAutoFilled': string;
+  'forgot.codeSentMsg': string;
+  'forgot.sendCodeFail': string;
+  'forgot.resetFail': string;
+  'forgot.resetSuccess': string;
+  'forgot.backToLogin': string;
+  'forgot.passwordRule': string;
+
   // ========== Homepage ==========
   'home.heroTitle': string;
   'home.heroSubtitle': string;
@@ -59,6 +133,8 @@ export interface Translations {
   'home.cardContactDesc': string;
   'home.cardFellowship': string;
   'home.cardFellowshipDesc': string;
+  'home.cardCourtship': string;
+  'home.cardCourtshipDesc': string;
   'home.checkingAuth': string;
   'home.generateFail': string;
   'home.generatingScripture': string;
@@ -194,6 +270,24 @@ export interface Translations {
   'profile.bookmarks.loadingVerses': string;
   'profile.bookmarks.loadVersesFail': string;
   'profile.bookmarks.clickToView': string;
+  'profile.account.section': string;
+  'profile.account.username': string;
+  'profile.account.email': string;
+  'profile.account.password': string;
+  'profile.account.displayName': string;
+  'profile.account.bio': string;
+  'profile.account.edit': string;
+  'profile.account.save': string;
+  'profile.account.cancel': string;
+  'profile.account.changePassword': string;
+  'profile.account.oldPassword': string;
+  'profile.account.newPassword': string;
+  'profile.account.confirmPassword': string;
+  'profile.account.saving': string;
+  'profile.account.saveSuccess': string;
+  'profile.account.saveFailed': string;
+  'profile.account.passwordChanged': string;
+  'profile.account.passwordRule': string;
 
   // ========== Messages ==========
   'messages.title': string;
@@ -501,6 +595,8 @@ export interface Translations {
   'qtAdmin.textPlaceholder': string;
   'qtAdmin.targetDate': string;
   'qtAdmin.targetDateHint': string;
+  'qtAdmin.targetDateRequired': string;
+  'qtAdmin.textFormatHint': string;
 
   // ========== Fellowship (主内通讯) ==========
   'fellowship.title': string;
@@ -546,12 +642,107 @@ export interface Translations {
   'fellowship.holdToRecord': string;
   'fellowship.clickToRecord': string;
   'fellowship.releaseToSend': string;
+  'fellowship.inviteMembers': string;
+  'fellowship.invite': string;
+  'fellowship.inviteFailed': string;
+  'fellowship.noFriendsToInvite': string;
+  'fellowship.searchUserToInvite': string;
+  'fellowship.searchResults': string;
+  'fellowship.noSearchResults': string;
+  'fellowship.notFriend': string;
   'fellowship.cancelRecord': string;
   'fellowship.imageTooLarge': string;
   'fellowship.voiceTooLarge': string;
   'fellowship.uploadFailed': string;
   'fellowship.sendImageFailed': string;
   'fellowship.sendVoiceFailed': string;
+
+  // ========== Courtship (主内佳偶) ==========
+  'courtship.title': string;
+  'courtship.subtitle': string;
+  'courtship.browse': string;
+  'courtship.myProfile': string;
+  'courtship.myLikes': string;
+  'courtship.myMatches': string;
+  'courtship.witness': string;
+  'courtship.filter': string;
+  'courtship.allGender': string;
+  'courtship.male': string;
+  'courtship.female': string;
+  'courtship.regionPlaceholder': string;
+  'courtship.search': string;
+  'courtship.noProfiles': string;
+  'courtship.noMoreProfiles': string;
+  'courtship.loadMore': string;
+  'courtship.age': string;
+  'courtship.yearsOld': string;
+  'courtship.beliefYears': string;
+  'courtship.church': string;
+  'courtship.ministry': string;
+  'courtship.occupation': string;
+  'courtship.bio': string;
+  'courtship.like': string;
+  'courtship.liked': string;
+  'courtship.likeMessage': string;
+  'courtship.likeMessagePlaceholder': string;
+  'courtship.likeSent': string;
+  'courtship.matched': string;
+  'courtship.matchSuccess': string;
+  'courtship.matchSuccessDesc': string;
+  'courtship.startChat': string;
+  'courtship.dissolveMatch': string;
+  'courtship.confirmDissolve': string;
+  'courtship.noMatches': string;
+  'courtship.noLikes': string;
+  // 资料编辑
+  'courtship.editProfile': string;
+  'courtship.nickname': string;
+  'courtship.gender': string;
+  'courtship.birthDate': string;
+  'courtship.region': string;
+  'courtship.seekingGender': string;
+  'courtship.seekingAgeMin': string;
+  'courtship.seekingAgeMax': string;
+  'courtship.seekingRegion': string;
+  'courtship.photos': string;
+  'courtship.uploadPhoto': string;
+  'courtship.photoLimit': string;
+  'courtship.save': string;
+  'courtship.saving': string;
+  'courtship.saved': string;
+  'courtship.statusPending': string;
+  'courtship.statusApproved': string;
+  'courtship.statusRejected': string;
+  'courtship.statusHidden': string;
+  'courtship.rejectReason': string;
+  'courtship.profilePendingTip': string;
+  'courtship.profileRejectedTip': string;
+  // 见证
+  'courtship.witnessTitle': string;
+  'courtship.witnessContent': string;
+  'courtship.submitWitness': string;
+  'courtship.witnessSubmitted': string;
+  'courtship.noWitnesses': string;
+  'courtship.myWitnesses': string;
+  'courtship.witnessPending': string;
+  // 举报
+  'courtship.report': string;
+  'courtship.reportReason': string;
+  'courtship.reportInappropriate': string;
+  'courtship.reportFake': string;
+  'courtship.reportSpam': string;
+  'courtship.reportOther': string;
+  'courtship.reportDetail': string;
+  'courtship.reportSubmitted': string;
+  // 错误
+  'courtship.profileRequired': string;
+  'courtship.nicknameRequired': string;
+  'courtship.createProfileFirst': string;
+  'courtship.loadFailed': string;
+  'courtship.viewDetails': string;
+  'courtship.collapse': string;
+  'courtship.noMyWitnesses': string;
+  'courtship.witnessApproved': string;
 }
 
 export const zh: Translations = {
@@ -566,6 +757,60 @@ export const zh: Translations = {
   'nav.user': '用户',
   'nav.qtAdmin': 'QT 管理',
   'nav.fellowship': '主内通讯',
+  'nav.courtship': '主内佳偶',
+  'nav.userAdmin': '用户管理',
+
+  // ========== User Admin (用户管理) ==========
+  'userAdmin.title': '用户管理',
+  'userAdmin.back': '返回',
+  'userAdmin.checkingAuth': '正在验证权限...',
+  'userAdmin.noPermission': '无权限访问',
+  'userAdmin.noPermissionHint': '仅管理员可访问此页面',
+  'userAdmin.backHome': '返回首页',
+  'userAdmin.subtitle': '管理平台注册用户：新增、编辑、禁用、重置密码、删除',
+  'userAdmin.searchPlaceholder': '搜索用户名 / 邮箱 / 昵称...',
+  'userAdmin.total': '共 {n} 位用户',
+  'userAdmin.addBtn': '新增用户',
+  'userAdmin.refreshBtn': '刷新',
+  'userAdmin.colUsername': '用户名',
+  'userAdmin.colEmail': '邮箱',
+  'userAdmin.colDisplayName': '昵称',
+  'userAdmin.colStatus': '状态',
+  'userAdmin.colLastLogin': '最后登录',
+  'userAdmin.colCreatedAt': '注册时间',
+  'userAdmin.colActions': '操作',
+  'userAdmin.statusActive': '正常',
+  'userAdmin.statusSuspended': '已暂停',
+  'userAdmin.statusDisabled': '已禁用',
+  'userAdmin.never': '从未',
+  'userAdmin.noPassword': '未设密码',
+  'userAdmin.editBtn': '编辑',
+  'userAdmin.resetPwdBtn': '重置密码',
+  'userAdmin.deleteBtn': '删除',
+  'userAdmin.confirmDelete': '确定删除该用户吗？删除后用户将无法登录，数据保留可恢复。',
+  'userAdmin.cannotDeleteAdmin': '不能删除管理员账号',
+  'userAdmin.loading': '加载中...',
+  'userAdmin.loadFail': '加载用户列表失败',
+  'userAdmin.saveFail': '保存失败',
+  'userAdmin.deleteFail': '删除失败',
+  'userAdmin.saveSuccess': '保存成功',
+  'userAdmin.deleteSuccess': '删除成功',
+  'userAdmin.resetSuccess': '密码已重置',
+  'userAdmin.createTitle': '新增用户',
+  'userAdmin.editTitle': '编辑用户',
+  'userAdmin.resetTitle': '重置密码',
+  'userAdmin.fieldUsername': '用户名',
+  'userAdmin.fieldEmail': '邮箱',
+  'userAdmin.fieldPassword': '密码',
+  'userAdmin.fieldDisplayName': '昵称',
+  'userAdmin.fieldStatus': '状态',
+  'userAdmin.fieldBio': '简介',
+  'userAdmin.fieldNewPassword': '新密码',
+  'userAdmin.cancelBtn': '取消',
+  'userAdmin.saveBtn': '保存',
+  'userAdmin.submitBtn': '提交',
+  'userAdmin.pwdHint': '至少8位，需含字母和数字',
+  'userAdmin.empty': '暂无用户数据',
 
   // Layout
   'layout.banner': '亲爱的小羊们，这里的所有话语只提供参考，我们跟神的关系还是取决于各自的祷告和圣灵的感动。',
@@ -581,6 +826,7 @@ export const zh: Translations = {
   'login.fail': '登录失败',
   'login.noAccount': '还没有账号？',
   'login.registerNow': '立即注册',
+  'login.forgotPassword': '忘记密码？',
 
   // Register
   'register.title': '注册',
@@ -600,6 +846,25 @@ export const zh: Translations = {
   'register.hasAccount': '已有账号？',
   'register.loginNow': '立即登录',
 
+  // Forgot Password
+  'forgot.title': '找回密码',
+  'forgot.subtitle': '输入注册邮箱获取验证码，设置新密码',
+  'forgot.email': '邮箱',
+  'forgot.getCode': '获取验证码',
+  'forgot.codeSent': '已发送',
+  'forgot.verificationCode': '验证码',
+  'forgot.newPassword': '新密码',
+  'forgot.confirmPassword': '确认新密码',
+  'forgot.submit': '重置密码',
+  'forgot.submitting': '重置中...',
+  'forgot.codeAutoFilled': '验证码已自动填入，请查看上方输入框',
+  'forgot.codeSentMsg': '验证码已发送至您的邮箱，请注意查收',
+  'forgot.sendCodeFail': '发送验证码失败',
+  'forgot.resetFail': '重置密码失败',
+  'forgot.resetSuccess': '密码重置成功，请使用新密码登录',
+  'forgot.backToLogin': '返回登录',
+  'forgot.passwordRule': '至少8位，需包含字母和数字',
+
   // Homepage
   'home.heroTitle': '每日领受神的话语',
   'home.heroSubtitle': '随机生成经文，安静默想，深度解经',
@@ -613,6 +878,8 @@ export const zh: Translations = {
   'home.cardContactDesc': '寻求牧养帮助',
   'home.cardFellowship': '主内通讯',
   'home.cardFellowshipDesc': '彼此相交祷告',
+  'home.cardCourtship': '主内佳偶',
+  'home.cardCourtshipDesc': '在基督里寻找配偶',
   'home.checkingAuth': '正在确认登录状态...',
   'home.generateFail': '生成失败，请先登录',
   'home.generatingScripture': '正在生成经文...',
@@ -755,6 +1022,24 @@ export const zh: Translations = {
   'profile.bookmarks.loadingVerses': '正在加载经文...',
   'profile.bookmarks.loadVersesFail': '加载经文失败',
   'profile.bookmarks.clickToView': '点击查看整章经文',
+  'profile.account.section': '账户信息',
+  'profile.account.username': '用户名',
+  'profile.account.email': '邮箱',
+  'profile.account.password': '密码',
+  'profile.account.displayName': '昵称',
+  'profile.account.bio': '简介',
+  'profile.account.edit': '修改',
+  'profile.account.save': '保存',
+  'profile.account.cancel': '取消',
+  'profile.account.changePassword': '修改密码',
+  'profile.account.oldPassword': '当前密码',
+  'profile.account.newPassword': '新密码',
+  'profile.account.confirmPassword': '确认新密码',
+  'profile.account.saving': '保存中...',
+  'profile.account.saveSuccess': '保存成功',
+  'profile.account.saveFailed': '保存失败',
+  'profile.account.passwordChanged': '密码修改成功',
+  'profile.account.passwordRule': '至少8位，需包含字母和数字',
 
   // Messages
   'messages.title': '私信',
@@ -1062,6 +1347,8 @@ export const zh: Translations = {
   'qtAdmin.textPlaceholder': '请将灵修文本粘贴到此处...\n\n支持粘贴包含标题、经文出处、经文正文、注释/默想散文、诗歌等内容的完整文本。系统会自动解析结构化信息。',
   'qtAdmin.targetDate': '目标日期',
   'qtAdmin.targetDateHint': '选择要填充的日期，将覆盖文本中识别出的日期',
+  'qtAdmin.targetDateRequired': '请先选择目标日期',
+  'qtAdmin.textFormatHint': '粘贴《每日灵修手册》标准版式文本（礼拜/标题/经文中英对照/今日诗歌/经文解释/今日祷告/默想散文/一节默想），系统将按固定格式自动排版填充到所选日期',
 
   // Fellowship (主内通讯)
   'fellowship.title': '主内通讯',
@@ -1107,12 +1394,103 @@ export const zh: Translations = {
   'fellowship.holdToRecord': '按住说话',
   'fellowship.clickToRecord': '点击录音',
   'fellowship.releaseToSend': '松开发送',
+  'fellowship.inviteMembers': '邀请成员',
+  'fellowship.invite': '邀请',
+  'fellowship.inviteFailed': '邀请失败',
+  'fellowship.noFriendsToInvite': '没有可邀请的好友（均已在本群或暂无好友）',
+  'fellowship.searchUserToInvite': '搜索用户名或邮箱，可拉非好友进群',
+  'fellowship.searchResults': '搜索结果',
+  'fellowship.noSearchResults': '未找到匹配用户',
+  'fellowship.notFriend': '非好友',
   'fellowship.cancelRecord': '取消',
   'fellowship.imageTooLarge': '图片不能超过10MB',
   'fellowship.voiceTooLarge': '语音不能超过5MB',
   'fellowship.uploadFailed': '上传失败',
   'fellowship.sendImageFailed': '发送图片失败',
   'fellowship.sendVoiceFailed': '发送语音失败',
+
+  // Courtship (主内佳偶)
+  'courtship.title': '主内佳偶',
+  'courtship.subtitle': '在基督里寻找你的佳偶',
+  'courtship.browse': '浏览资料',
+  'courtship.myProfile': '我的资料',
+  'courtship.myLikes': '我的心动',
+  'courtship.myMatches': '我的匹配',
+  'courtship.witness': '见证分享',
+  'courtship.filter': '筛选',
+  'courtship.allGender': '全部',
+  'courtship.male': '弟兄',
+  'courtship.female': '姐妹',
+  'courtship.regionPlaceholder': '所在地区',
+  'courtship.search': '搜索',
+  'courtship.noProfiles': '暂无符合条件的资料，换个筛选条件试试',
+  'courtship.noMoreProfiles': '没有更多了',
+  'courtship.loadMore': '加载更多',
+  'courtship.age': '年龄',
+  'courtship.yearsOld': '岁',
+  'courtship.beliefYears': '信主年限',
+  'courtship.church': '聚会教会',
+  'courtship.ministry': '服侍岗位',
+  'courtship.occupation': '职业',
+  'courtship.bio': '自我介绍',
+  'courtship.like': '心动',
+  'courtship.liked': '已心动',
+  'courtship.likeMessage': '附言（可选）',
+  'courtship.likeMessagePlaceholder': '简单介绍一下自己，或一句想说的话…',
+  'courtship.likeSent': '心动已表达',
+  'courtship.matched': '已匹配',
+  'courtship.matchSuccess': '匹配成功！',
+  'courtship.matchSuccessDesc': '你们彼此心动，可以开始聊天了',
+  'courtship.startChat': '开始聊天',
+  'courtship.dissolveMatch': '解除匹配',
+  'courtship.confirmDissolve': '确定解除匹配吗？解除后将无法继续聊天。',
+  'courtship.noMatches': '还没有匹配，去浏览资料表达心动吧',
+  'courtship.noLikes': '还没有心动记录',
+  'courtship.editProfile': '编辑资料',
+  'courtship.nickname': '展示昵称',
+  'courtship.gender': '性别',
+  'courtship.birthDate': '生日',
+  'courtship.region': '所在地区',
+  'courtship.seekingGender': '期望对方',
+  'courtship.seekingAgeMin': '期望年龄下限',
+  'courtship.seekingAgeMax': '期望年龄上限',
+  'courtship.seekingRegion': '期望地区',
+  'courtship.photos': '生活照片',
+  'courtship.uploadPhoto': '上传照片',
+  'courtship.photoLimit': '最多 6 张，建议生活照，避免过度修饰',
+  'courtship.save': '保存资料',
+  'courtship.saving': '保存中…',
+  'courtship.saved': '资料已保存',
+  'courtship.statusPending': '审核中',
+  'courtship.statusApproved': '已通过',
+  'courtship.statusRejected': '未通过',
+  'courtship.statusHidden': '已隐藏',
+  'courtship.rejectReason': '驳回原因',
+  'courtship.profilePendingTip': '资料正在审核中，审核通过后将展示给其他弟兄姐妹',
+  'courtship.profileRejectedTip': '资料未通过审核，请根据原因修改后重新提交',
+  'courtship.witnessTitle': '标题',
+  'courtship.witnessContent': '见证内容',
+  'courtship.submitWitness': '提交见证',
+  'courtship.witnessSubmitted': '见证已提交，等待审核',
+  'courtship.noWitnesses': '还没有见证分享',
+  'courtship.myWitnesses': '我的见证',
+  'courtship.witnessPending': '审核中',
+  'courtship.report': '举报',
+  'courtship.reportReason': '举报原因',
+  'courtship.reportInappropriate': '内容不当',
+  'courtship.reportFake': '虚假信息',
+  'courtship.reportSpam': '广告骚扰',
+  'courtship.reportOther': '其他',
+  'courtship.reportDetail': '详细说明',
+  'courtship.reportSubmitted': '举报已提交',
+  'courtship.profileRequired': '请先完善交友资料',
+  'courtship.nicknameRequired': '请填写展示昵称',
+  'courtship.createProfileFirst': '请先创建交友资料，再进行此操作',
+  'courtship.loadFailed': '加载失败，请稍后重试',
+  'courtship.viewDetails': '查看详情',
+  'courtship.collapse': '收起',
+  'courtship.noMyWitnesses': '你还没有提交过见证',
+  'courtship.witnessApproved': '已通过',
 };
 
 export const ko: Translations = {
@@ -1127,6 +1505,60 @@ export const ko: Translations = {
   'nav.user': '사용자',
   'nav.qtAdmin': 'QT 관리',
   'nav.fellowship': '성도 교제',
+  'nav.courtship': '주내 배우자',
+  'nav.userAdmin': '사용자 관리',
+
+  // ========== User Admin (사용자 관리) ==========
+  'userAdmin.title': '사용자 관리',
+  'userAdmin.back': '뒤로',
+  'userAdmin.checkingAuth': '권한 확인 중...',
+  'userAdmin.noPermission': '접근 권한 없음',
+  'userAdmin.noPermissionHint': '관리자만 이 페이지에 접근할 수 있습니다',
+  'userAdmin.backHome': '홈으로',
+  'userAdmin.subtitle': '가입 사용자 관리: 추가, 편집, 정지, 비밀번호 재설정, 삭제',
+  'userAdmin.searchPlaceholder': '사용자명 / 이메일 / 닉네임 검색...',
+  'userAdmin.total': '총 {n}명',
+  'userAdmin.addBtn': '사용자 추가',
+  'userAdmin.refreshBtn': '새로고침',
+  'userAdmin.colUsername': '사용자명',
+  'userAdmin.colEmail': '이메일',
+  'userAdmin.colDisplayName': '닉네임',
+  'userAdmin.colStatus': '상태',
+  'userAdmin.colLastLogin': '최근 로그인',
+  'userAdmin.colCreatedAt': '가입일',
+  'userAdmin.colActions': '작업',
+  'userAdmin.statusActive': '정상',
+  'userAdmin.statusSuspended': '일시정지',
+  'userAdmin.statusDisabled': '비활성',
+  'userAdmin.never': '없음',
+  'userAdmin.noPassword': '비밀번호 없음',
+  'userAdmin.editBtn': '편집',
+  'userAdmin.resetPwdBtn': '비밀번호 재설정',
+  'userAdmin.deleteBtn': '삭제',
+  'userAdmin.confirmDelete': '이 사용자를 삭제하시겠습니까? 삭제 후 로그인할 수 없으며, 데이터는 복구 가능합니다.',
+  'userAdmin.cannotDeleteAdmin': '관리자 계정은 삭제할 수 없습니다',
+  'userAdmin.loading': '로딩 중...',
+  'userAdmin.loadFail': '사용자 목록 로드 실패',
+  'userAdmin.saveFail': '저장 실패',
+  'userAdmin.deleteFail': '삭제 실패',
+  'userAdmin.saveSuccess': '저장 성공',
+  'userAdmin.deleteSuccess': '삭제 성공',
+  'userAdmin.resetSuccess': '비밀번호가 재설정되었습니다',
+  'userAdmin.createTitle': '사용자 추가',
+  'userAdmin.editTitle': '사용자 편집',
+  'userAdmin.resetTitle': '비밀번호 재설정',
+  'userAdmin.fieldUsername': '사용자명',
+  'userAdmin.fieldEmail': '이메일',
+  'userAdmin.fieldPassword': '비밀번호',
+  'userAdmin.fieldDisplayName': '닉네임',
+  'userAdmin.fieldStatus': '상태',
+  'userAdmin.fieldBio': '소개',
+  'userAdmin.fieldNewPassword': '새 비밀번호',
+  'userAdmin.cancelBtn': '취소',
+  'userAdmin.saveBtn': '저장',
+  'userAdmin.submitBtn': '제출',
+  'userAdmin.pwdHint': '8자 이상, 문자와 숫자 포함',
+  'userAdmin.empty': '사용자 데이터 없음',
 
   // Layout
   'layout.banner': '사랑하는 어린 양들아, 여기 모든 말씀은 참고용일 뿐이란다. 하나님과의 관계는 각자의 기도와 성령의 감동에 달려 있음을 기억하렴.',
@@ -1142,6 +1574,7 @@ export const ko: Translations = {
   'login.fail': '로그인 실패',
   'login.noAccount': '계정이 없으신가요?',
   'login.registerNow': '회원가입',
+  'login.forgotPassword': '비밀번호를 잊으셨나요?',
 
   // Register
   'register.title': '회원가입',
@@ -1161,6 +1594,25 @@ export const ko: Translations = {
   'register.hasAccount': '이미 계정이 있으신가요?',
   'register.loginNow': '로그인',
 
+  // Forgot Password
+  'forgot.title': '비밀번호 찾기',
+  'forgot.subtitle': '가입한 이메일로 인증번호를 받아 새 비밀번호를 설정하세요',
+  'forgot.email': '이메일',
+  'forgot.getCode': '인증번호 받기',
+  'forgot.codeSent': '발송됨',
+  'forgot.verificationCode': '인증번호',
+  'forgot.newPassword': '새 비밀번호',
+  'forgot.confirmPassword': '새 비밀번호 확인',
+  'forgot.submit': '비밀번호 재설정',
+  'forgot.submitting': '재설정 중...',
+  'forgot.codeAutoFilled': '인증번호가 자동 입력되었습니다. 위 입력창을 확인하세요',
+  'forgot.codeSentMsg': '인증번호가 이메일로 발송되었습니다. 확인해 주세요',
+  'forgot.sendCodeFail': '인증번호 발송 실패',
+  'forgot.resetFail': '비밀번호 재설정 실패',
+  'forgot.resetSuccess': '비밀번호가 재설정되었습니다. 새 비밀번호로 로그인하세요',
+  'forgot.backToLogin': '로그인으로',
+  'forgot.passwordRule': '8자리 이상, 영문과 숫자 포함',
+
   // Homepage
   'home.heroTitle': '매일 하나님의 말씀을 받다',
   'home.heroSubtitle': '무작위 말씀 생성, 조용한 묵상, 깊은 해설',
@@ -1174,6 +1626,8 @@ export const ko: Translations = {
   'home.cardContactDesc': '도움 요청하기',
   'home.cardFellowship': '성도 교제',
   'home.cardFellowshipDesc': '서로 교제하며 기도',
+  'home.cardCourtship': '주내 배우자',
+  'home.cardCourtshipDesc': '그리스도 안에서 배우자를 찾아보세요',
   'home.checkingAuth': '로그인 상태 확인 중...',
   'home.generateFail': '생성 실패. 먼저 로그인해 주세요',
   'home.generatingScripture': '말씀을 생성하는 중...',
@@ -1316,6 +1770,24 @@ export const ko: Translations = {
   'profile.bookmarks.loadingVerses': '말씀을 불러오는 중...',
   'profile.bookmarks.loadVersesFail': '말씀을 불러오지 못했습니다',
   'profile.bookmarks.clickToView': '클릭하여 전체 장 말씀 보기',
+  'profile.account.section': '계정 정보',
+  'profile.account.username': '사용자명',
+  'profile.account.email': '이메일',
+  'profile.account.password': '비밀번호',
+  'profile.account.displayName': '닉네임',
+  'profile.account.bio': '소개',
+  'profile.account.edit': '수정',
+  'profile.account.save': '저장',
+  'profile.account.cancel': '취소',
+  'profile.account.changePassword': '비밀번호 변경',
+  'profile.account.oldPassword': '현재 비밀번호',
+  'profile.account.newPassword': '새 비밀번호',
+  'profile.account.confirmPassword': '새 비밀번호 확인',
+  'profile.account.saving': '저장 중...',
+  'profile.account.saveSuccess': '저장되었습니다',
+  'profile.account.saveFailed': '저장 실패',
+  'profile.account.passwordChanged': '비밀번호가 변경되었습니다',
+  'profile.account.passwordRule': '8자리 이상, 영문과 숫자 포함',
 
   // Messages
   'messages.title': '메시지',
@@ -1623,6 +2095,8 @@ export const ko: Translations = {
   'qtAdmin.textPlaceholder': '묵상 텍스트를 여기에 붙여넣으세요...\n\n제목, 성경 구절 참조, 성경 본문, 주석/묵상 산문, 찬송가 등이 포함된 전체 텍스트 붙여넣기를 지원합니다. 시스템이 자동으로 구조화된 정보를 파싱합니다.',
   'qtAdmin.targetDate': '대상 날짜',
   'qtAdmin.targetDateHint': '채울 날짜를 선택하면 텍스트에서 인식된 날짜를 덮어씁니다',
+  'qtAdmin.targetDateRequired': '대상 날짜를 먼저 선택하세요',
+  'qtAdmin.textFormatHint': '《매일 묵상》 표준 양식 텍스트(요일/제목/중영문 대조 경문/오늘의 찬양/경문 해설/오늘의 기도/묵상 산문/한 절 묵상)를 붙여넣으면, 선택한 날짜에 고정 서식으로 자동 배치됩니다',
 
   // Fellowship (성도 교제)
   'fellowship.title': '성도 교제',
@@ -1668,10 +2142,101 @@ export const ko: Translations = {
   'fellowship.holdToRecord': '눌러서 말하기',
   'fellowship.clickToRecord': '녹음',
   'fellowship.releaseToSend': '놓으면 전송',
+  'fellowship.inviteMembers': '멤버 초대',
+  'fellowship.invite': '초대',
+  'fellowship.inviteFailed': '초대 실패',
+  'fellowship.noFriendsToInvite': '초대할 수 있는 친구가 없습니다 (모두 이 그룹에 있거나 친구가 없음)',
+  'fellowship.searchUserToInvite': '사용자명 또는 이메일 검색, 친구가 아닌 사용자도 초대 가능',
+  'fellowship.searchResults': '검색 결과',
+  'fellowship.noSearchResults': '일치하는 사용자가 없습니다',
+  'fellowship.notFriend': '친구 아님',
   'fellowship.cancelRecord': '취소',
   'fellowship.imageTooLarge': '사진은 10MB 이하만 가능',
   'fellowship.voiceTooLarge': '음성은 5MB 이하만 가능',
   'fellowship.uploadFailed': '업로드 실패',
   'fellowship.sendImageFailed': '사진 전송 실패',
   'fellowship.sendVoiceFailed': '음성 전송 실패',
+
+  // Courtship (주내 배우자)
+  'courtship.title': '주내 배우자',
+  'courtship.subtitle': '그리스도 안에서 배우자를 찾아보세요',
+  'courtship.browse': '프로필 둘러보기',
+  'courtship.myProfile': '내 프로필',
+  'courtship.myLikes': '내 마음',
+  'courtship.myMatches': '나의 매치',
+  'courtship.witness': '간증 나눔',
+  'courtship.filter': '필터',
+  'courtship.allGender': '전체',
+  'courtship.male': '형제',
+  'courtship.female': '자매',
+  'courtship.regionPlaceholder': '지역',
+  'courtship.search': '검색',
+  'courtship.noProfiles': '조건에 맞는 프로필이 없습니다. 필터를 바꿔보세요',
+  'courtship.noMoreProfiles': '더 이상 없습니다',
+  'courtship.loadMore': '더 보기',
+  'courtship.age': '나이',
+  'courtship.yearsOld': '세',
+  'courtship.beliefYears': '신앙 연수',
+  'courtship.church': '출석 교회',
+  'courtship.ministry': '사역 분야',
+  'courtship.occupation': '직업',
+  'courtship.bio': '자기소개',
+  'courtship.like': '마음 표현',
+  'courtship.liked': '마음 전달됨',
+  'courtship.likeMessage': '메시지(선택)',
+  'courtship.likeMessagePlaceholder': '간단히 자신을 소개하거나 하고 싶은 말을 적어보세요…',
+  'courtship.likeSent': '마음을 전했습니다',
+  'courtship.matched': '매칭됨',
+  'courtship.matchSuccess': '매칭 성공!',
+  'courtship.matchSuccessDesc': '서로 마음을 전했습니다. 대화를 시작할 수 있어요',
+  'courtship.startChat': '대화 시작',
+  'courtship.dissolveMatch': '매칭 해제',
+  'courtship.confirmDissolve': '매칭을 해제하시겠어요? 해제 후에는 대화할 수 없습니다.',
+  'courtship.noMatches': '아직 매칭이 없습니다. 프로필을 둘러보고 마음을 전해보세요',
+  'courtship.noLikes': '아직 마음 표현 기록이 없습니다',
+  'courtship.editProfile': '프로필 편집',
+  'courtship.nickname': '표시 닉네임',
+  'courtship.gender': '성별',
+  'courtship.birthDate': '생년월일',
+  'courtship.region': '지역',
+  'courtship.seekingGender': '원하는 상대',
+  'courtship.seekingAgeMin': '원하는 나이 하한',
+  'courtship.seekingAgeMax': '원하는 나이 상한',
+  'courtship.seekingRegion': '원하는 지역',
+  'courtship.photos': '생활 사진',
+  'courtship.uploadPhoto': '사진 업로드',
+  'courtship.photoLimit': '최대 6장, 일상 사진을 권장하며 과도한 보정은 피해주세요',
+  'courtship.save': '프로필 저장',
+  'courtship.saving': '저장 중…',
+  'courtship.saved': '프로필이 저장되었습니다',
+  'courtship.statusPending': '심사 중',
+  'courtship.statusApproved': '승인됨',
+  'courtship.statusRejected': '반려됨',
+  'courtship.statusHidden': '숨김',
+  'courtship.rejectReason': '반려 사유',
+  'courtship.profilePendingTip': '프로필이 심사 중입니다. 승인되면 다른 형제자매에게 보여집니다',
+  'courtship.profileRejectedTip': '프로필이 반려되었습니다. 사유를 확인 후 다시 제출해주세요',
+  'courtship.witnessTitle': '제목',
+  'courtship.witnessContent': '간증 내용',
+  'courtship.submitWitness': '간증 제출',
+  'courtship.witnessSubmitted': '간증이 제출되었습니다. 심사를 기다려주세요',
+  'courtship.noWitnesses': '아직 간증 나눔이 없습니다',
+  'courtship.myWitnesses': '나의 간증',
+  'courtship.witnessPending': '심사 중',
+  'courtship.report': '신고',
+  'courtship.reportReason': '신고 사유',
+  'courtship.reportInappropriate': '부적절한 내용',
+  'courtship.reportFake': '허위 정보',
+  'courtship.reportSpam': '광고/스팸',
+  'courtship.reportOther': '기타',
+  'courtship.reportDetail': '상세 설명',
+  'courtship.reportSubmitted': '신고가 접수되었습니다',
+  'courtship.profileRequired': '먼저 교제 프로필을 작성해주세요',
+  'courtship.nicknameRequired': '표시 닉네임을 입력해주세요',
+  'courtship.createProfileFirst': '먼저 교제 프로필을 생성한 후 이용해주세요',
+  'courtship.loadFailed': '로딩 실패. 잠시 후 다시 시도해주세요',
+  'courtship.viewDetails': '상세 보기',
+  'courtship.collapse': '접기',
+  'courtship.noMyWitnesses': '아직 제출한 간증이 없습니다',
+  'courtship.witnessApproved': '승인됨',
 };

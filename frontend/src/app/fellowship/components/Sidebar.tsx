@@ -37,30 +37,9 @@ export default function Sidebar({
   const { t } = useI18n();
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-amber-100">
-      {/* 顶部标题 + 连接状态 */}
-      <div className="px-4 py-3 border-b border-amber-100">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-amber-800">{t('fellowship.title')}</h1>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
-              connected
-                ? 'bg-green-50 text-green-600'
-                : 'bg-amber-50 text-amber-600'
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                connected ? 'bg-green-500' : 'bg-amber-500 animate-pulse'
-              }`}
-            />
-            {connected ? t('fellowship.connected') : t('fellowship.connecting')}
-          </span>
-        </div>
-      </div>
-
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-white border-r border-amber-100 overflow-hidden">
       {/* Tab 切换 */}
-      <div className="flex border-b border-amber-100">
+      <div className="flex flex-shrink-0 border-b border-amber-100">
         <button
           onClick={() => onTabChange('friends')}
           className={`flex-1 py-2.5 text-sm font-medium transition-colors relative ${
@@ -89,7 +68,7 @@ export default function Sidebar({
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex gap-2 px-3 py-2 border-b border-amber-100 bg-amber-50/30">
+      <div className="flex flex-shrink-0 gap-2 px-3 py-2 border-b border-amber-100 bg-amber-50/30">
         {activeTab === 'friends' ? (
           <>
             <button
@@ -127,7 +106,7 @@ export default function Sidebar({
       </div>
 
       {/* 列表 */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {activeTab === 'friends' ? (
           friends.length === 0 ? (
             <div className="text-center text-gray-400 text-sm py-12 px-4">
@@ -206,6 +185,14 @@ export default function Sidebar({
             );
           })
         )}
+      </div>
+
+      {/* 底部连接状态 */}
+      <div className="flex-shrink-0 px-3 py-2 border-t border-amber-50 bg-gray-50/50">
+        <span className={`flex items-center gap-1.5 text-xs ${connected ? 'text-green-600' : 'text-gray-400'}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-500' : 'bg-gray-400 animate-pulse'}`} />
+          {connected ? t('fellowship.connected') : t('fellowship.connecting')}
+        </span>
       </div>
     </div>
   );

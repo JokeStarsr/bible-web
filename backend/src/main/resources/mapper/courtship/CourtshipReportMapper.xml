@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.courtship.mapper.CourtshipReportMapper">
+
+    <resultMap id="ReportMap" type="com.bible.module.courtship.entity.CourtshipReport">
+        <id column="id" property="id"/>
+        <result column="reporter_id" property="reporterId"/>
+        <result column="reported_id" property="reportedId"/>
+        <result column="reason" property="reason"/>
+        <result column="detail" property="detail"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO courtship_reports(id, reporter_id, reported_id, reason, detail, status)
+        VALUES(#{id}, #{reporterId}, #{reportedId}, #{reason}, #{detail}, #{status})
+    </insert>
+
+</mapper>

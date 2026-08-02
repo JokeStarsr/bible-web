@@ -17,6 +17,7 @@ import AddFriendModal from './components/AddFriendModal';
 import FriendRequestsModal from './components/FriendRequestsModal';
 import CreateRoomModal from './components/CreateRoomModal';
 import MembersModal from './components/MembersModal';
+import AddMembersModal from './components/AddMembersModal';
 
 // 历史消息每页条数
 const PAGE_SIZE = 50;
@@ -56,6 +57,9 @@ export default function FellowshipPage() {
   const [showRequests, setShowRequests] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  // 邀请成员时需排除的已在群成员 id 集合
+  const [inviteExistingIds, setInviteExistingIds] = useState<Set<string>>(new Set());
 
   // WebSocket
   const { connected, subscribe, subscribeAll } = useChatWebSocket();
@@ -426,6 +430,30 @@ export default function FellowshipPage() {
     [loadRooms]
   );
 
+  // ---------- 邀请成员进群 ----------
+  // 点击 ChatWindow「邀请成员」按钮时，先拉取当前群成员用于排除，再打开邀请弹窗
+  const handleOpenInvite = useCallback(async () => {
+    if (!selectedRoomId) return;
+    try {
+      const members = await chatApi.listRoomMembers(selectedRoomId);
+      setInviteExistingIds(new Set((members || []).map((m) => m.userId)));
+    } catch {
+      setInviteExistingIds(new Set());
+    }
+    setShowInvite(true);
+  }, [selectedRoomId]);
+
+  // 提交邀请：调用 API 拉人，成功后刷新群列表（成员数更新）
+  const handleInviteMembers = useCallback(
+    async (memberIds: string[]) => {
+      if (!selectedRoomId) return;
+      await chatApi.addRoomMembers(selectedRoomId, memberIds);
+      await loadRooms();
+      // 同步刷新成员列表（若 MembersModal 打开则其内部会自行刷新，这里仅更新群列表）
+    },
+    [selectedRoomId, loadRooms]
+  );
+
   // ---------- 当前会话信息（用于 ChatWindow 头部） ----------
   const selectedFriend = friends.find((f) => f.roomId === selectedRoomId) || null;
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId) || null;
@@ -460,97 +488,117 @@ export default function FellowshipPage() {
   }
 
   return (
-    <div className="bg-[#FDF8F0]">
-      {/* 顶部返回首页 */}
-      <div className="flex items-center justify-between mb-3">
-        <button
-          onClick={() => router.push('/')}
-          className="inline-flex items-center gap-1 text-sm text-amber-700 hover:text-amber-900 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          {t('fellowship.title')}
-        </button>
+    <div
+      className="fixed top-0 left-0 right-0 flex flex-col bg-[#FDF8F0] z-30"
+      style={{ height: '100dvh' }}
+    >
+      {/* 顶部栏：返回首页 + 标题，固定高度 */}
+      <div className="flex-shrink-0 bg-white border-b border-amber-100">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between">
+          <button
+            onClick={() => router.push('/')}
+            className="inline-flex items-center gap-1 text-sm text-amber-700 hover:text-amber-900 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="font-medium">{t('fellowship.title')}</span>
+          </button>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
+              connected ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                connected ? 'bg-green-500' : 'bg-amber-500 animate-pulse'
+              }`}
+            />
+            {connected ? t('fellowship.connected') : t('fellowship.connecting')}
+          </span>
+        </div>
       </div>
 
-      {/* 主体：左右分栏（桌面），切换显示（移动） */}
-      <div
-        className="flex bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden"
-        style={{ height: 'calc(100vh - 11rem)' }}
-      >
-        {/* 侧栏：桌面常驻，移动端仅在未选中会话时显示 */}
-        <div
-          className={`${
-            selectedRoomId ? 'hidden md:flex' : 'flex'
-          } w-full md:w-80 flex-shrink-0`}
-        >
-          <Sidebar
-            friends={friends}
-            rooms={rooms}
-            requests={requests}
-            activeTab={activeTab}
-            selectedRoomId={selectedRoomId}
-            connected={connected}
-            onTabChange={setActiveTab}
-            onSelectFriend={handleSelectFriend}
-            onSelectRoom={handleSelectRoom}
-            onOpenAddFriend={() => setShowAddFriend(true)}
-            onOpenRequests={() => setShowRequests(true)}
-            onOpenCreateRoom={() => setShowCreateRoom(true)}
-          />
-        </div>
-
-        {/* 聊天窗口：桌面常驻，移动端仅在选中会话时显示 */}
-        <div
-          className={`${
-            selectedRoomId ? 'flex' : 'hidden md:flex'
-          } flex-1 min-w-0`}
-        >
-          {selectedInfo ? (
-            <ChatWindow
-              title={selectedInfo.title}
-              avatarUrl={selectedInfo.avatarUrl}
-              isRoom={selectedInfo.isRoom}
-              memberCount={selectedInfo.isRoom ? selectedInfo.memberCount : undefined}
-              messages={messages}
-              currentUserId={currentUserId}
-              loadingMessages={loadingMessages}
-              loadingMore={loadingMore}
-              hasMore={hasMore}
-              input={input}
-              sending={sending}
-              error={error}
-              onInputChange={setInput}
-              onSend={handleSend}
-              onSendImage={handleSendImage}
-              onSendAudio={handleSendAudio}
-              onLoadMore={handleLoadMore}
-              onBack={handleBack}
-              onOpenMembers={() => setShowMembers(true)}
-              onLeaveRoom={handleLeaveRoom}
-              onDeleteFriend={handleDeleteFriend}
+      {/* 主体：填满顶部栏之下的剩余空间，左右分栏（桌面），切换显示（移动）
+          完整 flex 链路：root(100dvh, flex-col) → 顶部栏(flex-shrink-0) → 主体(flex-1 min-h-0, flex-col)
+          → 卡片(flex-1 min-h-0, flex row) → 侧栏/聊天(flex-shrink-0/flex-1, min-h-0)
+          全程避免 h-full，因 h-full 在 flex-1 父项上在 iOS Safari 中可能无法解析高度 */}
+      <div className="flex-1 min-h-0 w-full max-w-6xl mx-auto px-2 sm:px-4 py-2 sm:py-3 flex flex-col">
+        <div className="flex-1 min-h-0 flex bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden">
+          {/* 侧栏：桌面常驻，移动端仅在未选中会话时显示 */}
+          <div
+            className={`${
+              selectedRoomId ? 'hidden md:flex' : 'flex'
+            } flex-col w-full md:w-72 lg:w-80 flex-shrink-0 min-h-0`}
+          >
+            <Sidebar
+              friends={friends}
+              rooms={rooms}
+              requests={requests}
+              activeTab={activeTab}
+              selectedRoomId={selectedRoomId}
+              connected={connected}
+              onTabChange={setActiveTab}
+              onSelectFriend={handleSelectFriend}
+              onSelectRoom={handleSelectRoom}
+              onOpenAddFriend={() => setShowAddFriend(true)}
+              onOpenRequests={() => setShowRequests(true)}
+              onOpenCreateRoom={() => setShowCreateRoom(true)}
             />
-          ) : (
-            <div className="flex-1 flex items-center justify-center bg-[#FDF8F0]">
-              <div className="text-center text-gray-400">
-                <svg
-                  className="w-16 h-16 mx-auto mb-3 text-amber-200"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                <p className="text-sm">{t('fellowship.noMessages')}</p>
+          </div>
+
+          {/* 聊天窗口：桌面常驻，移动端仅在选中会话时全屏显示 */}
+          <div
+            className={`${
+              selectedRoomId ? 'flex' : 'hidden md:flex'
+            } flex-col flex-1 min-w-0 min-h-0`}
+          >
+            {selectedInfo ? (
+              <ChatWindow
+                title={selectedInfo.title}
+                avatarUrl={selectedInfo.avatarUrl}
+                isRoom={selectedInfo.isRoom}
+                memberCount={selectedInfo.isRoom ? selectedInfo.memberCount : undefined}
+                messages={messages}
+                currentUserId={currentUserId}
+                loadingMessages={loadingMessages}
+                loadingMore={loadingMore}
+                hasMore={hasMore}
+                input={input}
+                sending={sending}
+                error={error}
+                onInputChange={setInput}
+                onSend={handleSend}
+                onSendImage={handleSendImage}
+                onSendAudio={handleSendAudio}
+                onLoadMore={handleLoadMore}
+                onBack={handleBack}
+                onOpenMembers={() => setShowMembers(true)}
+                onInviteMembers={handleOpenInvite}
+                onLeaveRoom={handleLeaveRoom}
+                onDeleteFriend={handleDeleteFriend}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-[#FDF8F0]">
+                <div className="text-center text-gray-400">
+                  <svg
+                    className="w-16 h-16 mx-auto mb-3 text-amber-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <p className="text-sm">{t('fellowship.noMessages')}</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -582,7 +630,17 @@ export default function FellowshipPage() {
       {showMembers && selectedRoomId && (
         <MembersModal
           roomId={selectedRoomId}
+          friends={friends}
           onClose={() => setShowMembers(false)}
+          onMembersChanged={loadRooms}
+        />
+      )}
+      {showInvite && selectedRoomId && (
+        <AddMembersModal
+          friends={friends}
+          existingMemberIds={inviteExistingIds}
+          onClose={() => setShowInvite(false)}
+          onAdd={handleInviteMembers}
         />
       )}
     </div>

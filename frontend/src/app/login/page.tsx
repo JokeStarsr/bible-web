@@ -49,6 +49,11 @@ export default function LoginPage() {
           <label className="block text-sm text-bible-muted mb-1">{t('login.password')}</label>
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </div>
+        <div className="flex justify-end">
+          <a href="/forgot-password" className="text-sm text-bible-gold hover:underline">
+            {t('login.forgotPassword')}
+          </a>
+        </div>
         {error && <div className="text-red-500 text-sm">{error}</div>}
         <button type="submit" className="btn-primary w-full" disabled={loading}>
           {loading ? t('login.submitting') : t('login.submit')}

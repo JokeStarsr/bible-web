@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.courtship.mapper.CourtshipLikeMapper">
+
+    <resultMap id="LikeMap" type="com.bible.module.courtship.entity.CourtshipLike">
+        <id column="id" property="id"/>
+        <result column="from_user_id" property="fromUserId"/>
+        <result column="to_user_id" property="toUserId"/>
+        <result column="message" property="message"/>
+        <result column="matched" property="matched"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <resultMap id="LikeResponseMap" type="com.bible.module.courtship.dto.LikeResponse">
+        <id column="id" property="id"/>
+        <result column="to_user_id" property="toUserId"/>
+        <result column="to_nickname" property="toNickname"/>
+        <result column="to_avatar_url" property="toAvatarUrl"/>
+        <result column="message" property="message"/>
+        <result column="matched" property="matched"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO courtship_likes(id, from_user_id, to_user_id, message, matched)
+        VALUES(#{id}, #{fromUserId}, #{toUserId}, #{message}, #{matched})
+    </insert>
+
+    <!-- 查询 from→to 是否已存在心动记录 -->
+    <select id="findExisting" resultMap="LikeMap">
+        SELECT id, from_user_id, to_user_id, message, matched, created_at
+        FROM courtship_likes
+        WHERE from_user_id = #{fromUserId} AND to_user_id = #{toUserId}
+        LIMIT 1
+    </select>
+
+    <update id="updateMatched">
+        UPDATE courtship_likes SET matched = #{matched} WHERE id = #{id}
+    </update>
+
+    <!-- 更新两人之间所有心动记录的 matched 状态（双向，用于解除匹配） -->
+    <update id="updateMatchedByPair">
+        UPDATE courtship_likes SET matched = #{matched}
+        WHERE (from_user_id = #{userA} AND to_user_id = #{userB})
+           OR (from_user_id = #{userB} AND to_user_id = #{userA})
+    </update>
+
+    <!-- 我发出过的心动（未匹配，JOIN users/profiles 取对方信息） -->
+    <select id="findMyLikes" resultMap="LikeResponseMap">
+        SELECT l.id,
+               l.to_user_id,
+               COALESCE(p.nickname, u.username) AS to_nickname,
+               u.avatar_url AS to_avatar_url,
+               l.message,
+               l.matched,
+               l.created_at
+        FROM courtship_likes l
+        JOIN users u ON u.id = l.to_user_id
+        LEFT JOIN courtship_profiles p ON p.user_id = l.to_user_id
+        WHERE l.from_user_id = #{userId} AND l.matched = FALSE
+        ORDER BY l.created_at DESC
+    </select>
+
+</mapper>

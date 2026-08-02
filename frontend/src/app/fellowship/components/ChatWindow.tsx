@@ -49,6 +49,7 @@ interface ChatWindowProps {
   onLoadMore: () => void;
   onBack: () => void;
   onOpenMembers: () => void;
+  onInviteMembers: () => void;
   onLeaveRoom: () => void;
   onDeleteFriend: () => void;
 }
@@ -73,6 +74,7 @@ export default function ChatWindow({
   onLoadMore,
   onBack,
   onOpenMembers,
+  onInviteMembers,
   onLeaveRoom,
   onDeleteFriend,
 }: ChatWindowProps) {
@@ -314,9 +316,9 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-white overflow-hidden">
       {/* 顶部 */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-amber-100">
+      <div className="flex flex-shrink-0 items-center justify-between px-3 py-2.5 border-b border-amber-100">
         <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={onBack}
@@ -343,12 +345,24 @@ export default function ChatWindow({
         </div>
         <div className="flex items-center gap-1">
           {isRoom ? (
-            <button
-              onClick={onLeaveRoom}
-              className="text-xs text-gray-400 hover:text-red-500 transition-colors px-2 py-1"
-            >
-              {t('fellowship.leaveRoom')}
-            </button>
+            <>
+              {/* 邀请成员：群聊直接显示，醒目入口 */}
+              <button
+                onClick={onInviteMembers}
+                className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-800 transition-colors px-2 py-1 rounded hover:bg-amber-50"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                {t('fellowship.inviteMembers')}
+              </button>
+              <button
+                onClick={onLeaveRoom}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors px-2 py-1"
+              >
+                {t('fellowship.leaveRoom')}
+              </button>
+            </>
           ) : (
             <button
               onClick={onDeleteFriend}
@@ -364,7 +378,7 @@ export default function ChatWindow({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-[#FDF8F0]"
+        className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-3 bg-[#FDF8F0]"
       >
         {hasMore && (
           <div className="text-center">
@@ -443,14 +457,14 @@ export default function ChatWindow({
 
       {/* 错误提示 */}
       {error && (
-        <div className="px-3 py-1.5 text-xs text-red-500 bg-red-50 border-t border-red-100">
+        <div className="flex-shrink-0 px-3 py-1.5 text-xs text-red-500 bg-red-50 border-t border-red-100">
           {error}
         </div>
       )}
 
       {/* 录音状态条 */}
       {recording && (
-        <div className="flex items-center justify-between px-3 py-2 bg-red-50 border-t border-red-100">
+        <div className="flex flex-shrink-0 items-center justify-between px-3 py-2 bg-red-50 border-t border-red-100">
           <span className="flex items-center gap-2 text-sm text-red-600">
             <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
             {t('fellowship.recording')}
@@ -476,7 +490,7 @@ export default function ChatWindow({
       {showEmoji && (
         <div
           data-emoji-panel
-          className="border-t border-amber-100 bg-white p-2 max-h-48 overflow-y-auto"
+          className="flex-shrink-0 border-t border-amber-100 bg-white p-2 max-h-48 overflow-y-auto"
         >
           <div className="grid grid-cols-8 gap-1">
             {EMOJI_LIST.map((emoji, i) => (
@@ -501,14 +515,15 @@ export default function ChatWindow({
         onChange={handleFileChange}
       />
 
-      {/* 输入框 */}
-      <div className="border-t border-amber-100 p-2.5">
-        <div className="flex items-end gap-1.5">
+      {/* 输入框：两行布局，避免手机端按钮挤压 */}
+      <div className="flex-shrink-0 border-t border-amber-100 p-2">
+        {/* 工具按钮行：左工具，右发送 */}
+        <div className="flex items-center gap-1 mb-1.5">
           {/* 表情按钮 */}
           <button
             data-emoji-btn
             onClick={() => setShowEmoji((v) => !v)}
-            className={`p-2 rounded-xl transition-colors flex-shrink-0 ${
+            className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
               showEmoji ? 'bg-amber-100 text-amber-600' : 'text-gray-500 hover:bg-gray-100 hover:text-amber-600'
             }`}
             aria-label={t('fellowship.emoji')}
@@ -522,7 +537,7 @@ export default function ChatWindow({
           <button
             onClick={handlePickImage}
             disabled={sending}
-            className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-amber-600 disabled:opacity-50 transition-colors flex-shrink-0"
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-amber-600 disabled:opacity-50 transition-colors flex-shrink-0"
             aria-label={t('fellowship.image')}
             title={t('fellowship.image')}
           >
@@ -534,7 +549,7 @@ export default function ChatWindow({
           <button
             onClick={handleToggleRecord}
             disabled={sending}
-            className={`p-2 rounded-xl transition-colors flex-shrink-0 ${
+            className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
               recording ? 'bg-red-500 text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-amber-600'
             } disabled:opacity-50`}
             aria-label={t('fellowship.voice')}
@@ -544,22 +559,25 @@ export default function ChatWindow({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 7v3m-4 0h8m-4-7a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
           </button>
-          <textarea
-            value={input}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('fellowship.messagePlaceholder')}
-            rows={1}
-            className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 resize-none max-h-24"
-          />
+          {/* 占位撑开，把发送按钮推到右侧 */}
+          <div className="flex-1" />
           <button
             onClick={onSend}
             disabled={sending || !input.trim()}
-            className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+            className="px-3 py-1.5 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
           >
             {sending ? '...' : t('fellowship.sendMessage')}
           </button>
         </div>
+        {/* 输入框行：占满整行 */}
+        <textarea
+          value={input}
+          onChange={(e) => onInputChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={t('fellowship.messagePlaceholder')}
+          rows={1}
+          className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 resize-none max-h-24"
+        />
       </div>
     </div>
   );

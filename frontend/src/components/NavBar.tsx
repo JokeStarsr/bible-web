@@ -96,9 +96,16 @@ export default function NavBar() {
               <a href="/messages" className="text-bible-muted hover:text-bible-gold transition-colors">
 {t('nav.messages')}
               </a>
-              <a href="/fellowship" className="text-bible-muted hover:text-bible-gold transition-colors">
-                {t('nav.fellowship')}
-              </a>
+              {isAdmin && (
+                <>
+                  <a href="/qt-admin" className="text-amber-700 font-medium hover:text-amber-900 transition-colors">
+                    {t('nav.qtAdmin')}
+                  </a>
+                  <a href="/user-admin" className="text-amber-700 font-medium hover:text-amber-900 transition-colors">
+                    {t('nav.userAdmin')}
+                  </a>
+                </>
+              )}
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -118,15 +125,6 @@ export default function NavBar() {
                     >
 {t('nav.profile')}
                     </a>
-                    {isAdmin && (
-                      <a
-                        href="/qt-admin"
-                        className="block w-full text-left px-4 py-2 text-sm text-amber-700 font-medium hover:bg-amber-50 transition-colors"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        {t('nav.qtAdmin')}
-                      </a>
-                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-bible-dark hover:bg-bible-warm/30 transition-colors"
@@ -185,13 +183,6 @@ export default function NavBar() {
 {t('nav.messages')}
               </a>
               <a
-                href="/fellowship"
-                className="block text-bible-dark hover:text-bible-gold"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t('nav.fellowship')}
-              </a>
-              <a
                 href="/profile"
                 className="block text-bible-dark hover:text-bible-gold"
                 onClick={() => setMobileMenuOpen(false)}
@@ -199,13 +190,22 @@ export default function NavBar() {
                 {t('nav.profile')}
               </a>
               {isAdmin && (
-                <a
-                  href="/qt-admin"
-                  className="block text-amber-700 font-medium hover:text-amber-900"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('nav.qtAdmin')}
-                </a>
+                <>
+                  <a
+                    href="/qt-admin"
+                    className="block text-amber-700 font-medium hover:text-amber-900"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {t('nav.qtAdmin')}
+                  </a>
+                  <a
+                    href="/user-admin"
+                    className="block text-amber-700 font-medium hover:text-amber-900"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {t('nav.userAdmin')}
+                  </a>
+                </>
               )}
               <button
                 onClick={handleLogout}

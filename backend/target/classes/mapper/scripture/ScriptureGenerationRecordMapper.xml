@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.scripture.mapper.ScriptureGenerationRecordMapper">
+
+    <resultMap id="ScriptureGenerationRecordResultMap" type="com.bible.module.scripture.entity.ScriptureGenerationRecord">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="version_id" property="versionId"/>
+        <result column="generation_type" property="generationType"/>
+        <result column="book_id" property="bookId"/>
+        <result column="start_chapter" property="startChapter"/>
+        <result column="start_verse" property="startVerse"/>
+        <result column="end_chapter" property="endChapter"/>
+        <result column="end_verse" property="endVerse"/>
+        <result column="reference_text" property="referenceText"/>
+        <result column="verse_count" property="verseCount"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="ScriptureGenerationRecordResultMap">
+        SELECT * FROM scripture_generation_records WHERE id = #{id}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO scripture_generation_records(id, user_id, version_id, generation_type, book_id, start_chapter, start_verse, end_chapter, end_verse, reference_text, verse_count, created_at)
+        VALUES(#{id}, #{userId}, #{versionId}, #{generationType}, #{bookId}, #{startChapter}, #{startVerse}, #{endChapter}, #{endVerse}, #{referenceText}, #{verseCount}, #{createdAt})
+    </insert>
+
+    <select id="findByUserId" resultMap="ScriptureGenerationRecordResultMap">
+        SELECT * FROM scripture_generation_records WHERE user_id = #{userId} ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM scripture_generation_records WHERE user_id = #{userId}
+    </select>
+
+</mapper>

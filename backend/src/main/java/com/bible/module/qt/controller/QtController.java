@@ -4,6 +4,7 @@ import com.bible.common.exception.BusinessException;
 import com.bible.common.pojo.ApiResponse;
 import com.bible.common.pojo.PageResult;
 import com.bible.module.qt.dto.*;
+import com.bible.module.qt.service.QtFormatParser;
 import com.bible.module.qt.service.QtOcrService;
 import com.bible.module.qt.service.QtPdfService;
 import com.bible.module.qt.service.QtService;
@@ -30,6 +31,7 @@ public class QtController {
     private final QtService qtService;
     private final QtPdfService qtPdfService;
     private final QtOcrService qtOcrService;
+    private final QtFormatParser qtFormatParser;
     private final UserMapper userMapper;
 
     private static final String ADMIN_EMAIL = "852341467@qq.com";
@@ -293,6 +295,60 @@ public class QtController {
     public static class TextImportRequest {
         private String text;
         private String targetDate; // 用户指定的目标日期（yyyy-MM-dd），可选
+    }
+
+    // ==================== 确定性格式化解析接口（仅管理员） ====================
+    // 针对《每日灵修手册》标准版式粘贴文本，按固定规则解析，排版与手写 SQL 完全一致
+
+    /**
+     * 粘贴灵修文本，按固定格式解析返回预览（不保存）
+     * 仅管理员（852341467@qq.com）可用
+     */
+    @PostMapping("/admin/text-format-preview")
+    public ApiResponse<QtImportRequest> textFormatPreview(
+            @RequestBody TextImportRequest req,
+            Authentication auth) {
+        checkAdmin(auth);
+        if (req.getText() == null || req.getText().isBlank()) {
+            return ApiResponse.fail("文本内容为空");
+        }
+        try {
+            QtImportRequest result = qtFormatParser.parse(req.getText(), req.getTargetDate());
+            log.info("Text format preview success: title={}, ref={}",
+                    result.getItems().get(0).getTitle(), result.getItems().get(0).getScriptureReference());
+            return ApiResponse.ok("解析成功", result);
+        } catch (Exception e) {
+            log.error("Text format preview failed", e);
+            return ApiResponse.fail("解析失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 粘贴灵修文本，按固定格式解析并直接保存到数据库
+     * 仅管理员（852341467@qq.com）可用
+     */
+    @PostMapping("/admin/text-format-import")
+    public ApiResponse<String> textFormatImport(
+            @RequestBody TextImportRequest req,
+            Authentication auth) {
+        checkAdmin(auth);
+        if (req.getText() == null || req.getText().isBlank()) {
+            return ApiResponse.fail("文本内容为空");
+        }
+        if (req.getTargetDate() == null || req.getTargetDate().isBlank()) {
+            return ApiResponse.fail("请选择目标日期");
+        }
+        try {
+            QtImportRequest result = qtFormatParser.parse(req.getText(), req.getTargetDate());
+            qtService.importContents(result);
+            QtImportRequest.QtImportItem item = result.getItems().get(0);
+            String msg = "成功导入：" + item.getDate() + " - " + item.getTitle() + "（" + item.getScriptureReference() + "）";
+            log.info("Text format import success: {} - {}", item.getDate(), item.getTitle());
+            return ApiResponse.ok(msg, null);
+        } catch (Exception e) {
+            log.error("Text format import failed", e);
+            return ApiResponse.fail("解析失败：" + e.getMessage());
+        }
     }
 
     /**

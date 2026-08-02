@@ -34,13 +34,27 @@
         SELECT * FROM users WHERE openid = #{openid} AND deleted_at IS NULL
     </select>
 
+    <select id="findAll" resultMap="UserResultMap">
+        SELECT * FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC
+    </select>
+
     <insert id="insert">
         INSERT INTO users(id, username, email, openid, display_name, avatar_url, bio, status, email_verified_at, last_login_at, created_at, updated_at)
         VALUES(#{id}, #{username}, #{email}, #{openid}, #{displayName}, #{avatarUrl}, #{bio}, #{status}, #{emailVerifiedAt}, #{lastLoginAt}, NOW(), NOW())
     </insert>
 
     <update id="update">
-        UPDATE users SET display_name = #{displayName}, avatar_url = #{avatarUrl}, bio = #{bio}, updated_at = NOW() WHERE id = #{id}
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="displayName != null">display_name = #{displayName},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="bio != null">bio = #{bio},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
     </update>
 
     <update id="updateStatus">
@@ -49,6 +63,10 @@
 
     <update id="updateLastLogin">
         UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="softDelete">
+        UPDATE users SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id} AND deleted_at IS NULL
     </update>
 
 </mapper>

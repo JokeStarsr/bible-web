@@ -45,7 +45,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - uploads_photos:/opt/bible-web/uploads/qt-photos
+      # 挂载整个 uploads 目录，包含 qt-photos 和 chat-files 子目录，
+      # 使后端写入的图片/语音文件能被 nginx 容器读取并静态服务
+      - uploads:/opt/bible-web/uploads
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://postgres:5432/bible
@@ -101,7 +103,11 @@ services:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - uploads_photos:/opt/bible-web/uploads/qt-photos
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      # 与 backend 共享同一 uploads 卷，nginx 静态服务 /uploads/ 下所有文件
+      - uploads:/opt/bible-web/uploads
+      # 备份文件下载目录（只读挂载）
+      - ./backups:/opt/bible-web/backups:ro
 
   adminer:
     image: adminer:latest
@@ -118,4 +124,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  uploads_photos:
+  uploads:

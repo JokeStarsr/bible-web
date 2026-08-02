@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.praise.mapper.PraiseTrackMapper">
+
+    <resultMap id="PraiseTrackResultMap" type="com.bible.module.praise.entity.PraiseTrack">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="artist_name" property="artistName"/>
+        <result column="cover_image_url" property="coverImageUrl"/>
+        <result column="audio_url" property="audioUrl"/>
+        <result column="duration_seconds" property="durationSeconds"/>
+        <result column="lyrics" property="lyrics"/>
+        <result column="external_url" property="externalUrl"/>
+        <result column="source_type" property="sourceType"/>
+        <result column="copyright_note" property="copyrightNote"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="PraiseTrackResultMap">
+        SELECT * FROM praise_tracks WHERE id = #{id}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO praise_tracks(id, title, artist_name, cover_image_url, audio_url, duration_seconds, lyrics, external_url, source_type, copyright_note, status, created_at, updated_at)
+        VALUES(COALESCE(#{id}, gen_random_uuid()), #{title}, #{artistName}, #{coverImageUrl}, #{audioUrl}, #{durationSeconds}, #{lyrics}, #{externalUrl}, #{sourceType}, #{copyrightNote}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE praise_tracks
+        SET title = #{title},
+            artist_name = #{artistName},
+            cover_image_url = #{coverImageUrl},
+            audio_url = #{audioUrl},
+            duration_seconds = #{durationSeconds},
+            lyrics = #{lyrics},
+            external_url = #{externalUrl},
+            source_type = #{sourceType},
+            copyright_note = #{copyrightNote},
+            status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="findAllActive" resultMap="PraiseTrackResultMap">
+        SELECT * FROM praise_tracks WHERE status = 'active'
+    </select>
+
+    <select id="findActiveBySourceType" resultMap="PraiseTrackResultMap">
+        SELECT * FROM praise_tracks WHERE status = 'active' AND source_type = #{sourceType}
+    </select>
+
+    <select id="countActive" resultType="int">
+        SELECT COUNT(*) FROM praise_tracks WHERE status = 'active'
+    </select>
+
+</mapper>

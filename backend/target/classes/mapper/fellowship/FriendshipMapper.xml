@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.fellowship.mapper.FriendshipMapper">
+
+    <resultMap id="FriendshipMap" type="com.bible.module.fellowship.entity.Friendship">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="friend_id" property="friendId"/>
+        <result column="status" property="status"/>
+        <result column="message" property="message"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO friendships(id, user_id, friend_id, status, message)
+        VALUES(#{id}, #{userId}, #{friendId}, #{status}, #{message})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE friendships SET status = #{status}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="findById" resultMap="FriendshipMap">
+        SELECT * FROM friendships WHERE id = #{id}
+    </select>
+
+    <resultMap id="FriendRequestMap" type="com.bible.module.fellowship.dto.FriendRequestResponse">
+        <id column="id" property="id"/>
+        <result column="from_user_id" property="fromUserId"/>
+        <result column="from_username" property="fromUsername"/>
+        <result column="from_avatar_url" property="fromAvatarUrl"/>
+        <result column="message" property="message"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 收到的待处理好友请求 -->
+    <select id="findPendingByFriendId" resultMap="FriendRequestMap">
+        SELECT f.id,
+               f.user_id AS from_user_id,
+               u.username AS from_username,
+               u.avatar_url AS from_avatar_url,
+               f.message,
+               f.status,
+               f.created_at
+        FROM friendships f
+        LEFT JOIN users u ON u.id = f.user_id
+        WHERE f.friend_id = #{friendId} AND f.status = 'PENDING'
+        ORDER BY f.created_at DESC
+    </select>
+
+    <!-- 已是好友的对方 userId（双向） -->
+    <select id="findAcceptedFriendIds" resultType="java.util.UUID">
+        SELECT CASE WHEN f.user_id = #{userId} THEN f.friend_id ELSE f.user_id END AS friend_id
+        FROM friendships f
+        WHERE f.status = 'ACCEPTED'
+          AND (f.user_id = #{userId} OR f.friend_id = #{userId})
+    </select>
+
+    <resultMap id="FriendMap" type="com.bible.module.fellowship.dto.FriendResponse">
+        <result column="friend_id" property="friendId"/>
+        <result column="username" property="username"/>
+        <result column="display_name" property="displayName"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="status" property="status"/>
+        <result column="room_id" property="roomId"/>
+        <result column="last_message_content" property="lastMessageContent"/>
+        <result column="last_message_at" property="lastMessageAt"/>
+        <result column="unread_count" property="unreadCount"/>
+    </resultMap>
+
+    <!-- 好友列表（双向，含单聊房间、最近消息、未读数） -->
+    <select id="findFriends" resultMap="FriendMap">
+        SELECT
+            CASE WHEN f.user_id = #{userId} THEN f.friend_id ELSE f.user_id END AS friend_id,
+            u.username,
+            u.display_name,
+            u.avatar_url,
+            f.status,
+            r.id AS room_id,
+            lm.content AS last_message_content,
+            lm.created_at AS last_message_at,
+            (SELECT COUNT(*) FROM chat_messages msg
+             WHERE msg.room_id = r.id
+               AND msg.created_at > COALESCE(m.last_read_at, TIMESTAMP '1970-01-01 00:00:00')) AS unread_count
+        FROM friendships f
+        JOIN users u ON u.id = (CASE WHEN f.user_id = #{userId} THEN f.friend_id ELSE f.user_id END)
+        LEFT JOIN chat_rooms r ON r.type = 'DIRECT'
+            AND r.id IN (SELECT room_id FROM chat_room_members WHERE user_id = #{userId})
+            AND r.id IN (SELECT room_id FROM chat_room_members
+                         WHERE user_id = (CASE WHEN f.user_id = #{userId} THEN f.friend_id ELSE f.user_id END))
+        LEFT JOIN chat_messages lm ON lm.id = (SELECT id FROM chat_messages WHERE room_id = r.id ORDER BY created_at DESC LIMIT 1)
+        LEFT JOIN chat_room_members m ON m.room_id = r.id AND m.user_id = #{userId}
+        WHERE f.status = 'ACCEPTED'
+          AND (f.user_id = #{userId} OR f.friend_id = #{userId})
+        ORDER BY lm.created_at DESC
+    </select>
+
+    <!-- 查两人间是否已存在好友关系记录（双向） -->
+    <select id="findExisting" resultMap="FriendshipMap">
+        SELECT * FROM friendships
+        WHERE (user_id = #{userId} AND friend_id = #{friendId})
+           OR (user_id = #{friendId} AND friend_id = #{userId})
+        LIMIT 1
+    </select>
+
+    <delete id="deleteFriendship">
+        DELETE FROM friendships
+        WHERE (user_id = #{userId} AND friend_id = #{friendId})
+           OR (user_id = #{friendId} AND friend_id = #{userId})
+    </delete>
+
+</mapper>

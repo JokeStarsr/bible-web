@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bible.module.scripture.mapper.BibleVerseMapper">
+
+    <resultMap id="BibleVerseResultMap" type="com.bible.module.scripture.entity.BibleVerse">
+        <id column="id" property="id"/>
+        <result column="book_id" property="bookId"/>
+        <result column="chapter_number" property="chapterNumber"/>
+        <result column="verse_number" property="verseNumber"/>
+        <result column="verse_text" property="verseText"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BibleVerseResultMap">
+        SELECT * FROM bible_verses WHERE id = #{id}
+    </select>
+
+    <select id="findByBookAndChapter" resultMap="BibleVerseResultMap">
+        SELECT * FROM bible_verses WHERE book_id = #{bookId} AND chapter_number = #{chapter} ORDER BY verse_number
+    </select>
+
+    <select id="findByRange" resultMap="BibleVerseResultMap">
+        SELECT * FROM bible_verses
+        WHERE book_id = #{bookId}
+        AND (
+            (chapter_number = #{startChapter} AND verse_number >= #{startVerse})
+            OR (chapter_number > #{startChapter} AND chapter_number &lt; #{endChapter})
+            OR (chapter_number = #{endChapter} AND verse_number &lt;= #{endVerse})
+        )
+        ORDER BY chapter_number, verse_number
+    </select>
+
+    <select id="countByBookAndChapter" resultType="int">
+        SELECT COUNT(*) FROM bible_verses WHERE book_id = #{bookId} AND chapter_number = #{chapter}
+    </select>
+
+    <select id="countByBookId" resultType="int">
+        SELECT COUNT(*) FROM bible_verses WHERE book_id = #{bookId}
+    </select>
+
+    <select id="findChaptersByBookId" resultType="int">
+        SELECT DISTINCT chapter_number FROM bible_verses WHERE book_id = #{bookId} ORDER BY chapter_number
+    </select>
+
+</mapper>

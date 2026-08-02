@@ -336,6 +336,45 @@ public class ChatService {
         return chatRoomMemberMapper.findRoomMembersWithUserInfo(roomId);
     }
 
+    /**
+     * 拉人进群（仅群聊房间；操作者必须是群成员）。
+     * 已在群内的成员自动跳过，DB 唯一约束亦兜底防重。
+     *
+     * @return 更新后的成员列表
+     */
+    @Transactional
+    public List<RoomMemberResponse> addMembers(UUID operatorId, UUID roomId, AddMembersRequest req) {
+        ChatRoom room = chatRoomMapper.findById(roomId);
+        if (room == null) {
+            throw new BusinessException("ROOM_NOT_FOUND", "房间不存在");
+        }
+        if (TYPE_DIRECT.equals(room.getType())) {
+            throw new BusinessException("NOT_GROUP", "单聊房间不可添加成员");
+        }
+        assertRoomMember(roomId, operatorId);
+
+        if (req == null || req.getMemberIds() == null || req.getMemberIds().isEmpty()) {
+            throw new BusinessException("INVALID_PARAM", "请至少选择一位成员");
+        }
+
+        int added = 0;
+        Set<UUID> seen = new HashSet<>();
+        for (UUID mid : req.getMemberIds()) {
+            if (mid == null || mid.equals(operatorId) || !seen.add(mid)) {
+                continue;
+            }
+            // 跳过已在群内的成员（DB 唯一约束兜底）
+            if (chatRoomMemberMapper.findByRoomAndUser(roomId, mid) != null) {
+                continue;
+            }
+            insertMember(roomId, mid);
+            added++;
+        }
+        log.info("addMembers: room={} operator={} added={}", roomId, operatorId, added);
+
+        return chatRoomMemberMapper.findRoomMembersWithUserInfo(roomId);
+    }
+
     /** 退出群聊（单聊不可退出） */
     @Transactional
     public void leaveRoom(UUID userId, UUID roomId) {
@@ -364,6 +403,25 @@ public class ChatService {
         insertMember(room.getId(), userId1);
         insertMember(room.getId(), userId2);
         return room;
+    }
+
+    /**
+     * 交友匹配成功时调用：确保两人互为好友（ACCEPTED），并保证存在单聊房间。
+     * 若已有好友记录则更新为 ACCEPTED；否则创建一条 ACCEPTED 记录。
+     */
+    @Transactional
+    public void ensureFriendshipForMatch(UUID userId1, UUID userId2) {
+        Friendship existing = friendshipMapper.findExisting(userId1, userId2);
+        if (existing != null) {
+            if (!STATUS_ACCEPTED.equals(existing.getStatus())) {
+                friendshipMapper.updateStatus(existing.getId(), STATUS_ACCEPTED);
+            }
+        } else {
+            Friendship f = new Friendship(UUID.randomUUID(), userId1, userId2, STATUS_ACCEPTED,
+                    null, null, null);
+            friendshipMapper.insert(f);
+        }
+        getOrCreateDirectRoom(userId1, userId2);
     }
 
     /** 校验当前用户是房间成员 */
