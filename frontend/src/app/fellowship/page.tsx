@@ -644,6 +644,7 @@ export default function FellowshipPage() {
                 onInviteMembers={handleOpenInvite}
                 onLeaveRoom={handleLeaveRoom}
                 onDeleteFriend={handleDeleteFriend}
+                onDeleteMessage={handleDeleteMessage}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center bg-[#FDF8F0]">
