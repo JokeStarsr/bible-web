@@ -56,6 +56,7 @@ public class ChatService {
     private static final String MSG_TYPE_TEXT = "TEXT";
     private static final String MSG_TYPE_IMAGE = "IMAGE";
     private static final String MSG_TYPE_AUDIO = "AUDIO";
+    private static final String MSG_TYPE_FILE = "FILE";
 
     /** 聊天文件（图片/语音）保存目录，由 nginx 静态服务 /uploads/ 下 */
     @Value("${app.chat.upload-dir:/opt/bible-web/uploads/chat-files}")
@@ -65,6 +66,8 @@ public class ChatService {
     private static final long IMAGE_MAX_SIZE = 10L * 1024 * 1024;
     /** 语音大小上限：5MB */
     private static final long AUDIO_MAX_SIZE = 5L * 1024 * 1024;
+    /** 文件大小上限：50MB */
+    private static final long FILE_MAX_SIZE = 50L * 1024 * 1024;
 
     // ==================== 好友 ====================
 
@@ -271,6 +274,29 @@ public class ChatService {
         return saveAndPushMessage(userId, roomId, url, MSG_TYPE_AUDIO);
     }
 
+    /** 发送文件消息：校验 + 落盘 + 建消息 + 推送 */
+    @Transactional
+    public ChatMessageResponse sendFileMessage(UUID userId, UUID roomId, MultipartFile file) {
+        assertRoomMember(roomId, userId);
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("FILE_EMPTY", "文件为空");
+        }
+        if (file.getSize() > FILE_MAX_SIZE) {
+            throw new BusinessException("FILE_SIZE", "文件大小不能超过50MB");
+        }
+        // 保存文件，获取 URL
+        String url = saveUploadFile(file, userId, "file");
+        // 构建 JSON content：{ "url": "...", "name": "原文件名", "size": 12345 }
+        String originalName = file.getOriginalFilename();
+        long size = file.getSize();
+        // 转义文件名中的特殊字符
+        String safeName = originalName != null
+                ? originalName.replace("\\", "\\\\").replace("\"", "\\\"")
+                : "unknown";
+        String jsonContent = "{\"url\":\"" + url + "\",\"name\":\"" + safeName + "\",\"size\":" + size + "}";
+        return saveAndPushMessage(userId, roomId, jsonContent, MSG_TYPE_FILE);
+    }
+
     /** 保存文件到磁盘并返回可访问的相对 URL */
     private String saveUploadFile(MultipartFile file, UUID userId, String prefix) {
         try {
@@ -295,7 +321,7 @@ public class ChatService {
         if (type == null || type.isBlank()) return MSG_TYPE_TEXT;
         String upper = type.trim().toUpperCase();
         return switch (upper) {
-            case MSG_TYPE_TEXT, MSG_TYPE_IMAGE, MSG_TYPE_AUDIO -> upper;
+            case MSG_TYPE_TEXT, MSG_TYPE_IMAGE, MSG_TYPE_AUDIO, MSG_TYPE_FILE -> upper;
             default -> MSG_TYPE_TEXT;
         };
     }

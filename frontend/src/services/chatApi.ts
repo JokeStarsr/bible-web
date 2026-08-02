@@ -149,6 +149,17 @@ export const chatApi = {
       .then((r) => r.data.data as ChatMessageInfo);
   },
 
+  /** 发送文件消息（PDF/Word/Excel/其他任意文件，FormData 上传） */
+  sendFileMessage: (roomId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api
+      .post(`/chat/rooms/${roomId}/messages/file`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data.data as ChatMessageInfo);
+  },
+
   /** 标记房间已读 */
   markRead: (roomId: string) =>
     api.post(`/chat/rooms/${roomId}/read`).then((r) => r.data.data),

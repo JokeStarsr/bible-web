@@ -133,6 +133,15 @@ public class ChatController {
         return ApiResponse.ok(chatService.sendAudioMessage(userId, roomId, file));
     }
 
+    /** 发送文件消息（multipart/form-data，支持 PDF/Word/Excel 等任意文件类型，上限 50MB） */
+    @PostMapping(value = "/rooms/{roomId}/messages/file", consumes = "multipart/form-data")
+    public ApiResponse<ChatMessageResponse> sendFileMessage(@PathVariable UUID roomId,
+                                                         @RequestParam("file") MultipartFile file,
+                                                         Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        return ApiResponse.ok(chatService.sendFileMessage(userId, roomId, file));
+    }
+
     /** 标记房间已读 */
     @PostMapping("/rooms/{roomId}/read")
     public ApiResponse<Void> markRead(@PathVariable UUID roomId, Authentication auth) {

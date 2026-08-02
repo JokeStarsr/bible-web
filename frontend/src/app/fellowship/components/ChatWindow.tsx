@@ -28,6 +28,7 @@ const EMOJI_LIST = [
 const MSG_TYPE_TEXT = 'TEXT';
 const MSG_TYPE_IMAGE = 'IMAGE';
 const MSG_TYPE_AUDIO = 'AUDIO';
+const MSG_TYPE_FILE = 'FILE';
 
 interface ChatWindowProps {
   title: string;
@@ -46,6 +47,7 @@ interface ChatWindowProps {
   onSend: () => void;
   onSendImage: (file: File) => void;
   onSendAudio: (file: File) => void;
+  onSendFile: (file: File) => void;
   onLoadMore: () => void;
   onBack: () => void;
   onOpenMembers: () => void;
@@ -71,6 +73,7 @@ export default function ChatWindow({
   onSend,
   onSendImage,
   onSendAudio,
+  onSendFile,
   onLoadMore,
   onBack,
   onOpenMembers,
@@ -83,6 +86,7 @@ export default function ChatWindow({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const docFileInputRef = useRef<HTMLInputElement>(null);
 
   // 表情面板显示
   const [showEmoji, setShowEmoji] = useState(false);
@@ -168,6 +172,22 @@ export default function ChatWindow({
       return;
     }
     onSendImage(file);
+  };
+
+  // ---------- 文件上传（通用文件：PDF/Word/Excel 等） ----------
+  const handlePickFile = () => {
+    docFileInputRef.current?.click();
+  };
+
+  const handleDocFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert('文件大小不能超过50MB');
+      return;
+    }
+    onSendFile(file);
   };
 
   // ---------- 语音录制 ----------
@@ -284,6 +304,46 @@ export default function ChatWindow({
     setRecording(false);
   };
 
+  // 消息内容渲染里的文件消息
+  const renderFileContent = (content: string) => {
+    try {
+      const info = JSON.parse(content);
+      const name = info.name || '文件';
+      const url = info.url || '';
+      const size = info.size || 0;
+      const sizeStr = size > 1024 * 1024
+        ? (size / 1024 / 1024).toFixed(1) + 'MB'
+        : (size / 1024).toFixed(1) + 'KB';
+      // 获取文件图标（按扩展名）
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      const isPdf = ext === 'pdf';
+      const isWord = ['doc', 'docx'].includes(ext);
+      const isExcel = ['xls', 'xlsx', 'csv'].includes(ext);
+      return (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/80 hover:bg-white transition-colors min-w-[200px]"
+          style={{ color: '#374151' }}
+        >
+          <span className="text-2xl shrink-0">
+            {isPdf ? '📄' : isWord ? '📝' : isExcel ? '📊' : '📎'}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{name}</p>
+            <p className="text-xs text-gray-500">{sizeStr}</p>
+          </div>
+          <svg className="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </a>
+      );
+    } catch {
+      return <span className="text-sm text-gray-500">[文件]</span>;
+    }
+  };
+
   // ---------- 消息内容渲染 ----------
   const renderMessageContent = (msg: ChatMessageInfo, isSelf: boolean) => {
     if (msg.type === MSG_TYPE_IMAGE) {
@@ -310,6 +370,9 @@ export default function ChatWindow({
           style={{ filter: isSelf ? 'invert(0.9)' : 'none' }}
         />
       );
+    }
+    if (msg.type === MSG_TYPE_FILE) {
+      return renderFileContent(msg.content);
     }
     // 文本消息（含表情，表情是 unicode 字符直接显示）
     return <span className="whitespace-pre-wrap break-words">{msg.content}</span>;
@@ -515,6 +578,14 @@ export default function ChatWindow({
         onChange={handleFileChange}
       />
 
+      {/* 隐藏的通用文件选择器 */}
+      <input
+        ref={docFileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleDocFileChange}
+      />
+
       {/* 输入框：两行布局，避免手机端按钮挤压 */}
       <div className="flex-shrink-0 border-t border-amber-100 p-2">
         {/* 工具按钮行：左工具，右发送 */}
@@ -557,6 +628,18 @@ export default function ChatWindow({
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 7v3m-4 0h8m-4-7a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+          </button>
+          {/* 文件按钮 */}
+          <button
+            onClick={handlePickFile}
+            disabled={sending}
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-amber-600 disabled:opacity-50 transition-colors flex-shrink-0"
+            aria-label="文件"
+            title="上传文件"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
           </button>
           {/* 占位撑开，把发送按钮推到右侧 */}
