@@ -148,6 +148,16 @@ public class ChatController {
         return ApiResponse.ok(chatService.getRoomMembers(userId, roomId));
     }
 
+    /** 拉人进群（仅群聊；操作者须为群成员） */
+    @PostMapping("/rooms/{roomId}/members")
+    public ApiResponse<List<RoomMemberResponse>> addRoomMembers(@PathVariable UUID roomId,
+                                                                @RequestBody AddMembersRequest req,
+                                                                Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        List<RoomMemberResponse> updated = chatService.addMembers(userId, roomId, req);
+        return ApiResponse.ok("已添加成员", updated);
+    }
+
     /** 退出群聊 */
     @PostMapping("/rooms/{roomId}/leave")
     public ApiResponse<Void> leaveRoom(@PathVariable UUID roomId, Authentication auth) {

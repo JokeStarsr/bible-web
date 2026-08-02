@@ -601,7 +601,9 @@ export default function FellowshipPage() {
       {showMembers && selectedRoomId && (
         <MembersModal
           roomId={selectedRoomId}
+          friends={friends}
           onClose={() => setShowMembers(false)}
+          onMembersChanged={loadRooms}
         />
       )}
     </div>

@@ -157,6 +157,12 @@ export const chatApi = {
   listRoomMembers: (roomId: string) =>
     api.get(`/chat/rooms/${roomId}/members`).then((r) => r.data.data as RoomMemberInfo[]),
 
+  /** 拉人进群（返回更新后的成员列表） */
+  addRoomMembers: (roomId: string, memberIds: string[]) =>
+    api
+      .post(`/chat/rooms/${roomId}/members`, { memberIds })
+      .then((r) => r.data.data as RoomMemberInfo[]),
+
   /** 退出群聊 */
   leaveRoom: (roomId: string) =>
     api.post(`/chat/rooms/${roomId}/leave`).then((r) => r.data.data),

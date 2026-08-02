@@ -642,6 +642,10 @@ export interface Translations {
   'fellowship.holdToRecord': string;
   'fellowship.clickToRecord': string;
   'fellowship.releaseToSend': string;
+  'fellowship.inviteMembers': string;
+  'fellowship.invite': string;
+  'fellowship.inviteFailed': string;
+  'fellowship.noFriendsToInvite': string;
   'fellowship.cancelRecord': string;
   'fellowship.imageTooLarge': string;
   'fellowship.voiceTooLarge': string;
@@ -1386,6 +1390,10 @@ export const zh: Translations = {
   'fellowship.holdToRecord': '按住说话',
   'fellowship.clickToRecord': '点击录音',
   'fellowship.releaseToSend': '松开发送',
+  'fellowship.inviteMembers': '邀请成员',
+  'fellowship.invite': '邀请',
+  'fellowship.inviteFailed': '邀请失败',
+  'fellowship.noFriendsToInvite': '没有可邀请的好友（均已在本群或暂无好友）',
   'fellowship.cancelRecord': '取消',
   'fellowship.imageTooLarge': '图片不能超过10MB',
   'fellowship.voiceTooLarge': '语音不能超过5MB',
@@ -2126,6 +2134,10 @@ export const ko: Translations = {
   'fellowship.holdToRecord': '눌러서 말하기',
   'fellowship.clickToRecord': '녹음',
   'fellowship.releaseToSend': '놓으면 전송',
+  'fellowship.inviteMembers': '멤버 초대',
+  'fellowship.invite': '초대',
+  'fellowship.inviteFailed': '초대 실패',
+  'fellowship.noFriendsToInvite': '초대할 수 있는 친구가 없습니다 (모두 이 그룹에 있거나 친구가 없음)',
   'fellowship.cancelRecord': '취소',
   'fellowship.imageTooLarge': '사진은 10MB 이하만 가능',
   'fellowship.voiceTooLarge': '음성은 5MB 이하만 가능',
