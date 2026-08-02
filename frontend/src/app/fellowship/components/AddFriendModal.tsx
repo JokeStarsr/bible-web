@@ -47,9 +47,15 @@ export default function AddFriendModal({ onClose, onDone }: AddFriendModalProps)
       setSentIds((prev) => new Set(prev).add(user.userId));
       onDone();
     } catch (err: any) {
+      // 用 errorCode 精确判断，避免消息文本模糊匹配误判
+      // （后端 PENDING 提示「已发送好友请求...」也含「好友」二字，曾导致误显示「已经是好友」）
+      const code = err.response?.data?.errorCode;
       const msg = err.response?.data?.message || '';
-      if (msg.includes('already') || msg.includes('好友') || msg.includes('친구')) {
+      if (code === 'ALREADY_FRIEND') {
         setError(t('fellowship.alreadyFriend'));
+      } else if (code === 'REQUEST_PENDING') {
+        // 后端已针对「发起方/接收方」返回精确文案，直接透传
+        setError(msg || t('fellowship.requestSent'));
       } else {
         setError(msg || t('fellowship.userNotFound'));
       }
