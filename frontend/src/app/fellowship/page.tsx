@@ -17,6 +17,7 @@ import AddFriendModal from './components/AddFriendModal';
 import FriendRequestsModal from './components/FriendRequestsModal';
 import CreateRoomModal from './components/CreateRoomModal';
 import MembersModal from './components/MembersModal';
+import AddMembersModal from './components/AddMembersModal';
 
 // 历史消息每页条数
 const PAGE_SIZE = 50;
@@ -56,6 +57,9 @@ export default function FellowshipPage() {
   const [showRequests, setShowRequests] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  // 邀请成员时需排除的已在群成员 id 集合
+  const [inviteExistingIds, setInviteExistingIds] = useState<Set<string>>(new Set());
 
   // WebSocket
   const { connected, subscribe, subscribeAll } = useChatWebSocket();
@@ -426,6 +430,30 @@ export default function FellowshipPage() {
     [loadRooms]
   );
 
+  // ---------- 邀请成员进群 ----------
+  // 点击 ChatWindow「邀请成员」按钮时，先拉取当前群成员用于排除，再打开邀请弹窗
+  const handleOpenInvite = useCallback(async () => {
+    if (!selectedRoomId) return;
+    try {
+      const members = await chatApi.listRoomMembers(selectedRoomId);
+      setInviteExistingIds(new Set((members || []).map((m) => m.userId)));
+    } catch {
+      setInviteExistingIds(new Set());
+    }
+    setShowInvite(true);
+  }, [selectedRoomId]);
+
+  // 提交邀请：调用 API 拉人，成功后刷新群列表（成员数更新）
+  const handleInviteMembers = useCallback(
+    async (memberIds: string[]) => {
+      if (!selectedRoomId) return;
+      await chatApi.addRoomMembers(selectedRoomId, memberIds);
+      await loadRooms();
+      // 同步刷新成员列表（若 MembersModal 打开则其内部会自行刷新，这里仅更新群列表）
+    },
+    [selectedRoomId, loadRooms]
+  );
+
   // ---------- 当前会话信息（用于 ChatWindow 头部） ----------
   const selectedFriend = friends.find((f) => f.roomId === selectedRoomId) || null;
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId) || null;
@@ -546,6 +574,7 @@ export default function FellowshipPage() {
                 onLoadMore={handleLoadMore}
                 onBack={handleBack}
                 onOpenMembers={() => setShowMembers(true)}
+                onInviteMembers={handleOpenInvite}
                 onLeaveRoom={handleLeaveRoom}
                 onDeleteFriend={handleDeleteFriend}
               />
@@ -604,6 +633,14 @@ export default function FellowshipPage() {
           friends={friends}
           onClose={() => setShowMembers(false)}
           onMembersChanged={loadRooms}
+        />
+      )}
+      {showInvite && selectedRoomId && (
+        <AddMembersModal
+          friends={friends}
+          existingMemberIds={inviteExistingIds}
+          onClose={() => setShowInvite(false)}
+          onAdd={handleInviteMembers}
         />
       )}
     </div>
