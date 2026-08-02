@@ -631,8 +631,10 @@ export default function FellowshipPage() {
         <MembersModal
           roomId={selectedRoomId}
           friends={friends}
+          currentUserId={currentUserId}
           onClose={() => setShowMembers(false)}
           onMembersChanged={loadRooms}
+          onFriendRequestSent={loadRequests}
         />
       )}
       {showInvite && selectedRoomId && (
