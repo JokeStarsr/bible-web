@@ -25,4 +25,10 @@ public interface ChatMessageMapper {
 
     /** 用户在房间的未读消息数（created_at > last_read_at） */
     int countUnread(@Param("roomId") UUID roomId, @Param("userId") UUID userId);
+
+    /** 根据 ID 查询单条消息 */
+    ChatMessage findById(@Param("id") UUID id);
+
+    /** 根据 ID 删除单条消息 */
+    int deleteById(@Param("id") UUID id);
 }

@@ -316,6 +316,55 @@ public class ChatService {
         }
     }
 
+    /** 删除消息：仅发送者可删除自己的消息，同时清理关联的文件 */
+    @Transactional
+    public void deleteMessage(UUID userId, UUID messageId) {
+        ChatMessage msg = chatMessageMapper.findById(messageId);
+        if (msg == null) {
+            throw new BusinessException("MESSAGE_NOT_FOUND", "消息不存在");
+        }
+        if (!msg.getSenderId().equals(userId)) {
+            throw new BusinessException("FORBIDDEN", "只能删除自己发送的消息");
+        }
+        // 删除关联的文件（图片/语音/文件）
+        deleteAssociatedFile(msg);
+        // 删除数据库记录
+        chatMessageMapper.deleteById(messageId);
+        // 通过 WebSocket 推送删除事件
+        pushDeleteEvent(msg.getRoomId(), messageId);
+    }
+
+    /** 根据消息类型删除磁盘上的关联文件 */
+    private void deleteAssociatedFile(ChatMessage msg) {
+        String type = msg.getType();
+        if (!MSG_TYPE_IMAGE.equals(type) && !MSG_TYPE_AUDIO.equals(type) && !MSG_TYPE_FILE.equals(type)) {
+            return;
+        }
+        String filePath = msg.getContent();
+        if (MSG_TYPE_FILE.equals(type)) {
+            // FILE 类型 content 是 JSON，需解析出 url
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(filePath);
+                filePath = node.path("url").asText("");
+            } catch (Exception e) {
+                log.warn("解析文件消息 content 失败: {}", e.getMessage());
+                return;
+            }
+        }
+        if (filePath == null || filePath.isBlank()) return;
+        // 仅删除 /uploads/chat-files/ 下的文件，防止路径遍历攻击
+        if (!filePath.startsWith("/uploads/chat-files/")) return;
+        String filename = filePath.substring("/uploads/chat-files/".length());
+        if (filename.contains("..") || filename.contains("/")) return;
+        try {
+            Path path = Paths.get(chatUploadDir).resolve(filename);
+            Files.deleteIfExists(path);
+            log.info("Deleted chat file: {}", path);
+        } catch (IOException e) {
+            log.warn("删除文件失败: {}", e.getMessage());
+        }
+    }
+
     /** 归一化消息类型，非法值一律按 TEXT */
     private String normalizeType(String type) {
         if (type == null || type.isBlank()) return MSG_TYPE_TEXT;
@@ -485,6 +534,23 @@ public class ChatService {
             }
         } catch (Exception e) {
             log.warn("WebSocket 推送消息失败: {}", e.getMessage());
+        }
+    }
+
+    /** 通过 WebSocket 推送消息删除事件 */
+    private void pushDeleteEvent(UUID roomId, UUID messageId) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", "delete");
+            payload.put("roomId", roomId);
+            payload.put("messageId", messageId.toString());
+            String json = objectMapper.writeValueAsString(payload);
+            List<UUID> memberIds = chatRoomMemberMapper.findMemberUserIds(roomId);
+            for (UUID memberId : memberIds) {
+                chatWebSocketHandler.sendToUser(memberId, json);
+            }
+        } catch (Exception e) {
+            log.warn("WebSocket 推送删除事件失败: {}", e.getMessage());
         }
     }
 }

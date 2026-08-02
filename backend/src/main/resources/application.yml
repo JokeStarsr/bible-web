@@ -11,11 +11,11 @@ spring:
     password: ${DB_PASS:bible_pass}
     driver-class-name: org.postgresql.Driver
 
-  # 上传文件大小限制：QT 灵修图片可能较大，放大到 20MB
+  # 上传文件大小限制：聊天文件最大 50MB
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 25MB
+      max-file-size: 50MB
+      max-request-size: 55MB
 
   flyway:
     enabled: true

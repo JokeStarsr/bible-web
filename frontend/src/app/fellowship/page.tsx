@@ -62,7 +62,7 @@ export default function FellowshipPage() {
   const [inviteExistingIds, setInviteExistingIds] = useState<Set<string>>(new Set());
 
   // WebSocket
-  const { connected, subscribe, subscribeAll } = useChatWebSocket();
+  const { connected, subscribe, subscribeAll, subscribeDelete } = useChatWebSocket();
 
   // 用 ref 跟踪 selectedRoomId，避免全局监听器闭包过期
   const selectedRoomIdRef = useRef<string | null>(null);
@@ -351,7 +351,26 @@ export default function FellowshipPage() {
     [selectedRoomId, sending, appendMessage, t]
   );
 
-  // ---------- WebSocket 全局监听：更新侧栏 ----------
+  // ---------- 删除消息 ----------
+  const removeMessage = useCallback((messageId: string) => {
+    messageIdsRef.current.delete(messageId);
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }, []);
+
+  const handleDeleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!confirm('确认删除这条消息？')) return;
+      try {
+        await chatApi.deleteMessage(messageId);
+        removeMessage(messageId);
+      } catch (err: any) {
+        setError(err.response?.data?.message || '删除失败');
+      }
+    },
+    [removeMessage]
+  );
+
+  // ---------- WebSocket 房间订阅：删除消息 ----------
   useEffect(() => {
     const unsubscribe = subscribeAll((message) => {
       const currentSelected = selectedRoomIdRef.current;
@@ -404,6 +423,15 @@ export default function FellowshipPage() {
     });
     return unsubscribe;
   }, [selectedRoomId, subscribe, appendMessage, currentUserId]);
+
+  // ---------- WebSocket 房间订阅：删除消息 ----------
+  useEffect(() => {
+    if (!selectedRoomId) return;
+    const unsubscribe = subscribeDelete(selectedRoomId, (messageId) => {
+      removeMessage(messageId);
+    });
+    return unsubscribe;
+  }, [selectedRoomId, subscribeDelete, removeMessage]);
 
   // ---------- 好友请求处理 ----------
   const handleAcceptRequest = useCallback(

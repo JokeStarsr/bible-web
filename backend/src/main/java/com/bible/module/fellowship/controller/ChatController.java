@@ -142,6 +142,14 @@ public class ChatController {
         return ApiResponse.ok(chatService.sendFileMessage(userId, roomId, file));
     }
 
+    /** 删除消息（仅发送者可删除自己发的消息，同时清理关联文件） */
+    @DeleteMapping("/messages/{messageId}")
+    public ApiResponse<Void> deleteMessage(@PathVariable UUID messageId, Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        chatService.deleteMessage(userId, messageId);
+        return ApiResponse.ok("已删除", null);
+    }
+
     /** 标记房间已读 */
     @PostMapping("/rooms/{roomId}/read")
     public ApiResponse<Void> markRead(@PathVariable UUID roomId, Authentication auth) {

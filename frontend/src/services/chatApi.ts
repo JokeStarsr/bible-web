@@ -160,6 +160,10 @@ export const chatApi = {
       .then((r) => r.data.data as ChatMessageInfo);
   },
 
+  /** 删除消息（仅发送者可删除自己发的消息） */
+  deleteMessage: (messageId: string) =>
+    api.delete(`/chat/messages/${messageId}`).then((r) => r.data.data),
+
   /** 标记房间已读 */
   markRead: (roomId: string) =>
     api.post(`/chat/rooms/${roomId}/read`).then((r) => r.data.data),
