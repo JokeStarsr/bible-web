@@ -51,6 +51,7 @@
             <if test="displayName != null">display_name = #{displayName},</if>
             <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
             <if test="bio != null">bio = #{bio},</if>
+            <if test="status != null">status = #{status},</if>
             updated_at = NOW()
         </set>
         WHERE id = #{id}
