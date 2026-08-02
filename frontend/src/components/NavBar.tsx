@@ -96,9 +96,6 @@ export default function NavBar() {
               <a href="/messages" className="text-bible-muted hover:text-bible-gold transition-colors">
 {t('nav.messages')}
               </a>
-              <a href="/fellowship" className="text-bible-muted hover:text-bible-gold transition-colors">
-                {t('nav.fellowship')}
-              </a>
               {isAdmin && (
                 <>
                   <a href="/qt-admin" className="text-amber-700 font-medium hover:text-amber-900 transition-colors">
@@ -184,13 +181,6 @@ export default function NavBar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
 {t('nav.messages')}
-              </a>
-              <a
-                href="/fellowship"
-                className="block text-bible-dark hover:text-bible-gold"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t('nav.fellowship')}
               </a>
               <a
                 href="/profile"
