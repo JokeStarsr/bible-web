@@ -5,12 +5,14 @@ import type { ChatMessageInfo } from '@/services/chatApi';
 
 // 服务端推送的消息条目
 export interface ChatWSEntry {
-  type: 'message' | 'pong';
+  type: 'message' | 'pong' | 'delete';
   roomId?: string;
   message?: ChatMessageInfo;
+  messageId?: string;
 }
 
 type MessageCallback = (message: ChatMessageInfo) => void;
+type DeleteCallback = (messageId: string) => void;
 
 // 心跳间隔（毫秒）
 const HEARTBEAT_INTERVAL = 25_000;
@@ -31,6 +33,8 @@ export function useChatWebSocket() {
   const roomListenersRef = useRef<Map<string, Set<MessageCallback>>>(new Map());
   // 全局监听器（接收所有房间的消息）
   const globalListenersRef = useRef<Set<MessageCallback>>(new Set());
+  // 按房间订阅的删除回调集合：roomId -> Set<callback>
+  const roomDeleteListenersRef = useRef<Map<string, Set<DeleteCallback>>>(new Map());
   // 心跳定时器
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // 重连定时器
@@ -107,7 +111,25 @@ export function useChatWebSocket() {
       } catch {
         return; // 忽略无法解析的消息
       }
-      if (entry.type === 'pong' || !entry.message || !entry.roomId) return;
+      if (entry.type === 'pong' || !entry.roomId) return;
+
+      // 删除消息事件
+      if (entry.type === 'delete' && entry.messageId) {
+        const delListeners = roomDeleteListenersRef.current.get(entry.roomId);
+        if (delListeners) {
+          delListeners.forEach((cb) => {
+            try {
+              cb(entry.messageId!);
+            } catch {
+              /* ignore */
+            }
+          });
+        }
+        return;
+      }
+
+      // 新消息事件
+      if (!entry.message) return;
       const message = entry.message;
       // 派发到对应房间的订阅者
       const listeners = roomListenersRef.current.get(entry.roomId);
@@ -196,6 +218,25 @@ export function useChatWebSocket() {
     };
   }, []);
 
+  // 订阅指定房间的消息删除事件，返回取消订阅函数
+  const subscribeDelete = useCallback((roomId: string, callback: DeleteCallback) => {
+    let set = roomDeleteListenersRef.current.get(roomId);
+    if (!set) {
+      set = new Set();
+      roomDeleteListenersRef.current.set(roomId, set);
+    }
+    set.add(callback);
+    return () => {
+      const s = roomDeleteListenersRef.current.get(roomId);
+      if (s) {
+        s.delete(callback);
+        if (s.size === 0) {
+          roomDeleteListenersRef.current.delete(roomId);
+        }
+      }
+    };
+  }, []);
+
   // 主动发送原始数据（备用，目前心跳内部已用）
   const send = useCallback((data: unknown) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -209,7 +250,7 @@ export function useChatWebSocket() {
     return false;
   }, []);
 
-  return { connected, subscribe, subscribeAll, send };
+  return { connected, subscribe, subscribeAll, subscribeDelete, send };
 }
 
 export default useChatWebSocket;

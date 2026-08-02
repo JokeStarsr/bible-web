@@ -62,7 +62,7 @@ export default function FellowshipPage() {
   const [inviteExistingIds, setInviteExistingIds] = useState<Set<string>>(new Set());
 
   // WebSocket
-  const { connected, subscribe, subscribeAll } = useChatWebSocket();
+  const { connected, subscribe, subscribeAll, subscribeDelete } = useChatWebSocket();
 
   // 用 ref 跟踪 selectedRoomId，避免全局监听器闭包过期
   const selectedRoomIdRef = useRef<string | null>(null);
@@ -313,7 +313,64 @@ export default function FellowshipPage() {
     [selectedRoomId, sending, appendMessage, t]
   );
 
-  // ---------- WebSocket 全局监听：更新侧栏 ----------
+  // 发送文件消息
+  const handleSendFile = useCallback(
+    async (file: File) => {
+      if (!selectedRoomId || sending) return;
+      setSending(true);
+      setError('');
+      try {
+        const msg = await chatApi.sendFileMessage(selectedRoomId, file);
+        appendMessage(msg);
+        const preview = `[文件] ${file.name}`;
+        setFriends((prev) =>
+          prev.map((f) =>
+            f.roomId === selectedRoomId
+              ? { ...f, lastMessageContent: preview, lastMessageAt: msg.createdAt }
+              : f
+          )
+        );
+        setRooms((prev) =>
+          prev.map((r) =>
+            r.id === selectedRoomId
+              ? {
+                  ...r,
+                  lastMessageContent: preview,
+                  lastMessageAt: msg.createdAt,
+                  lastMessageSenderName: msg.senderName,
+                }
+              : r
+          )
+        );
+      } catch (err: any) {
+        setError(err.response?.data?.message || '文件发送失败');
+      } finally {
+        setSending(false);
+      }
+    },
+    [selectedRoomId, sending, appendMessage, t]
+  );
+
+  // ---------- 删除消息 ----------
+  const removeMessage = useCallback((messageId: string) => {
+    messageIdsRef.current.delete(messageId);
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }, []);
+
+  const handleDeleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!confirm('确认删除这条消息？')) return;
+      try {
+        await chatApi.deleteMessage(messageId);
+        removeMessage(messageId);
+      } catch (err: any) {
+        setError(err.response?.data?.message || '删除失败');
+      }
+    },
+    [removeMessage]
+  );
+
+  // ---------- WebSocket 房间订阅：删除消息 ----------
   useEffect(() => {
     const unsubscribe = subscribeAll((message) => {
       const currentSelected = selectedRoomIdRef.current;
@@ -366,6 +423,15 @@ export default function FellowshipPage() {
     });
     return unsubscribe;
   }, [selectedRoomId, subscribe, appendMessage, currentUserId]);
+
+  // ---------- WebSocket 房间订阅：删除消息 ----------
+  useEffect(() => {
+    if (!selectedRoomId) return;
+    const unsubscribe = subscribeDelete(selectedRoomId, (messageId) => {
+      removeMessage(messageId);
+    });
+    return unsubscribe;
+  }, [selectedRoomId, subscribeDelete, removeMessage]);
 
   // ---------- 好友请求处理 ----------
   const handleAcceptRequest = useCallback(
@@ -571,12 +637,14 @@ export default function FellowshipPage() {
                 onSend={handleSend}
                 onSendImage={handleSendImage}
                 onSendAudio={handleSendAudio}
+                onSendFile={handleSendFile}
                 onLoadMore={handleLoadMore}
                 onBack={handleBack}
                 onOpenMembers={() => setShowMembers(true)}
                 onInviteMembers={handleOpenInvite}
                 onLeaveRoom={handleLeaveRoom}
                 onDeleteFriend={handleDeleteFriend}
+                onDeleteMessage={handleDeleteMessage}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center bg-[#FDF8F0]">
@@ -631,8 +699,10 @@ export default function FellowshipPage() {
         <MembersModal
           roomId={selectedRoomId}
           friends={friends}
+          currentUserId={currentUserId}
           onClose={() => setShowMembers(false)}
           onMembersChanged={loadRooms}
+          onFriendRequestSent={loadRequests}
         />
       )}
       {showInvite && selectedRoomId && (
