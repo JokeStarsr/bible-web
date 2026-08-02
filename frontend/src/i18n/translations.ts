@@ -13,6 +13,59 @@ export interface Translations {
   'nav.qtAdmin': string;
   'nav.fellowship': string;
   'nav.courtship': string;
+  'nav.userAdmin': string;
+
+  // ========== User Admin (用户管理) ==========
+  'userAdmin.title': string;
+  'userAdmin.back': string;
+  'userAdmin.checkingAuth': string;
+  'userAdmin.noPermission': string;
+  'userAdmin.noPermissionHint': string;
+  'userAdmin.backHome': string;
+  'userAdmin.subtitle': string;
+  'userAdmin.searchPlaceholder': string;
+  'userAdmin.total': string;
+  'userAdmin.addBtn': string;
+  'userAdmin.refreshBtn': string;
+  'userAdmin.colUsername': string;
+  'userAdmin.colEmail': string;
+  'userAdmin.colDisplayName': string;
+  'userAdmin.colStatus': string;
+  'userAdmin.colLastLogin': string;
+  'userAdmin.colCreatedAt': string;
+  'userAdmin.colActions': string;
+  'userAdmin.statusActive': string;
+  'userAdmin.statusSuspended': string;
+  'userAdmin.statusDisabled': string;
+  'userAdmin.never': string;
+  'userAdmin.noPassword': string;
+  'userAdmin.editBtn': string;
+  'userAdmin.resetPwdBtn': string;
+  'userAdmin.deleteBtn': string;
+  'userAdmin.confirmDelete': string;
+  'userAdmin.cannotDeleteAdmin': string;
+  'userAdmin.loading': string;
+  'userAdmin.loadFail': string;
+  'userAdmin.saveFail': string;
+  'userAdmin.deleteFail': string;
+  'userAdmin.saveSuccess': string;
+  'userAdmin.deleteSuccess': string;
+  'userAdmin.resetSuccess': string;
+  'userAdmin.createTitle': string;
+  'userAdmin.editTitle': string;
+  'userAdmin.resetTitle': string;
+  'userAdmin.fieldUsername': string;
+  'userAdmin.fieldEmail': string;
+  'userAdmin.fieldPassword': string;
+  'userAdmin.fieldDisplayName': string;
+  'userAdmin.fieldStatus': string;
+  'userAdmin.fieldBio': string;
+  'userAdmin.fieldNewPassword': string;
+  'userAdmin.cancelBtn': string;
+  'userAdmin.saveBtn': string;
+  'userAdmin.submitBtn': string;
+  'userAdmin.pwdHint': string;
+  'userAdmin.empty': string;
 
   // ========== Layout ==========
   'layout.banner': string;
@@ -697,6 +750,59 @@ export const zh: Translations = {
   'nav.qtAdmin': 'QT 管理',
   'nav.fellowship': '主内通讯',
   'nav.courtship': '主内佳偶',
+  'nav.userAdmin': '用户管理',
+
+  // ========== User Admin (用户管理) ==========
+  'userAdmin.title': '用户管理',
+  'userAdmin.back': '返回',
+  'userAdmin.checkingAuth': '正在验证权限...',
+  'userAdmin.noPermission': '无权限访问',
+  'userAdmin.noPermissionHint': '仅管理员可访问此页面',
+  'userAdmin.backHome': '返回首页',
+  'userAdmin.subtitle': '管理平台注册用户：新增、编辑、禁用、重置密码、删除',
+  'userAdmin.searchPlaceholder': '搜索用户名 / 邮箱 / 昵称...',
+  'userAdmin.total': '共 {n} 位用户',
+  'userAdmin.addBtn': '新增用户',
+  'userAdmin.refreshBtn': '刷新',
+  'userAdmin.colUsername': '用户名',
+  'userAdmin.colEmail': '邮箱',
+  'userAdmin.colDisplayName': '昵称',
+  'userAdmin.colStatus': '状态',
+  'userAdmin.colLastLogin': '最后登录',
+  'userAdmin.colCreatedAt': '注册时间',
+  'userAdmin.colActions': '操作',
+  'userAdmin.statusActive': '正常',
+  'userAdmin.statusSuspended': '已暂停',
+  'userAdmin.statusDisabled': '已禁用',
+  'userAdmin.never': '从未',
+  'userAdmin.noPassword': '未设密码',
+  'userAdmin.editBtn': '编辑',
+  'userAdmin.resetPwdBtn': '重置密码',
+  'userAdmin.deleteBtn': '删除',
+  'userAdmin.confirmDelete': '确定删除该用户吗？删除后用户将无法登录，数据保留可恢复。',
+  'userAdmin.cannotDeleteAdmin': '不能删除管理员账号',
+  'userAdmin.loading': '加载中...',
+  'userAdmin.loadFail': '加载用户列表失败',
+  'userAdmin.saveFail': '保存失败',
+  'userAdmin.deleteFail': '删除失败',
+  'userAdmin.saveSuccess': '保存成功',
+  'userAdmin.deleteSuccess': '删除成功',
+  'userAdmin.resetSuccess': '密码已重置',
+  'userAdmin.createTitle': '新增用户',
+  'userAdmin.editTitle': '编辑用户',
+  'userAdmin.resetTitle': '重置密码',
+  'userAdmin.fieldUsername': '用户名',
+  'userAdmin.fieldEmail': '邮箱',
+  'userAdmin.fieldPassword': '密码',
+  'userAdmin.fieldDisplayName': '昵称',
+  'userAdmin.fieldStatus': '状态',
+  'userAdmin.fieldBio': '简介',
+  'userAdmin.fieldNewPassword': '新密码',
+  'userAdmin.cancelBtn': '取消',
+  'userAdmin.saveBtn': '保存',
+  'userAdmin.submitBtn': '提交',
+  'userAdmin.pwdHint': '至少8位，需含字母和数字',
+  'userAdmin.empty': '暂无用户数据',
 
   // Layout
   'layout.banner': '亲爱的小羊们，这里的所有话语只提供参考，我们跟神的关系还是取决于各自的祷告和圣灵的感动。',
@@ -1384,6 +1490,59 @@ export const ko: Translations = {
   'nav.qtAdmin': 'QT 관리',
   'nav.fellowship': '성도 교제',
   'nav.courtship': '주내 배우자',
+  'nav.userAdmin': '사용자 관리',
+
+  // ========== User Admin (사용자 관리) ==========
+  'userAdmin.title': '사용자 관리',
+  'userAdmin.back': '뒤로',
+  'userAdmin.checkingAuth': '권한 확인 중...',
+  'userAdmin.noPermission': '접근 권한 없음',
+  'userAdmin.noPermissionHint': '관리자만 이 페이지에 접근할 수 있습니다',
+  'userAdmin.backHome': '홈으로',
+  'userAdmin.subtitle': '가입 사용자 관리: 추가, 편집, 정지, 비밀번호 재설정, 삭제',
+  'userAdmin.searchPlaceholder': '사용자명 / 이메일 / 닉네임 검색...',
+  'userAdmin.total': '총 {n}명',
+  'userAdmin.addBtn': '사용자 추가',
+  'userAdmin.refreshBtn': '새로고침',
+  'userAdmin.colUsername': '사용자명',
+  'userAdmin.colEmail': '이메일',
+  'userAdmin.colDisplayName': '닉네임',
+  'userAdmin.colStatus': '상태',
+  'userAdmin.colLastLogin': '최근 로그인',
+  'userAdmin.colCreatedAt': '가입일',
+  'userAdmin.colActions': '작업',
+  'userAdmin.statusActive': '정상',
+  'userAdmin.statusSuspended': '일시정지',
+  'userAdmin.statusDisabled': '비활성',
+  'userAdmin.never': '없음',
+  'userAdmin.noPassword': '비밀번호 없음',
+  'userAdmin.editBtn': '편집',
+  'userAdmin.resetPwdBtn': '비밀번호 재설정',
+  'userAdmin.deleteBtn': '삭제',
+  'userAdmin.confirmDelete': '이 사용자를 삭제하시겠습니까? 삭제 후 로그인할 수 없으며, 데이터는 복구 가능합니다.',
+  'userAdmin.cannotDeleteAdmin': '관리자 계정은 삭제할 수 없습니다',
+  'userAdmin.loading': '로딩 중...',
+  'userAdmin.loadFail': '사용자 목록 로드 실패',
+  'userAdmin.saveFail': '저장 실패',
+  'userAdmin.deleteFail': '삭제 실패',
+  'userAdmin.saveSuccess': '저장 성공',
+  'userAdmin.deleteSuccess': '삭제 성공',
+  'userAdmin.resetSuccess': '비밀번호가 재설정되었습니다',
+  'userAdmin.createTitle': '사용자 추가',
+  'userAdmin.editTitle': '사용자 편집',
+  'userAdmin.resetTitle': '비밀번호 재설정',
+  'userAdmin.fieldUsername': '사용자명',
+  'userAdmin.fieldEmail': '이메일',
+  'userAdmin.fieldPassword': '비밀번호',
+  'userAdmin.fieldDisplayName': '닉네임',
+  'userAdmin.fieldStatus': '상태',
+  'userAdmin.fieldBio': '소개',
+  'userAdmin.fieldNewPassword': '새 비밀번호',
+  'userAdmin.cancelBtn': '취소',
+  'userAdmin.saveBtn': '저장',
+  'userAdmin.submitBtn': '제출',
+  'userAdmin.pwdHint': '8자 이상, 문자와 숫자 포함',
+  'userAdmin.empty': '사용자 데이터 없음',
 
   // Layout
   'layout.banner': '사랑하는 어린 양들아, 여기 모든 말씀은 참고용일 뿐이란다. 하나님과의 관계는 각자의 기도와 성령의 감동에 달려 있음을 기억하렴.',
