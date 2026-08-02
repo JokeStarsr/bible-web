@@ -646,6 +646,10 @@ export interface Translations {
   'fellowship.invite': string;
   'fellowship.inviteFailed': string;
   'fellowship.noFriendsToInvite': string;
+  'fellowship.searchUserToInvite': string;
+  'fellowship.searchResults': string;
+  'fellowship.noSearchResults': string;
+  'fellowship.notFriend': string;
   'fellowship.cancelRecord': string;
   'fellowship.imageTooLarge': string;
   'fellowship.voiceTooLarge': string;
@@ -1394,6 +1398,10 @@ export const zh: Translations = {
   'fellowship.invite': '邀请',
   'fellowship.inviteFailed': '邀请失败',
   'fellowship.noFriendsToInvite': '没有可邀请的好友（均已在本群或暂无好友）',
+  'fellowship.searchUserToInvite': '搜索用户名或邮箱，可拉非好友进群',
+  'fellowship.searchResults': '搜索结果',
+  'fellowship.noSearchResults': '未找到匹配用户',
+  'fellowship.notFriend': '非好友',
   'fellowship.cancelRecord': '取消',
   'fellowship.imageTooLarge': '图片不能超过10MB',
   'fellowship.voiceTooLarge': '语音不能超过5MB',
@@ -2138,6 +2146,10 @@ export const ko: Translations = {
   'fellowship.invite': '초대',
   'fellowship.inviteFailed': '초대 실패',
   'fellowship.noFriendsToInvite': '초대할 수 있는 친구가 없습니다 (모두 이 그룹에 있거나 친구가 없음)',
+  'fellowship.searchUserToInvite': '사용자명 또는 이메일 검색, 친구가 아닌 사용자도 초대 가능',
+  'fellowship.searchResults': '검색 결과',
+  'fellowship.noSearchResults': '일치하는 사용자가 없습니다',
+  'fellowship.notFriend': '친구 아님',
   'fellowship.cancelRecord': '취소',
   'fellowship.imageTooLarge': '사진은 10MB 이하만 가능',
   'fellowship.voiceTooLarge': '음성은 5MB 이하만 가능',
