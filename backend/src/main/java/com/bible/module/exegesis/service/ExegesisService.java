@@ -249,7 +249,7 @@ public class ExegesisService {
     }
 
     private String generateOriginalTextNote(BibleBook book, String category, String ref, String verseText) {
-        return String.format("【原文翻译与注释】%s是%s的一部分。虽然当前系统未配置大模型 API Key，无法给出针对这段具体经文的原文词汇分析，但你可以从以下方面自行默想：\n\n" +
+        return String.format("【原文翻译与注释】%s是%s的一部分。当前为简要解经版本，暂未给出针对这段具体经文的原文词汇分析，你可以从以下方面自行默想：\n\n" +
                 "1. 这段经文中的核心动词和名词，在原文中往往带有比中文译本更丰富的含义。例如，智慧书中的\"敬畏\"、先知书中的\"回转/悔改\"、保罗书信中的\"恩典\"等，都是理解整段经文的关键。\n\n" +
                 "2. 建议结合一本好的原文 Concordance（经文汇编）或圣经注释书，查看关键词在原文中的使用频率和上下文。\n\n" +
                 "3. 本段经文的经文内容如下，可供你参考默想：\n%s",
@@ -266,8 +266,8 @@ public class ExegesisService {
     }
 
     private String generateSummary(BibleBook book, String category, String ref, int sc, int sv, int ec, int ev) {
-        return String.format("【经文摘要】%s（%s）的这段经文（%s）向我们传递了宝贵的属灵信息。由于当前系统未配置大模型 API Key，" +
-                "无法生成针对具体经文的精细摘要，但你可以从经文字面意思出发，结合其所属的%s类别，默想神在这段经文中要表达的心意。",
+        return String.format("【经文摘要】%s（%s）的这段经文（%s）向我们传递了宝贵的属灵信息。当前为简要解经版本，" +
+                "你可以从经文字面意思出发，结合其所属的%s类别，默想神在这段经文中要表达的心意。",
                 book.getBookNameZh(), category, ref, category);
     }
 
