@@ -33,7 +33,8 @@ RUN apk add --no-cache curl tzdata python3 py3-pip \
     tesseract-ocr tesseract-ocr-data-chi_sim tesseract-ocr-data-eng \
     postgresql-client && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/Shanghai" > /etc/timezone
+    echo "Asia/Shanghai" > /etc/timezone && \
+    pip install --no-cache-dir --break-system-packages edge-tts
 
 COPY bible-tts.py /usr/local/bin/bible-tts.py
 
