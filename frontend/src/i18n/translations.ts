@@ -164,6 +164,8 @@ export interface Translations {
   'home.generationTypes': Record<string, string>;
   'home.getExegesis': string;
   'home.exegesisLoading': string;
+  'home.exegesisLoadingHint': string;
+  'home.exegesisReminder': string;
   'home.exegesisError': string;
   'home.exegesisPanel.title': string;
   'home.exegesisPanel.historicalBackground': string;
@@ -915,7 +917,9 @@ export const zh: Translations = {
     'chapter_full': '整一章',
   },
   'home.getExegesis': '获取深度解经',
-  'home.exegesisLoading': '解经正在生成中，请稍候...',
+  'home.exegesisLoading': '正在为您深度解经，请耐心等候…',
+  'home.exegesisLoadingHint': 'AI 正在查考背景、逐节解析，通常需要数秒到数十秒，请勿离开本页',
+  'home.exegesisReminder': '再次提醒，解析内容均为参考，弟兄姊妹们依然需要各自谦卑祷告哦！',
   'home.exegesisError': '解经生成失败，请稍后再试',
   'home.exegesisPanel.title': 'AI 深度解经',
   'home.exegesisPanel.historicalBackground': '历史背景',
@@ -1663,7 +1667,9 @@ export const ko: Translations = {
     'chapter_full': '한 장 전체',
   },
   'home.getExegesis': '깊이 있는 해설 보기',
-  'home.exegesisLoading': '해설을 생성하는 중입니다. 잠시만 기다려 주세요...',
+  'home.exegesisLoading': '깊이 있는 해설을 생성 중입니다. 잠시만 기다려 주세요…',
+  'home.exegesisLoadingHint': 'AI가 배경을 살피고 절별로 풀이하고 있습니다. 보통 수 초에서 수십 초가 걸리며, 이 페이지를 벗어나지 마세요.',
+  'home.exegesisReminder': '다시 한번 당부드립니다: 해설 내용은 모두 참고용이며, 형제자매님들은 각자 겸손히 기도해 주세요!',
   'home.exegesisError': '해설 생성에 실패했습니다. 다시 시도해 주세요',
   'home.exegesisPanel.title': 'AI 성경 해설',
   'home.exegesisPanel.historicalBackground': '역사적 배경',

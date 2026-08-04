@@ -62,6 +62,7 @@ export default function HomePage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  const [exegesisLoading, setExegesisLoading] = useState(false);
   const [scripture, setScripture] = useState<ScriptureData | null>(null);
   const [exegesis, setExegesis] = useState<any>(null);
   const [error, setError] = useState('');
@@ -175,7 +176,8 @@ export default function HomePage() {
 
   const getExegesis = async () => {
     if (!scripture) return;
-    setLoading(true);
+    setExegesisLoading(true);
+    setError('');
     try {
       const res = await api.post('/exegesis/generate', {
         generationRecordId: scripture.generationRecordId,
@@ -184,7 +186,7 @@ export default function HomePage() {
     } catch (err: any) {
       setError(err.response?.data?.message || t('home.exegesisFail'));
     } finally {
-      setLoading(false);
+      setExegesisLoading(false);
     }
   };
 
@@ -455,19 +457,52 @@ export default function HomePage() {
 
           {/* 解经按钮 */}
           <div className="text-center">
-            <button onClick={getExegesis} className="exegesis-btn" disabled={loading}>
+            <button onClick={getExegesis} className="exegesis-btn" disabled={exegesisLoading}>
               {t('home.startExegesis')}
             </button>
           </div>
         </div>
       )}
 
+      {/* 解经生成中：醒目等待标识 */}
+      {exegesisLoading && (
+        <div className="scripture-card border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-white">
+          <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+            {/* 旋转的书卷图标 */}
+            <div className="relative mb-5">
+              <div className="w-16 h-16 rounded-full border-4 border-amber-200 border-t-amber-600 animate-spin" />
+              <svg
+                className="absolute inset-0 m-auto w-7 h-7 text-amber-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <p className="text-lg font-bold text-amber-700 animate-pulse">
+              {t('home.exegesisLoading')}
+            </p>
+            <p className="mt-2 text-sm text-amber-600/80 max-w-md">
+              {t('home.exegesisLoadingHint')}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 解经内容 */}
-      {exegesis && (
+      {exegesis && !exegesisLoading && (
         <div className="scripture-card space-y-6">
           <h2 className="text-2xl font-bold text-bible-dark text-center border-b border-bible-warm pb-4">
             {t('home.exegesisTitle')}
           </h2>
+
+          {/* 红字提醒 */}
+          <p className="text-center text-red-600 font-semibold bg-red-50 rounded-lg py-2 px-4 text-sm">
+            {t('home.exegesisReminder')}
+          </p>
 
           <Section title={t('home.exegesisSection.summary')}>
             <HebrewText text={exegesis.summary} />
