@@ -35,6 +35,8 @@ public class QtAllResponseDTO {
     private String meditation;
     private String application;
     private String prayer;
+    /** 可见范围：PUBLIC=可共享，PRIVATE=仅自己看见 */
+    private String visibility;
     private LocalDateTime createdAt;
 
     /** 数据库原始 photos 字符串（逗号分隔），不返回给前端 */

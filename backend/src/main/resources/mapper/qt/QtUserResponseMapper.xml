@@ -10,6 +10,7 @@
         <result column="application" property="application"/>
         <result column="prayer" property="prayer"/>
         <result column="photos" property="photos"/>
+        <result column="visibility" property="visibility"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
@@ -29,14 +30,32 @@
         ORDER BY r.created_at ASC
     </select>
 
+    <!-- 社区可见列表：返回 PUBLIC 回应 + 当前用户自己的所有回应（含 PRIVATE） -->
+    <select id="findVisibleByContentId" resultMap="QtUserResponseMap">
+        SELECT r.* FROM qt_user_responses r
+        WHERE r.qt_content_id = #{qtContentId}
+          AND (r.visibility = 'PUBLIC' OR r.user_id = #{userId})
+        ORDER BY r.created_at ASC
+    </select>
+
     <insert id="insert">
-        INSERT INTO qt_user_responses(id, user_id, qt_content_id, meditation, application, prayer, photos)
-        VALUES(#{id}, #{userId}, #{qtContentId}, #{meditation}, #{application}, #{prayer}, #{photos})
+        INSERT INTO qt_user_responses(id, user_id, qt_content_id, meditation, application, prayer, photos, visibility)
+        VALUES(#{id}, #{userId}, #{qtContentId}, #{meditation}, #{application}, #{prayer}, #{photos},
+               <choose>
+                   <when test="visibility != null and visibility != ''">#{visibility}</when>
+                   <otherwise>'PUBLIC'</otherwise>
+               </choose>)
     </insert>
 
     <update id="update">
         UPDATE qt_user_responses
-        SET meditation = #{meditation}, application = #{application}, prayer = #{prayer}, photos = #{photos}, updated_at = NOW()
+        SET meditation = #{meditation}, application = #{application}, prayer = #{prayer}, photos = #{photos},
+            visibility =
+                <choose>
+                    <when test="visibility != null and visibility != ''">#{visibility}</when>
+                    <otherwise>'PUBLIC'</otherwise>
+                </choose>,
+            updated_at = NOW()
         WHERE id = #{id}
     </update>
 
@@ -55,7 +74,8 @@
         DELETE FROM qt_user_responses WHERE id = #{id}
     </delete>
 
-    <!-- 查询所有用户的回应，JOIN users + qt_daily_contents 一次性返回完整数据 -->
+    <!-- 查询所有用户的回应，JOIN users + qt_daily_contents 一次性返回完整数据。
+         仅返回 PUBLIC 回应 + 当前用户自己的所有回应（含 PRIVATE）。 -->
     <resultMap id="AllResponseMap" type="com.bible.module.qt.dto.QtAllResponseDTO">
         <id column="response_id" property="responseId"/>
         <result column="user_id" property="userId"/>
@@ -70,11 +90,12 @@
         <result column="meditation" property="meditation"/>
         <result column="application" property="application"/>
         <result column="prayer" property="prayer"/>
+        <result column="visibility" property="visibility"/>
         <result column="photos" property="photosRaw"/>
         <result column="created_at" property="createdAt"/>
     </resultMap>
 
-    <select id="findAllResponses" resultMap="AllResponseMap">
+    <select id="findAllVisibleResponses" resultMap="AllResponseMap">
         SELECT r.id AS response_id,
                r.user_id,
                r.qt_content_id,
@@ -82,6 +103,7 @@
                r.application,
                r.prayer,
                r.photos,
+               r.visibility,
                r.created_at,
                u.username,
                u.display_name,
@@ -93,6 +115,7 @@
         FROM qt_user_responses r
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN qt_daily_contents c ON r.qt_content_id = c.id
+        WHERE r.visibility = 'PUBLIC' OR r.user_id = #{userId}
         ORDER BY r.created_at DESC
     </select>
 

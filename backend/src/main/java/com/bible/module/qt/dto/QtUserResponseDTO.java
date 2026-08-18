@@ -18,5 +18,7 @@ public class QtUserResponseDTO {
     private String application;
     private String prayer;
     private List<String> photos;
+    /** 可见范围：PUBLIC=可共享，PRIVATE=仅自己看见 */
+    private String visibility;
     private LocalDateTime createdAt;
 }

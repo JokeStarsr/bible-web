@@ -526,6 +526,13 @@ export interface Translations {
   'qt.selectDate': string;
   'qt.confirm': string;
   'qt.goToday': string;
+  'qt.visibilityLabel': string;
+  'qt.visibilityPublic': string;
+  'qt.visibilityPrivate': string;
+  'qt.visibilityHint': string;
+  'qt.publicTag': string;
+  'qt.privateTag': string;
+  'qt.myPrivateNote': string;
 
   // ========== QT History ==========
   'qtHistory.title': string;
@@ -1280,6 +1287,13 @@ export const zh: Translations = {
   'qt.selectDate': '选择日期',
   'qt.confirm': '确定',
   'qt.goToday': '今天',
+  'qt.visibilityLabel': '可见范围',
+  'qt.visibilityPublic': '可共享',
+  'qt.visibilityPrivate': '仅自己看见',
+  'qt.visibilityHint': '选择「可共享」后，其他用户可在社区中看到你的回应',
+  'qt.publicTag': '共享',
+  'qt.privateTag': '私密',
+  'qt.myPrivateNote': '仅自己可见',
 
   // QT History
   'qtHistory.title': 'QT 历史记录',
@@ -2030,6 +2044,13 @@ export const ko: Translations = {
   'qt.selectDate': '날짜 선택',
   'qt.confirm': '확인',
   'qt.goToday': '오늘',
+  'qt.visibilityLabel': '공개 범위',
+  'qt.visibilityPublic': '공유 가능',
+  'qt.visibilityPrivate': '나만 보기',
+  'qt.visibilityHint': '"공유 가능"을 선택하면 다른 사용자가 커뮤니티에서 회원의 묵상을 볼 수 있습니다',
+  'qt.publicTag': '공유',
+  'qt.privateTag': '비공개',
+  'qt.myPrivateNote': '나만 볼 수 있음',
 
   // QT History
   'qtHistory.title': 'QT 기록',

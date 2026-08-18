@@ -98,12 +98,15 @@ public class QtService {
     public void saveResponse(UUID userId, QtUserResponseRequest req) {
         String photosStr = req.getPhotos() != null && !req.getPhotos().isEmpty()
                 ? String.join(",", req.getPhotos()) : null;
+        // 规范化可见范围：默认 PUBLIC，仅接受 PUBLIC / PRIVATE
+        String visibility = normalizeVisibility(req.getVisibility());
         QtUserResponse existing = responseMapper.findByUserAndContent(userId, req.getQtContentId());
         if (existing != null) {
             existing.setMeditation(req.getMeditation());
             existing.setApplication(req.getApplication());
             existing.setPrayer(req.getPrayer());
             existing.setPhotos(photosStr);
+            existing.setVisibility(visibility);
             responseMapper.update(existing);
         } else {
             QtUserResponse r = new QtUserResponse();
@@ -114,8 +117,16 @@ public class QtService {
             r.setApplication(req.getApplication());
             r.setPrayer(req.getPrayer());
             r.setPhotos(photosStr);
+            r.setVisibility(visibility);
             responseMapper.insert(r);
         }
+    }
+
+    /** 规范化可见范围字段，仅接受 PUBLIC / PRIVATE，其余值或空值默认 PUBLIC */
+    private String normalizeVisibility(String visibility) {
+        if (visibility == null || visibility.isBlank()) return "PUBLIC";
+        String v = visibility.trim().toUpperCase();
+        return "PRIVATE".equals(v) ? "PRIVATE" : "PUBLIC";
     }
 
     public String uploadPhoto(UUID userId, MultipartFile file) {
@@ -156,12 +167,13 @@ public class QtService {
         return toResponseDTO(response);
     }
 
-    public List<QtUserResponseDTO> getCommunityResponses(LocalDate date) {
+    public List<QtUserResponseDTO> getCommunityResponses(LocalDate date, UUID currentUserId) {
         QtDailyContent content = contentMapper.findByDate(date);
         if (content == null) {
             throw new BusinessException("QT_NOT_FOUND", "该日期暂无灵修内容");
         }
-        List<QtUserResponse> responses = responseMapper.findByContentId(content.getId());
+        // 仅返回 PUBLIC 回应 + 当前用户自己的所有回应（含 PRIVATE）
+        List<QtUserResponse> responses = responseMapper.findVisibleByContentId(content.getId(), currentUserId);
         return responses.stream().map(this::toResponseDTO).collect(Collectors.toList());
     }
 
@@ -219,9 +231,10 @@ public class QtService {
 
     /**
      * 获取所有用户的 QT 回应（用于历史记录按用户名分类展示）
+     * 仅返回 PUBLIC 回应 + 当前用户自己的所有回应（含 PRIVATE）
      */
-    public List<QtAllResponseDTO> getAllResponses() {
-        return responseMapper.findAllResponses();
+    public List<QtAllResponseDTO> getAllResponses(UUID currentUserId) {
+        return responseMapper.findAllVisibleResponses(currentUserId);
     }
 
     @Transactional
@@ -271,6 +284,7 @@ public class QtService {
                 .application(r.getApplication())
                 .prayer(r.getPrayer())
                 .photos(photoList)
+                .visibility(r.getVisibility() != null ? r.getVisibility() : "PUBLIC")
                 .createdAt(r.getCreatedAt())
                 .build();
     }

@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { useI18n } from '@/i18n/I18nContext';
 import { localizeScriptureReference, localizeBibleBookNames } from '@/utils/bibleBookNames';
+
+type Visibility = 'PUBLIC' | 'PRIVATE';
 
 interface ResponseItem {
   responseId: string;
@@ -21,6 +23,7 @@ interface ResponseItem {
   application: string;
   prayer: string;
   photos: string[];
+  visibility?: string;
   createdAt: string;
 }
 
@@ -29,6 +32,33 @@ interface UserGroup {
   username: string;
   displayName: string;
   responses: ResponseItem[];
+}
+
+/**
+ * 自适应高度的 textarea：随内容增多自动变长，不出现内部滚动条。
+ */
+function useAutoResizeTextarea<T extends HTMLTextAreaElement>(value: string) {
+  const ref = useRef<T | null>(null);
+  const resize = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(el.scrollHeight, 80)}px`;
+    el.style.overflowY = 'hidden';
+  }, []);
+  useEffect(() => { resize(); }, [value, resize]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => resize();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [resize]);
+  useEffect(() => { resize(); }, [resize]);
+  return ref;
 }
 
 export default function QtHistoryPage() {
@@ -49,8 +79,14 @@ export default function QtHistoryPage() {
   const [editMeditation, setEditMeditation] = useState('');
   const [editApplication, setEditApplication] = useState('');
   const [editPrayer, setEditPrayer] = useState('');
+  const [editVisibility, setEditVisibility] = useState<Visibility>('PUBLIC');
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // 编辑模式下的自适应 textarea refs
+  const editMeditationRef = useAutoResizeTextarea<HTMLTextAreaElement>(editMeditation);
+  const editApplicationRef = useAutoResizeTextarea<HTMLTextAreaElement>(editApplication);
+  const editPrayerRef = useAutoResizeTextarea<HTMLTextAreaElement>(editPrayer);
 
   // 视图模式：按用户名分类 / 按时间排序
   const [viewMode, setViewMode] = useState<'user' | 'time'>('user');
@@ -176,6 +212,7 @@ export default function QtHistoryPage() {
     setEditMeditation(item.meditation || '');
     setEditApplication(item.application || '');
     setEditPrayer(item.prayer || '');
+    setEditVisibility(item.visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC');
     setExpandedResponse(item.responseId);
   };
 
@@ -192,6 +229,7 @@ export default function QtHistoryPage() {
         application: editApplication,
         prayer: editPrayer,
         photos: item.photos || [],
+        visibility: editVisibility,
       });
       setEditingId(null);
       await loadAllResponses();
@@ -352,7 +390,12 @@ export default function QtHistoryPage() {
                           >
                             <div className="flex items-center justify-between">
                               <div>
-                                <span className="text-sm text-bible-muted">{formatDate(item.qtDate)}</span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm text-bible-muted">{formatDate(item.qtDate)}</span>
+                                  {item.visibility === 'PRIVATE' && canManage && (
+                                    <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{t('qt.privateTag')}</span>
+                                  )}
+                                </div>
                                 <h3 className="text-base font-semibold text-bible-dark mt-1">{lang === 'ko' && item.titleKo ? item.titleKo : localizeBibleBookNames(item.title, lang)}</h3>
                                 {item.scriptureReference && (
                                   <p className="text-sm text-bible-gold mt-0.5">{lang === 'ko' && item.scriptureReferenceKo ? item.scriptureReferenceKo : localizeScriptureReference(item.scriptureReference, lang)}</p>
@@ -426,29 +469,55 @@ export default function QtHistoryPage() {
                               <div>
                                 <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.meditation')}</label>
                                 <textarea
+                                  ref={editMeditationRef}
                                   value={editMeditation}
                                   onChange={(e) => setEditMeditation(e.target.value)}
                                   rows={3}
-                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold resize-none overflow-hidden leading-relaxed"
                                 />
                               </div>
                               <div>
                                 <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.application')}</label>
                                 <textarea
+                                  ref={editApplicationRef}
                                   value={editApplication}
                                   onChange={(e) => setEditApplication(e.target.value)}
                                   rows={3}
-                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold resize-none overflow-hidden leading-relaxed"
                                 />
                               </div>
                               <div>
                                 <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.prayer')}</label>
                                 <textarea
+                                  ref={editPrayerRef}
                                   value={editPrayer}
                                   onChange={(e) => setEditPrayer(e.target.value)}
                                   rows={3}
-                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold resize-none overflow-hidden leading-relaxed"
                                 />
+                              </div>
+                              {/* 可见范围选择 */}
+                              <div className="bg-amber-50/40 rounded-lg border border-amber-100 p-2.5">
+                                <label className="block text-xs font-semibold text-amber-800 mb-1.5">{t('qt.visibilityLabel')}</label>
+                                <div className="flex flex-wrap gap-2 mb-1">
+                                  <button type="button" onClick={() => setEditVisibility('PUBLIC')}
+                                    className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                      editVisibility === 'PUBLIC'
+                                        ? 'bg-amber-500 text-white border-amber-500'
+                                        : 'bg-white text-amber-700 border-amber-200 hover:border-amber-400'
+                                    }`}>
+                                    {t('qt.visibilityPublic')}
+                                  </button>
+                                  <button type="button" onClick={() => setEditVisibility('PRIVATE')}
+                                    className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                      editVisibility === 'PRIVATE'
+                                        ? 'bg-gray-600 text-white border-gray-600'
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                                    }`}>
+                                    {t('qt.visibilityPrivate')}
+                                  </button>
+                                </div>
+                                <p className="text-[11px] text-amber-600/80 leading-relaxed">{t('qt.visibilityHint')}</p>
                               </div>
                               <div className="flex gap-2">
                                 <button
@@ -542,6 +611,9 @@ export default function QtHistoryPage() {
                                       {isMe && (
                                         <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">{t('qtHistory.me')}</span>
                                       )}
+                                      {item.visibility === 'PRIVATE' && isMe && (
+                                        <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{t('qt.privateTag')}</span>
+                                      )}
                                     </div>
                                     <span className="text-xs text-bible-muted">{formatDateTime(item.createdAt)}</span>
                                   </div>
@@ -615,29 +687,55 @@ export default function QtHistoryPage() {
                               <div>
                                 <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.meditation')}</label>
                                 <textarea
+                                  ref={editMeditationRef}
                                   value={editMeditation}
                                   onChange={(e) => setEditMeditation(e.target.value)}
                                   rows={3}
-                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold resize-none overflow-hidden leading-relaxed"
                                 />
                               </div>
                               <div>
                                 <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.application')}</label>
                                 <textarea
+                                  ref={editApplicationRef}
                                   value={editApplication}
                                   onChange={(e) => setEditApplication(e.target.value)}
                                   rows={3}
-                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold resize-none overflow-hidden leading-relaxed"
                                 />
                               </div>
                               <div>
                                 <label className="text-xs font-medium text-bible-gold mb-1 block">{t('qtHistory.prayer')}</label>
                                 <textarea
+                                  ref={editPrayerRef}
                                   value={editPrayer}
                                   onChange={(e) => setEditPrayer(e.target.value)}
                                   rows={3}
-                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold"
+                                  className="w-full text-sm border border-bible-warm rounded-lg p-2 focus:outline-none focus:border-bible-gold resize-none overflow-hidden leading-relaxed"
                                 />
+                              </div>
+                              {/* 可见范围选择 */}
+                              <div className="bg-amber-50/40 rounded-lg border border-amber-100 p-2.5">
+                                <label className="block text-xs font-semibold text-amber-800 mb-1.5">{t('qt.visibilityLabel')}</label>
+                                <div className="flex flex-wrap gap-2 mb-1">
+                                  <button type="button" onClick={() => setEditVisibility('PUBLIC')}
+                                    className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                      editVisibility === 'PUBLIC'
+                                        ? 'bg-amber-500 text-white border-amber-500'
+                                        : 'bg-white text-amber-700 border-amber-200 hover:border-amber-400'
+                                    }`}>
+                                    {t('qt.visibilityPublic')}
+                                  </button>
+                                  <button type="button" onClick={() => setEditVisibility('PRIVATE')}
+                                    className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                      editVisibility === 'PRIVATE'
+                                        ? 'bg-gray-600 text-white border-gray-600'
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                                    }`}>
+                                    {t('qt.visibilityPrivate')}
+                                  </button>
+                                </div>
+                                <p className="text-[11px] text-amber-600/80 leading-relaxed">{t('qt.visibilityHint')}</p>
                               </div>
                               <div className="flex gap-2">
                                 <button

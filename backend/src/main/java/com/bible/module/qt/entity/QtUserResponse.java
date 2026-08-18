@@ -18,6 +18,8 @@ public class QtUserResponse {
     private String application;
     private String prayer;
     private String photos;
+    /** 可见范围：PUBLIC=可共享（其他用户可见），PRIVATE=仅自己看见 */
+    private String visibility;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface QtUserResponseMapper {
     QtUserResponse findByUserAndContent(@Param("userId") UUID userId, @Param("qtContentId") UUID qtContentId);
     List<QtUserResponse> findByContentId(@Param("qtContentId") UUID qtContentId);
+    /** 社区可见列表：返回 PUBLIC 回应 + 当前用户自己的所有回应（含 PRIVATE） */
+    List<QtUserResponse> findVisibleByContentId(@Param("qtContentId") UUID qtContentId, @Param("userId") UUID userId);
     QtUserResponse findById(@Param("id") UUID id);
     void insert(QtUserResponse response);
     void update(QtUserResponse response);
@@ -19,6 +21,7 @@ public interface QtUserResponseMapper {
     int countUserHistory(@Param("userId") UUID userId);
     void deleteById(@Param("id") UUID id);
 
-    /** 查询所有用户的回应（JOIN users + qt_daily_contents），按创建时间倒序 */
-    List<QtAllResponseDTO> findAllResponses();
+    /** 查询所有用户的回应（JOIN users + qt_daily_contents），按创建时间倒序。
+     *  返回 PUBLIC 回应 + 当前用户自己的所有回应（含 PRIVATE）。 */
+    List<QtAllResponseDTO> findAllVisibleResponses(@Param("userId") UUID userId);
 }

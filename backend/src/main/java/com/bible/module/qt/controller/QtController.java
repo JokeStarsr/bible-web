@@ -99,8 +99,12 @@ public class QtController {
 
     @GetMapping("/responses/{date}")
     public ApiResponse<List<QtUserResponseDTO>> communityResponses(
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ApiResponse.ok(qtService.getCommunityResponses(date));
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication auth) {
+        // 允许匿名访问：未登录用户仅能看见 PUBLIC 回应；
+        // 登录用户可看见 PUBLIC 回应 + 自己的所有回应（含 PRIVATE）
+        UUID userId = auth != null ? (UUID) auth.getPrincipal() : null;
+        return ApiResponse.ok(qtService.getCommunityResponses(date, userId));
     }
 
     @GetMapping("/history")
@@ -115,13 +119,15 @@ public class QtController {
     /**
      * 获取所有用户的 QT 回应（用于历史记录按用户名分类展示）
      * 一次 JOIN 查询返回所有回应，前端按用户名分组
+     * 仅返回 PUBLIC 回应 + 当前用户自己的所有回应（含 PRIVATE）
      */
     @GetMapping("/all-responses")
     public ApiResponse<List<QtAllResponseDTO>> allResponses(Authentication auth) {
         if (auth == null) {
             throw new BusinessException("UNAUTHORIZED", "请先登录");
         }
-        return ApiResponse.ok(qtService.getAllResponses());
+        UUID userId = (UUID) auth.getPrincipal();
+        return ApiResponse.ok(qtService.getAllResponses(userId));
     }
 
     /**

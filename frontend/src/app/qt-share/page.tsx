@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { useI18n } from '@/i18n/I18nContext';
@@ -21,6 +21,8 @@ interface QtContent {
   hymnKo?: string;
 }
 
+type Visibility = 'PUBLIC' | 'PRIVATE';
+
 interface QtUserResponseItem {
   id: string;
   userId: string;
@@ -30,7 +32,47 @@ interface QtUserResponseItem {
   application: string;
   prayer: string;
   photos?: string[];
+  visibility?: string;
   createdAt: string;
+}
+
+/**
+ * 自适应高度的 textarea：随内容增多自动变长，不出现内部滚动条。
+ * 使用方式：const ref = useAutoResizeTextarea(value);
+ *           <textarea ref={ref} value={value} ... />
+ */
+function useAutoResizeTextarea<T extends HTMLTextAreaElement>(value: string) {
+  const ref = useRef<T | null>(null);
+  const resize = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    // 先重置为 auto，让 scrollHeight 反映真实所需高度
+    el.style.height = 'auto';
+    // 留一点缓冲，避免最后一行被裁切
+    el.style.height = `${Math.max(el.scrollHeight, 96)}px`;
+    // 关键：禁用内部滚动条
+    el.style.overflowY = 'hidden';
+  }, []);
+  useEffect(() => {
+    resize();
+    // 内容变化时重新计算高度
+  }, [value, resize]);
+  // 容器尺寸变化（窗口旋转/缩放）时也要重新计算
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => resize();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [resize]);
+  // 初始挂载后立刻算一次，避免首次渲染出现 1 行高度
+  useEffect(() => {
+    resize();
+  }, [resize]);
+  return ref;
 }
 
 export default function QtSharePage() {
@@ -46,11 +88,17 @@ export default function QtSharePage() {
   const [application, setApplication] = useState('');
   const [prayer, setPrayer] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState<Visibility>('PUBLIC');
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState('');
+
+  // 自适应高度的 textarea refs
+  const meditationRef = useAutoResizeTextarea<HTMLTextAreaElement>(meditation);
+  const applicationRef = useAutoResizeTextarea<HTMLTextAreaElement>(application);
+  const prayerRef = useAutoResizeTextarea<HTMLTextAreaElement>(prayer);
 
   const [community, setCommunity] = useState<QtUserResponseItem[]>([]);
   const [communityLoading, setCommunityLoading] = useState(false);
@@ -127,6 +175,7 @@ export default function QtSharePage() {
         setApplication(myData.application || '');
         setPrayer(myData.prayer || '');
         setPhotos(myData.photos || []);
+        setVisibility(myData.visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC');
       } catch { /* unused */ }
     } catch (err: any) {
       setError(err.response?.data?.message || t('qt.noContent'));
@@ -144,6 +193,7 @@ export default function QtSharePage() {
     setApplication('');
     setPrayer('');
     setPhotos([]);
+    setVisibility('PUBLIC');
     try {
       const res = await api.get(`/qt/date/${date}`);
       setContent(res.data.data);
@@ -154,6 +204,7 @@ export default function QtSharePage() {
         setApplication(myData.application || '');
         setPrayer(myData.prayer || '');
         setPhotos(myData.photos || []);
+        setVisibility(myData.visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC');
         setSaved(true);
       } catch { /* unused */ }
     } catch (err: any) {
@@ -201,6 +252,7 @@ export default function QtSharePage() {
         application: application.trim(),
         prayer: prayer.trim(),
         photos: photos,
+        visibility,
       });
       setSaved(true);
     } catch (err: any) {
@@ -221,6 +273,7 @@ export default function QtSharePage() {
       setApplication('');
       setPrayer('');
       setPhotos([]);
+      setVisibility('PUBLIC');
       setSaved(false);
     } catch (err: any) {
       setError(err.response?.data?.message || t('qt.deleteFail'));
@@ -625,22 +678,47 @@ export default function QtSharePage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('qt.meditationLabel')}</label>
-                <textarea value={meditation} onChange={(e) => { setMeditation(e.target.value); setSaved(false); }}
+                <textarea ref={meditationRef} value={meditation} onChange={(e) => { setMeditation(e.target.value); setSaved(false); }}
                   placeholder={t('qt.meditationPlaceholder')} rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-amber-200 bg-amber-50/30 text-gray-800 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-none text-sm" />
+                  className="w-full px-4 py-3 rounded-xl border border-amber-200 bg-amber-50/30 text-gray-800 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-none overflow-hidden text-sm leading-relaxed" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('qt.applyLabel')}</label>
-                <textarea value={application} onChange={(e) => { setApplication(e.target.value); setSaved(false); }}
+                <textarea ref={applicationRef} value={application} onChange={(e) => { setApplication(e.target.value); setSaved(false); }}
                   placeholder={t('qt.applyPlaceholder')} rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-amber-200 bg-amber-50/30 text-gray-800 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-none text-sm" />
+                  className="w-full px-4 py-3 rounded-xl border border-amber-200 bg-amber-50/30 text-gray-800 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-none overflow-hidden text-sm leading-relaxed" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('qt.prayerLabel')}</label>
-                <textarea value={prayer} onChange={(e) => { setPrayer(e.target.value); setSaved(false); }}
+                <textarea ref={prayerRef} value={prayer} onChange={(e) => { setPrayer(e.target.value); setSaved(false); }}
                   placeholder={t('qt.prayerPlaceholder')} rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-amber-200 bg-amber-50/30 text-gray-800 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-none text-sm" />
+                  className="w-full px-4 py-3 rounded-xl border border-amber-200 bg-amber-50/30 text-gray-800 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-none overflow-hidden text-sm leading-relaxed" />
               </div>
+
+              {/* 可见范围选择 */}
+              <div className="bg-amber-50/40 rounded-xl border border-amber-100 p-3">
+                <label className="block text-sm font-semibold text-amber-800 mb-2">{t('qt.visibilityLabel')}</label>
+                <div className="flex flex-wrap gap-2 mb-1.5">
+                  <button type="button" onClick={() => { setVisibility('PUBLIC'); setSaved(false); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                      visibility === 'PUBLIC'
+                        ? 'bg-amber-500 text-white border-amber-500'
+                        : 'bg-white text-amber-700 border-amber-200 hover:border-amber-400'
+                    }`}>
+                    {t('qt.visibilityPublic')}
+                  </button>
+                  <button type="button" onClick={() => { setVisibility('PRIVATE'); setSaved(false); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                      visibility === 'PRIVATE'
+                        ? 'bg-gray-600 text-white border-gray-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                    }`}>
+                    {t('qt.visibilityPrivate')}
+                  </button>
+                </div>
+                <p className="text-xs text-amber-600/80 leading-relaxed">{t('qt.visibilityHint')}</p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('qt.photoLabel')}</label>
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -683,11 +761,19 @@ export default function QtSharePage() {
               </button>
             </div>
             {community.length === 0 && <p className="text-amber-500 text-sm">{t('qt.loadHint')}</p>}
-            {community.map((item) => (
-              <div key={item.id} className="border border-amber-100 rounded-xl overflow-hidden mb-2">
+            {community.map((item) => {
+              const isMine = item.userId === currentUserId;
+              const isPrivate = item.visibility === 'PRIVATE';
+              return (
+              <div key={item.id} className={`border rounded-xl overflow-hidden mb-2 ${isPrivate ? 'border-gray-200 bg-gray-50/30' : 'border-amber-100'}`}>
                 <button onClick={() => setExpandedUser(expandedUser === item.id ? null : item.id)}
                   className="w-full flex items-center justify-between px-4 py-3 bg-amber-50/50 hover:bg-amber-100/50 transition-colors">
-                  <span className="font-medium text-gray-800 text-sm">{item.username || item.displayName || t('qt.brotherSister')}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium text-gray-800 text-sm">{item.username || item.displayName || t('qt.brotherSister')}</span>
+                    {isMine && isPrivate && (
+                      <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{t('qt.privateTag')}</span>
+                    )}
+                  </span>
                   <svg className={`w-4 h-4 text-amber-400 transition-transform ${expandedUser === item.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 {expandedUser === item.id && (
@@ -702,7 +788,8 @@ export default function QtSharePage() {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </>)}
 
