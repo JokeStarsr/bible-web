@@ -119,8 +119,15 @@ public class DailyThoughtService {
         String llmResult;
         try {
             llmResult = llmService.chat(systemPrompt, userPrompt);
-        } catch (Exception e) {
-            log.error("调用大模型生成今日随想失败", e);
+        } catch (LlmService.LlmCallException e) {
+            log.warn("今日随想调用大模型失败（httpStatus={}，recoverable={}）：{}",
+                    e.getHttpStatus(), e.isRecoverable(), e.getMessage());
+            if (e.isRecoverable()) {
+                // 可恢复错误：账户余额不足、限流、服务不可用、网络异常 → 走本地 fallback
+                log.warn("使用本地经文模板生成今日随想降级回应");
+                return buildFallbackResponse(req, matchedVerses, e.getMessage());
+            }
+            // 不可恢复错误（401/403/404 等配置类问题）→ 直接抛出，便于排查
             throw new BusinessException("LLM_CALL_FAILED", "生成今日随想失败：" + e.getMessage());
         }
 
@@ -130,13 +137,78 @@ public class DailyThoughtService {
             root = objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
             log.error("今日随想大模型返回 JSON 解析失败，原始内容: {}, 提取后: {}", llmResult, json, e);
-            throw new BusinessException("LLM_RESPONSE_INVALID", "大模型返回格式异常，请重试");
+            // JSON 解析失败也降级到本地 fallback，避免用户拿不到回应
+            return buildFallbackResponse(req, matchedVerses,
+                    "大模型返回格式异常，已切换为本地预设回应");
         }
 
         String pastoralResponse = textNode(root, "pastoralResponse");
         String divineWord = textNode(root, "divineWord");
         String hymn = textNode(root, "hymn");
         List<DailyThoughtResponse.ScriptureMatch> scriptures = parseScriptures(root.path("scriptures"));
+
+        return DailyThoughtResponse.builder()
+                .pastoralResponse(pastoralResponse)
+                .scriptures(scriptures)
+                .divineWord(divineWord)
+                .hymn(hymn)
+                .build();
+    }
+
+    /**
+     * 本地降级回应：当大模型不可用（余额不足/超时/网络异常/返回格式异常）时，
+     * 用本地经文数据库 + 预设模板生成一个基础的牧养性回应，
+     * 保证用户始终能拿到内容，不会看到刺眼的报错。
+     *
+     * @param req            用户的原始随想请求
+     * @param matchedVerses  之前已从本地经文库匹配到的经文（可能为空）
+     * @param reason         降级原因（用于日志，不返回给用户）
+     */
+    private DailyThoughtResponse buildFallbackResponse(DailyThoughtRequest req,
+                                                       List<BibleVerse> matchedVerses,
+                                                       String reason) {
+        log.info("生成今日随想降级回应：{}", reason);
+        boolean isKorean = "ko".equalsIgnoreCase(req.getLang());
+
+        // 经文部分：优先用已匹配到的经文；不足则补经典安慰经文
+        List<DailyThoughtResponse.ScriptureMatch> scriptures = new ArrayList<>();
+        for (BibleVerse v : matchedVerses) {
+            if (scriptures.size() >= 3) break;
+            BibleBook book = bookMapper.findById(v.getBookId());
+            String bookName = book != null ? book.getBookNameZh() : "";
+            scriptures.add(DailyThoughtResponse.ScriptureMatch.builder()
+                    .reference(String.format("%s %d:%d", bookName, v.getChapterNumber(), v.getVerseNumber()))
+                    .text(v.getVerseText())
+                    .relevance(isKorean
+                            ? "이 구절은 오늘 당신의 묵상과 마음을 향해 말씀하십니다."
+                            : "这段经文与今日的随想与心境相互呼应，愿它向你说话。")
+                    .build());
+        }
+        // 若匹配为空，补一段诗篇 23 篇作为通用安慰
+        if (scriptures.isEmpty()) {
+            scriptures.add(DailyThoughtResponse.ScriptureMatch.builder()
+                    .reference(isKorean ? "시편 23:1" : "诗篇 23:1")
+                    .text(isKorean ? "여호와는 나의 목자시니 내가 부족함이 없으리로다" : "耶和华是我的牧者，我必不至缺乏。")
+                    .relevance(isKorean
+                            ? "어떤 형편 가운데서도 여호와께서는 목자가 되사 잃지 않으시는 임을 기억합시다."
+                            : "无论身处何种境况，耶和华始终是那位不撇弃我们的牧者，这是我们可以安息的根基。")
+                    .build());
+        }
+
+        String pastoralResponse = isKorean
+                ? "지금 당신이 적어 내려간 마음을 주님께 들고 나아가기를 권합니다. "
+                  + "큰 감정이나 완벽한 말씀이 아니어도, 진실된 마음이면 주님은 기쁘히 받으십니다. "
+                  + "오늘 하루도 은혜 안에서 평안하시기를 소망합니다."
+                : "愿你带着此刻所写下的心境来到主面前。不必等到心情平复、言语完全，"
+                  + "只要是诚实的心，主都乐意收纳。愿今天的你在这恩典与平安中继续前行。";
+
+        String divineWord = isKorean
+                ? "하나님께서 당신에게 하실 말씀: \"수고하고 무거운 짐 진 자들아, 다 내게로 오라. 내가 너희에게 안식을 주리라.\" (마태복음 11:28)"
+                : "神可能想对你说：\"凡劳苦担重担的人，可以到我这里来，我就使你们得安息。\"（马太福音 11:28）";
+
+        String hymn = isKorean
+                ? "찬송가 405장 - \"나의 갈길 다 가르쳐 주시겠네\""
+                : "赞美诗《恩典之路》 - \"我知信靠你，前路不惧，每一步都书写你的恩典。\"";
 
         return DailyThoughtResponse.builder()
                 .pastoralResponse(pastoralResponse)
