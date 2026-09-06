@@ -173,8 +173,8 @@ public class AuthService {
     // ==================== 登录 ====================
 
     public LoginResponse login(LoginRequest req) {
-        int failCount = isDev() ? devCodeService.getLoginFailCount(req.getEmail())
-                : verificationCodeService.getLoginFailCount(req.getEmail());
+        // 登录失败次数限制依赖 Redis；若 Redis 不可用，跳过限流，保证用户能正常登录
+        int failCount = safeGetLoginFailCount(req.getEmail());
         if (failCount >= 5) {
             throw new BusinessException("RATE_LIMITED", "登录失败次数过多，请15分钟后再试");
         }
@@ -194,19 +194,11 @@ public class AuthService {
         }
 
         if (!passwordEncoder.matches(req.getPassword(), cred.getPasswordHash())) {
-            if (isDev()) {
-                devCodeService.recordLoginFail(req.getEmail());
-            } else {
-                verificationCodeService.recordLoginFail(req.getEmail());
-            }
+            safeRecordLoginFail(req.getEmail());
             throw new BusinessException("UNAUTHORIZED", "账号或密码错误");
         }
 
-        if (isDev()) {
-            devCodeService.clearLoginFail(req.getEmail());
-        } else {
-            verificationCodeService.clearLoginFail(req.getEmail());
-        }
+        safeClearLoginFail(req.getEmail());
         userMapper.updateLastLogin(user.getId());
 
         String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername());
@@ -216,6 +208,45 @@ public class AuthService {
         LoginResponse.UserInfo info = new LoginResponse.UserInfo(
                 user.getId(), user.getUsername(), user.getDisplayName());
         return new LoginResponse(accessToken, refreshToken, expiresIn, info);
+    }
+
+    // ==================== 登录失败次数（Redis 容错） ====================
+
+    /** 安全获取登录失败次数：Redis 不可用时返回 0，不阻塞登录 */
+    private int safeGetLoginFailCount(String email) {
+        try {
+            return isDev() ? devCodeService.getLoginFailCount(email)
+                    : verificationCodeService.getLoginFailCount(email);
+        } catch (Exception e) {
+            log.warn("获取登录失败次数失败（跳过限流）: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+    /** 安全记录登录失败：Redis 不可用时静默忽略 */
+    private void safeRecordLoginFail(String email) {
+        try {
+            if (isDev()) {
+                devCodeService.recordLoginFail(email);
+            } else {
+                verificationCodeService.recordLoginFail(email);
+            }
+        } catch (Exception e) {
+            log.warn("记录登录失败次数失败: {}", e.getMessage());
+        }
+    }
+
+    /** 安全清除登录失败次数：Redis 不可用时静默忽略 */
+    private void safeClearLoginFail(String email) {
+        try {
+            if (isDev()) {
+                devCodeService.clearLoginFail(email);
+            } else {
+                verificationCodeService.clearLoginFail(email);
+            }
+        } catch (Exception e) {
+            log.warn("清除登录失败次数失败: {}", e.getMessage());
+        }
     }
 
     // ==================== 微信登录 ====================
